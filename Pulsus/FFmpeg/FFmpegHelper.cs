@@ -38,13 +38,15 @@ namespace Pulsus.FFmpeg
 
 		public static void Init()
 		{
+			string executablePath = Path.GetDirectoryName(System.Reflection.Assembly.GetEntryAssembly().Location);
 			string ffmpegPath = Path.Combine("ffmpeg", Environment.Is64BitProcess ? "x64" : "x86");
-			string ffmpegPathFull = Path.Combine(Environment.CurrentDirectory, ffmpegPath);
+			string ffmpegPathFull = Path.Combine(executablePath, ffmpegPath);
 
 			switch (Environment.OSVersion.Platform)
 			{
 				case PlatformID.Win32NT:
-					SetDllDirectoryW(ffmpegPath);
+					if (!SetDllDirectory(ffmpegPathFull))
+						throw new ApplicationException("Failed to call SetDllDirectory, error code " + Marshal.GetLastWin32Error().ToString());
 					break;
 				case PlatformID.Unix:
 				case PlatformID.MacOSX:
@@ -63,6 +65,10 @@ namespace Pulsus.FFmpeg
 			{
 				ffmpeg.av_register_all();
 				ffmpeg.avcodec_register_all();
+
+				// early load
+				ffmpeg.swscale_version();
+				ffmpeg.swresample_version();
 
 				// forward FFmpeg log messages
 				unsafe
@@ -187,7 +193,7 @@ namespace Pulsus.FFmpeg
 
 		[DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
 		[return: MarshalAs(UnmanagedType.Bool)]
-		private static extern bool SetDllDirectoryW(string lpPathName);
+		private static extern bool SetDllDirectory(string lpPathName);
 
 		// corrected signatures from FFmpeg.AutoGen
 
