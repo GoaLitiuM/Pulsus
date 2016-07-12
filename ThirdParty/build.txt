@@ -1,0 +1,24 @@
+linux:
+	- install Mono
+
+	- install Mono PCL reference assemblies package
+		- Debian: sudo apt-get install referenceassemblies-pcl
+		- Arch (AUR): yaourt -S mono-pcl
+		
+	- install SDL2 and SDL2_ttf packages
+		- Debian: sudo apt-get install libsdl2-2.0-0 libsdl2-ttf-2.0-0
+		- Arch: sudo pacman -S sdl2 sdl2_ttf
+
+	- install FFmpeg (3.0.2)
+		- Debian: sudo apt-get install ffmpeg
+		- Arch: sudo pacman -S ffmpeg
+
+	cd bgfx
+	make linux-debug64
+	cp .build/linux64_gcc/bin/libbgfx-shared-libDebug.so ../../bin/Debug
+
+	cd ../Eto/Source
+	xbuild "Eto - net45.sln"
+	cd ..
+	cp BuildOutput/net45/Debug/Eto.Gtk3.dll ../../bin/Debug
+	cp BuildOutput/net45/Debug/Eto.Gtk2.dll ../../bin/Debug

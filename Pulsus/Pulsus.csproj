@@ -1,0 +1,273 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{D6699C35-4AC9-4387-A66A-789633D10195}</ProjectGuid>
+    <OutputType>WinExe</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>Pulsus</RootNamespace>
+    <AssemblyName>Pulsus</AssemblyName>
+    <TargetFrameworkVersion>v4.5.1</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+    <IsWebBootstrapper>false</IsWebBootstrapper>
+    <BaseIntermediateOutputPath>..\obj\</BaseIntermediateOutputPath>
+    <TargetFrameworkProfile />
+    <PublishUrl>publish\</PublishUrl>
+    <Install>true</Install>
+    <InstallFrom>Disk</InstallFrom>
+    <UpdateEnabled>false</UpdateEnabled>
+    <UpdateMode>Foreground</UpdateMode>
+    <UpdateInterval>7</UpdateInterval>
+    <UpdateIntervalUnits>Days</UpdateIntervalUnits>
+    <UpdatePeriodically>false</UpdatePeriodically>
+    <UpdateRequired>false</UpdateRequired>
+    <MapFileExtensions>true</MapFileExtensions>
+    <ApplicationRevision>0</ApplicationRevision>
+    <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
+    <UseApplicationTrust>false</UseApplicationTrust>
+    <BootstrapperEnabled>true</BootstrapperEnabled>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>..\bin\Debug\</OutputPath>
+    <DefineConstants>TRACE;DEBUG</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <UseVSHostingProcess>false</UseVSHostingProcess>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>..\bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
+    <UseVSHostingProcess>false</UseVSHostingProcess>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+  <PropertyGroup>
+    <StartupObject>Pulsus.Program</StartupObject>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>..\bin\x64\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <DebugType>full</DebugType>
+    <PlatformTarget>x64</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
+    <OutputPath>..\bin\x64\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <Optimize>true</Optimize>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>x64</PlatformTarget>
+    <UseVSHostingProcess>false</UseVSHostingProcess>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x86'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>..\bin\x86\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <DebugType>full</DebugType>
+    <PlatformTarget>x86</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x86'">
+    <OutputPath>..\bin\x86\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <Optimize>true</Optimize>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>x86</PlatformTarget>
+    <UseVSHostingProcess>false</UseVSHostingProcess>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup>
+    <RunPostBuildEvent>OnOutputUpdated</RunPostBuildEvent>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="Eto">
+      <HintPath>..\ThirdParty\Eto.dll</HintPath>
+    </Reference>
+    <Reference Include="FFmpeg.AutoGen, Version=1.2.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\ThirdParty\FFmpeg.AutoGen.dll</HintPath>
+    </Reference>
+    <Reference Include="Newtonsoft.Json">
+      <HintPath>..\ThirdParty\Newtonsoft.Json.dll</HintPath>
+    </Reference>
+    <Reference Include="SDL2-CS, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\ThirdParty\SDL2-CS.dll</HintPath>
+    </Reference>
+    <Reference Include="SharpBgfx, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\ThirdParty\SharpBgfx.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Properties\AssemblyInfo_Version.cs" />
+    <Compile Include="Audio\Sound.cs" />
+    <Compile Include="Audio\SoundInstance.cs" />
+    <Compile Include="FFmpeg\FFmpegException.cs" />
+    <Compile Include="Gameplay\EventPlayers\Judge.cs" />
+    <Compile Include="Gameplay\EventPlayers\Player.cs" />
+    <Compile Include="Gameplay\Event\BGAEvent.cs" />
+    <Compile Include="Gameplay\Event\LandmineEvent.cs" />
+    <Compile Include="Gameplay\Event\MeasureMarkerEvent.cs" />
+    <Compile Include="Gameplay\Event\LongNoteEndEvent.cs" />
+    <Compile Include="Gameplay\Event\StopEvent.cs" />
+    <Compile Include="Gameplay\Event\BPMEvent.cs" />
+    <Compile Include="Gameplay\Event\MeasureLengthEvent.cs" />
+    <Compile Include="Gameplay\Event\KeySoundChangeEvent.cs" />
+    <Compile Include="Gameplay\Event\NoteEvent.cs" />
+    <Compile Include="Gameplay\Event\SoundEvent.cs" />
+    <Compile Include="Gameplay\NoteScore.cs" />
+    <Compile Include="Graphics\FrameBuffer.cs" />
+    <Compile Include="Graphics\TextureAtlas.cs" />
+    <Compile Include="Scenes\FileSelectScene.cs" />
+    <Compile Include="Scenes\RenderAudioScene.cs" />
+    <Compile Include="FFmpeg\FFmpegContext.cs" />
+    <Compile Include="FFmpeg\FFmpegHelper.cs" />
+    <Compile Include="FFmpeg\FFmpegVideo.cs" />
+    <Compile Include="Game.cs" />
+    <Compile Include="Audio\AudioEngine.cs" />
+    <Compile Include="Scenes\GameplayScene.cs" />
+    <Compile Include="Input\InputAction.cs" />
+    <Compile Include="Input\JoystickState.cs" />
+    <Compile Include="Shared\Float4.cs" />
+    <Compile Include="Shared\Int2.cs" />
+    <Compile Include="Shared\Rectangle.cs" />
+    <Compile Include="Graphics\Font.cs" />
+    <Compile Include="Graphics\FontGlyph.cs" />
+    <Compile Include="Graphics\VertexBuffer.cs" />
+    <Compile Include="Input\InputManager.cs" />
+    <Compile Include="Input\Joystick.cs" />
+    <Compile Include="Program.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Graphics\Color.cs" />
+    <Compile Include="Shared\Float3.cs" />
+    <Compile Include="Graphics\Matrix4.cs" />
+    <Compile Include="Graphics\Renderer.cs" />
+    <Compile Include="Graphics\ShaderProgram.cs" />
+    <Compile Include="Graphics\SpriteRenderer.cs" />
+    <Compile Include="Graphics\Texture2D.cs" />
+    <Compile Include="Graphics\IndexBuffer.cs" />
+    <Compile Include="Graphics\VertexTexture.cs" />
+    <Compile Include="Graphics\VertexTextureColor.cs" />
+    <Compile Include="Graphics\VertexColor.cs" />
+    <Compile Include="Scenes\Scene.cs" />
+    <Compile Include="SceneManager.cs" />
+    <Compile Include="Shared\Settings.cs" />
+    <Compile Include="Shared\SettingsManager.cs" />
+    <Compile Include="SettingsWindow.cs" />
+    <Compile Include="Gameplay\EventPlayers\Skin.cs" />
+    <Compile Include="Gameplay\BMS\BMSJudge.cs" />
+    <Compile Include="Gameplay\EventPlayers\Loader.cs" />
+    <Compile Include="Gameplay\EventPlayerGraph.cs" />
+    <Compile Include="Input\InputMapper.cs" />
+    <Compile Include="Gameplay\EventPlayers\BGM.cs" />
+    <Compile Include="Gameplay\BGAObject.cs" />
+    <Compile Include="Gameplay\BMS\BMSChannel.cs" />
+    <Compile Include="Gameplay\BMS\BMSChart.cs" />
+    <Compile Include="Gameplay\BMS\BMSMeasure.cs" />
+    <Compile Include="Gameplay\BMS\BMSParser.cs" />
+    <Compile Include="Gameplay\EventPlayer.cs" />
+    <Compile Include="Gameplay\SoundObject.cs" />
+    <Compile Include="Shared\Log.cs" />
+    <Compile Include="Gameplay\Song.cs" />
+    <Compile Include="Gameplay\Chart.cs" />
+    <Compile Include="Gameplay\ChartParser.cs" />
+    <Compile Include="Gameplay\Event\Event.cs" />
+    <Compile Include="Shared\Utility.cs" />
+    <Compile Include="GameWindow.cs" />
+    <EmbeddedResource Include="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <Compile Include="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Resources.resx</DependentUpon>
+      <DesignTime>True</DesignTime>
+    </Compile>
+    <None Include="Properties\Settings.settings">
+      <Generator>SettingsSingleFileGenerator</Generator>
+      <LastGenOutput>Settings.Designer.cs</LastGenOutput>
+    </None>
+    <Compile Include="Properties\Settings.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Settings.settings</DependentUpon>
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="App.config">
+      <SubType>Designer</SubType>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <BootstrapperPackage Include="Microsoft.Net.Framework.3.5.SP1">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework 3.5 SP1</ProductName>
+      <Install>false</Install>
+    </BootstrapperPackage>
+  </ItemGroup>
+  <ItemGroup />
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <PropertyGroup>
+    <PreBuildEvent>
+    </PreBuildEvent>
+  </PropertyGroup>
+  <PropertyGroup>
+    <PostBuildEvent>
+    </PostBuildEvent>
+  </PropertyGroup>
+  <Target Name="BeforeBuild">
+    <Exec ContinueOnError="True" Command="git describe --tags --abbrev=0 &gt; tag.temp" />
+    <ReadLinesFromFile File="tag.temp">
+      <Output TaskParameter="Lines" PropertyName="GitTag" />
+    </ReadLinesFromFile>
+    <Delete Files="tag.temp" />
+    <PropertyGroup>
+      <GitTag Condition="'$(GitTag)' == ''">0.0.0</GitTag>
+    </PropertyGroup>
+    <Message Text="Tag: $(GitTag)" />
+    <Exec Command="git rev-parse --short HEAD &gt; hash.temp" />
+    <ReadLinesFromFile File="hash.temp">
+      <Output TaskParameter="Lines" PropertyName="GitHash" />
+    </ReadLinesFromFile>
+    <Delete Files="hash.temp" />
+    <PropertyGroup>
+      <GitHash Condition="'$(GitHash)' == ''">0000000</GitHash>
+    </PropertyGroup>
+    <Message Text="Hash: $(GitHash)" />
+    <WriteLinesToFile File="$(ProjectDir)\Properties\AssemblyInfo_Version.cs" Overwrite="true" Lines="// This file was auto-generated during build.&#xD;&#xA;using System.Reflection%3B&#xD;&#xA;&#xD;&#xA;[assembly: AssemblyVersion(&quot;$(GitTag)&quot;)]&#xD;&#xA;[assembly: AssemblyFileVersion(&quot;$(GitTag)&quot;)]&#xD;&#xA;[assembly: AssemblyInformationalVersion(&quot;$(GitTag)-$(GitHash)&quot;)]&#xD;&#xA;" />
+  </Target>
+  <Target Name="AfterBuild">
+    <Copy SourceFiles="$(SolutionDir)ThirdParty\FFmpeg.AutoGen.dll.config;$(SolutionDir)ThirdParty\SDL2-CS.dll.config;$(SolutionDir)ThirdParty\SharpBgfx.dll.config" DestinationFolder="$(TargetDir)" />
+  </Target>
+</Project>
