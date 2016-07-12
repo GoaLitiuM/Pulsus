@@ -97,7 +97,9 @@ namespace Pulsus.Gameplay
 					double difference = eventTimestamp - currentTime;
 					if (difference >= 2.0)
 						break;
-					if (!(eventList[i] is NoteEvent))
+
+					NoteEvent note = eventList[i] as NoteEvent;
+					if (note == null || note.lane != lane)
 						continue;
 
 					if (difference >= closestDiff)
@@ -114,7 +116,8 @@ namespace Pulsus.Gameplay
 					if (difference >= 2.0)
 						break;
 
-					if (!(eventList[i] is NoteEvent))
+					NoteEvent note = eventList[i] as NoteEvent;
+					if (note == null || note.lane != lane)
 						continue;
 
 					if (difference >= closestDiff)
