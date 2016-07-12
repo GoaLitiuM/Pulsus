@@ -45,8 +45,8 @@ namespace Pulsus.FFmpeg
 			switch (Environment.OSVersion.Platform)
 			{
 				case PlatformID.Win32NT:
-					if (!SetDllDirectory(ffmpegPathFull))
-						throw new ApplicationException("Failed to call SetDllDirectory, error code " + Marshal.GetLastWin32Error().ToString());
+					string envPath = Environment.GetEnvironmentVariable("PATH");
+					Environment.SetEnvironmentVariable("PATH", envPath + ";" + ffmpegPathFull);
 					break;
 				case PlatformID.Unix:
 				case PlatformID.MacOSX:
@@ -190,10 +190,6 @@ namespace Pulsus.FFmpeg
 		public const int AV_LOG_DEBUG = 48;
 		public const int AV_LOG_TRACE = 56;
 		public const int AVERROR_EOF = -541478725;	// FFERRTAG( 'E','O','F',' ')
-
-		[DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
-		[return: MarshalAs(UnmanagedType.Bool)]
-		private static extern bool SetDllDirectory(string lpPathName);
 
 		// corrected signatures from FFmpeg.AutoGen
 
