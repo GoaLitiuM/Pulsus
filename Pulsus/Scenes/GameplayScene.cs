@@ -102,7 +102,6 @@ namespace Pulsus
 				song.Dispose();
 		}
 
-		double multi = 1.0;
 		private void BindInput()
 		{
 			inputMapper.MapInput(SDL.SDL_Scancode.SDL_SCANCODE_ESCAPE, InputAction.OnPressed(() =>
@@ -130,14 +129,6 @@ namespace Pulsus
 
 				SettingsManager.instance.gameplay.scrollTime = skin.baseScrollTime;
 				Log.Info("scrollTime: " + skin.baseScrollTime.ToString("0.00"));
-			}));
-
-			inputMapper.MapInput(SDL.SDL_Scancode.SDL_SCANCODE_SPACE, InputAction.OnPressedReleased(() =>
-			{
-				multi = 0.25;
-			}, () =>
-			{
-				multi = 1.0;
 			}));
 
 			if (!SettingsManager.instance.gameplay.autoplay)
@@ -189,7 +180,7 @@ namespace Pulsus
 		public override void Update(double deltaTime)
 		{
 			inputMapper.Update();
-			playerGraph.Update(deltaTime*multi);
+			playerGraph.Update(deltaTime);
 		}
 
 		public override void Draw(double deltaTime)
