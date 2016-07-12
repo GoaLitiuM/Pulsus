@@ -20,9 +20,6 @@ Features
 Requirements
 ---
 Windows users may need to install the following packages:
-- [Visual C++ Redistributable for Visual Studio 2015](https://www.microsoft.com/en-us/download/details.aspx?id=48145)
- - vc_redist.x86.exe for 32-bit builds
- - vc_redist.x64.exe for 64-bit builds
 - .NET Framework 4.5.1 or [later](https://www.microsoft.com/en-us/download/details.aspx?id=49981), or [Mono](http://www.mono-project.com/download/#download-win) (untested)
 
 Linux users:
