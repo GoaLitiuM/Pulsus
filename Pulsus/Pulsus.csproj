@@ -256,7 +256,7 @@
       <GitTag Condition="'$(GitTag)' == ''">0.0.0</GitTag>
     </PropertyGroup>
     <Message Text="Tag: $(GitTag)" />
-    <Exec Command="git rev-parse --short HEAD &gt; hash.temp" />
+    <Exec ContinueOnError="True" Command="git rev-parse --short HEAD &gt; hash.temp" />
     <ReadLinesFromFile File="hash.temp">
       <Output TaskParameter="Lines" PropertyName="GitHash" />
     </ReadLinesFromFile>
