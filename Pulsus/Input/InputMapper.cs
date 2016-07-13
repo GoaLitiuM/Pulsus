@@ -16,7 +16,7 @@ namespace Pulsus.Input
 		Dictionary<InputAction, bool> lastState;
 
 		List<Tuple<SDL.SDL_Scancode, InputAction>> keyboardMapping = new List<Tuple<SDL.SDL_Scancode, InputAction>>();
-		List<Tuple<JoyButtons, InputAction>> joystickMapping = new List<Tuple<JoyButtons, InputAction>>();
+		List<Tuple<JoyInput, InputAction>> joystickMapping = new List<Tuple<JoyInput, InputAction>>();
 
 		public InputMapper(InputManager input)
 		{
@@ -29,10 +29,10 @@ namespace Pulsus.Input
 			keyboardMapping.Add(new Tuple<SDL.SDL_Scancode, InputAction>(key, inputAction));
 		}
 
-		public void MapInput(JoyButtons button, InputAction inputAction)
+		public void MapInput(JoyInput button, InputAction inputAction)
 		{
 			MapInput(inputAction);
-			joystickMapping.Add(new Tuple<JoyButtons, InputAction>(button, inputAction));
+			joystickMapping.Add(new Tuple<JoyInput, InputAction>(button, inputAction));
 		}
 
 		private void MapInput(InputAction inputAction)
@@ -59,30 +59,30 @@ namespace Pulsus.Input
 
 			foreach (var t in joystickMapping)
 			{
-				JoyButtons button = t.Item1;
+				JoyInput button = t.Item1;
 
-				if (button < JoyButtons.Axis1Up)
+				if (button < JoyInput.Axis1Up)
 					inputState[t.Item2] |= joystickState.ButtonDown((int)button);
 				else
 				{
 					int stick = 0;
-					if (button >= JoyButtons.Axis2Up)
+					if (button >= JoyInput.Axis2Up)
 					{
 						stick = 1;
-						button -= JoyButtons.Axis2Up - JoyButtons.Axis1Up;
+						button -= JoyInput.Axis2Up - JoyInput.Axis1Up;
 					}
 
-					if (button == JoyButtons.Axis1Up)
+					if (button == JoyInput.Axis1Up)
 						inputState[t.Item2] |= joystickState.GetAxisY(stick) < -axisDeadzoneInt;
-					else if (button == JoyButtons.Axis1Down)
+					else if (button == JoyInput.Axis1Down)
 						inputState[t.Item2] |= joystickState.GetAxisY(stick) > axisDeadzoneInt;
-					else if (button == JoyButtons.Axis1Left)
+					else if (button == JoyInput.Axis1Left)
 						inputState[t.Item2] |= joystickState.GetAxisX(stick) < -axisDeadzoneInt;
-					else if (button == JoyButtons.Axis1Right)
+					else if (button == JoyInput.Axis1Right)
 						inputState[t.Item2] |= joystickState.GetAxisX(stick) > axisDeadzoneInt;
-					else if (button == JoyButtons.Axis1Y)
+					else if (button == JoyInput.Axis1Y)
 						inputState[t.Item2] |= Math.Abs(joystickState.GetAxisY(stick)) > axisDeadzoneInt;
-					else if (button == JoyButtons.Axis1X)
+					else if (button == JoyInput.Axis1X)
 						inputState[t.Item2] |= Math.Abs(joystickState.GetAxisX(stick)) > axisDeadzoneInt;
 				}
 			}

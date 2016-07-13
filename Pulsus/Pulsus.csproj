@@ -159,6 +159,7 @@
     <Compile Include="Input\InputAction.cs" />
     <Compile Include="Input\JoystickState.cs" />
     <Compile Include="Shared\Float4.cs" />
+    <Compile Include="Shared\InputLayout.cs" />
     <Compile Include="Shared\Int2.cs" />
     <Compile Include="Shared\Rectangle.cs" />
     <Compile Include="Graphics\Font.cs" />

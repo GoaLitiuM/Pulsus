@@ -125,9 +125,11 @@ namespace Pulsus.Input
 		}
 	}
 
-	public enum JoyButtons : int
+	public enum JoyInput : int
 	{
-		Button1 = 0,
+		Unknown = 0,
+
+		Button1,
 		Button2,
 		Button3,
 		Button4,

@@ -1,9 +1,12 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Pulsus.Graphics;
 using Pulsus.Audio;
 using Pulsus.Gameplay;
+using Pulsus.Input;
+using SDL2;
 
 namespace Pulsus
 {
@@ -85,7 +88,111 @@ namespace Pulsus
 
 	public class InputSettings
 	{
-		
+		public Dictionary<string, InputLayout> layouts = new Dictionary<string, InputLayout>
+		{
+			["general"] = new InputLayoutTT
+			(
+				new InputType[] // turntable
+				{
+					new InputKey(SDL.SDL_Scancode.SDL_SCANCODE_LSHIFT),
+					new InputKey(SDL.SDL_Scancode.SDL_SCANCODE_RSHIFT),
+					new InputJoystick(JoyInput.Axis1Up),
+					new InputJoystick(JoyInput.Axis1Down),
+				},
+				new InputType[][] // keys
+				{
+					new InputType[]
+					{
+						new InputKey(SDL.SDL_Scancode.SDL_SCANCODE_Z),
+						new InputJoystick(JoyInput.Button4),
+					},
+					new InputType[]
+					{
+						new InputKey(SDL.SDL_Scancode.SDL_SCANCODE_X),
+						new InputJoystick(JoyInput.Button7),
+					},
+					new InputType[]
+					{
+						new InputKey(SDL.SDL_Scancode.SDL_SCANCODE_C),
+						new InputJoystick(JoyInput.Button3),
+					},
+					new InputType[]
+					{
+						new InputKey(SDL.SDL_Scancode.SDL_SCANCODE_M),
+						new InputKey(SDL.SDL_Scancode.SDL_SCANCODE_SPACE),
+						new InputJoystick(JoyInput.Button8),
+					},
+					new InputType[]
+					{
+						new InputKey(SDL.SDL_Scancode.SDL_SCANCODE_COMMA),
+						new InputJoystick(JoyInput.Button2),
+					},
+					new InputType[]
+					{
+						new InputKey(SDL.SDL_Scancode.SDL_SCANCODE_PERIOD),
+						new InputJoystick(JoyInput.Button5),
+					},
+					new InputType[]
+					{
+						new InputKey(SDL.SDL_Scancode.SDL_SCANCODE_SLASH),
+						new InputJoystick(JoyInput.Axis1Left),
+					},
+				},
+				new Tuple<string, InputType[]>("exit", new InputType[]
+				{
+					new InputKey(SDL.SDL_Scancode.SDL_SCANCODE_ESCAPE),
+				}),
+				new Tuple<string, InputType[]>("scrollSpeedInc", new InputType[]
+				{
+					new InputKey(SDL.SDL_Scancode.SDL_SCANCODE_KP_PLUS),
+				}),
+				new Tuple<string, InputType[]>("scrollSpeedDec", new InputType[]
+				{
+					new InputKey(SDL.SDL_Scancode.SDL_SCANCODE_KP_MINUS),
+				})
+			),
+			["5k"] = new InputLayoutTT
+			(
+				new InputType[] { },
+				new InputType[][]
+				{
+					new InputType[] { },
+					new InputType[] { },
+					new InputType[] { },
+					new InputType[] { },
+					new InputType[] { },
+				}
+			),
+			["7k"] = new InputLayoutTT
+			(
+				new InputType[] { },
+				new InputType[][]
+				{
+					new InputType[] { },
+					new InputType[] { },
+					new InputType[] { },
+					new InputType[] { },
+					new InputType[] { },
+					new InputType[] { },
+					new InputType[] { },
+				}
+			),
+			["9k"] = new InputLayoutKeys
+			(
+				new InputType[][]
+				{
+					new InputType[] { },
+					new InputType[] { },
+					new InputType[] { },
+					new InputType[] { },
+					new InputType[] { },
+					new InputType[] { },
+					new InputType[] { },
+					new InputType[] { },
+					new InputType[] { },
+				}
+			),
+		};
 	}
 
 	public class GameplaySettings

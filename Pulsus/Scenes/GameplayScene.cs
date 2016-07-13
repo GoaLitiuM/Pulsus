@@ -1,6 +1,7 @@
 ﻿using SDL2;
 using Pulsus.Input;
 using Pulsus.Gameplay;
+using System;
 
 namespace Pulsus
 {
@@ -77,7 +78,37 @@ namespace Pulsus
 
 			// bind input
 			inputMapper = new InputMapper(game.inputManager);
-			BindInput();
+
+			InputLayout keyLayout = null;
+			InputLayout generalLayout = settings.input.layouts["general"];
+			int laneCount = chart.playerChannels;
+			if (laneCount == 6)
+				settings.input.layouts.TryGetValue("5k", out keyLayout);
+			if (laneCount == 8 || keyLayout == null)
+				settings.input.layouts.TryGetValue("7k", out keyLayout);
+			if (laneCount == 9 || keyLayout == null)
+				settings.input.layouts.TryGetValue("9k", out keyLayout);
+
+			InputLayout layout = null;
+			if (keyLayout != null)
+			{
+				layout = new InputLayout();
+				layout.keys = new System.Collections.Generic.Dictionary<string, string[]>(keyLayout.keys);
+				foreach (var key in generalLayout.keys.Keys)
+				{
+					// override non-present keys
+					if (!layout.keys.ContainsKey(key) || layout.keys[key].Length == 0)
+						layout.keys[key] = generalLayout.keys[key];
+				}
+			}
+			else
+				layout = generalLayout;
+
+			// ensure that exit is always bound to somewhere
+			if (layout.keys["exit"].Length == 0)
+				layout.keys["exit"] = new string[] { new InputKey(SDL.SDL_Scancode.SDL_SCANCODE_ESCAPE).Name };
+
+			BindInputLayout(layout);
 
 			// start all the players
 			Log.Info("Starting player graph");
@@ -102,66 +133,74 @@ namespace Pulsus
 				song.Dispose();
 		}
 
-		private void BindInput()
+		private void BindInputLayout(InputLayout layout)
 		{
-			inputMapper.MapInput(SDL.SDL_Scancode.SDL_SCANCODE_ESCAPE, InputAction.OnPressed(() =>
+			Settings settings = SettingsManager.instance;
+
+			BindKey(layout.GetInputs("exit"), InputAction.OnPressed(() =>
 			{
 				active = false;
 			}));
 			
 			double scrollStep = 0.01;
 
-			inputMapper.MapInput(SDL.SDL_Scancode.SDL_SCANCODE_KP_PLUS, InputAction.OnPressed(() =>
+			BindKey(layout.GetInputs("scrollSpeedInc"), InputAction.OnPressed(() =>
 			{
 				skin.baseScrollTime += scrollStep;
 				if (skin.baseScrollTime >= 10.0)
 					skin.baseScrollTime = 10.0;
 
-				SettingsManager.instance.gameplay.scrollTime = skin.baseScrollTime;
+				settings.gameplay.scrollTime = skin.baseScrollTime;
 				Log.Info("scrollTime: " + skin.baseScrollTime.ToString("0.00"));
 			}));
 
-			inputMapper.MapInput(SDL.SDL_Scancode.SDL_SCANCODE_KP_MINUS, InputAction.OnPressed(() =>
+			BindKey(layout.GetInputs("scrollSpeedDec"), InputAction.OnPressed(() =>
 			{
 				skin.baseScrollTime -= scrollStep;
 				if (skin.baseScrollTime < scrollStep)
 					skin.baseScrollTime = scrollStep;
 
-				SettingsManager.instance.gameplay.scrollTime = skin.baseScrollTime;
+				settings.gameplay.scrollTime = skin.baseScrollTime;
 				Log.Info("scrollTime: " + skin.baseScrollTime.ToString("0.00"));
 			}));
-
-			if (!SettingsManager.instance.gameplay.autoplay)
+			
+			if (!settings.gameplay.autoplay)
 			{
-				BindPlayerKey(SDL.SDL_Scancode.SDL_SCANCODE_A, 1);
-				BindPlayerKey(SDL.SDL_Scancode.SDL_SCANCODE_Z, 1);
-				BindPlayerKey(SDL.SDL_Scancode.SDL_SCANCODE_X, 2);
-				BindPlayerKey(SDL.SDL_Scancode.SDL_SCANCODE_C, 3);
-				BindPlayerKey(SDL.SDL_Scancode.SDL_SCANCODE_M, 4);
-				BindPlayerKey(SDL.SDL_Scancode.SDL_SCANCODE_SPACE, 4);
-				BindPlayerKey(SDL.SDL_Scancode.SDL_SCANCODE_COMMA, 5);
-				BindPlayerKey(SDL.SDL_Scancode.SDL_SCANCODE_PERIOD, 6);
-				BindPlayerKey(SDL.SDL_Scancode.SDL_SCANCODE_SLASH, 7);
-				BindPlayerKey(SDL.SDL_Scancode.SDL_SCANCODE_LSHIFT, 0);
-				BindPlayerKey(SDL.SDL_Scancode.SDL_SCANCODE_RSHIFT, 0);
+				BindLaneKey(layout.GetInputs("turntable"), 0);
 
-				// standard 7K layout
-				BindPlayerKey(JoyButtons.Button4, 1);
-				BindPlayerKey(JoyButtons.Button7, 2);
-				BindPlayerKey(JoyButtons.Button3, 3);
-				BindPlayerKey(JoyButtons.Button8, 4);
-				BindPlayerKey(JoyButtons.Button2, 5);
-				BindPlayerKey(JoyButtons.Button5, 6);
-				BindPlayerKey(JoyButtons.Axis1Left, 7);
-				BindPlayerKey(JoyButtons.Axis1Up, 0);
-				BindPlayerKey(JoyButtons.Axis1Down, 0);
-
-				//BindPlayerKey(JoyButtons.Button10, Start);
-				//BindPlayerKey(JoyButtons.Button9, Select);
+				int keyCount = 9;
+				for (int key = 0; key <= keyCount; key++)
+					BindLaneKey(layout.GetKeyInputs(key), key);
 			}
 		}
 
-		private void BindPlayerKey(JoyButtons button, int lane)
+		private void BindKey(InputType[] inputs, InputAction inputAction)
+		{
+			foreach (InputType input in inputs)
+			{
+				if (input is InputKey)
+					inputMapper.MapInput((input as InputKey).scancode, inputAction);
+				else if (input is InputJoystick)
+					inputMapper.MapInput((input as InputJoystick).button, inputAction);
+				else
+					throw new ApplicationException("Unable to bind unknown type of InputType");
+			}
+		}
+
+		private void BindLaneKey(InputType[] inputs, int lane)
+		{
+			foreach (InputType input in inputs)
+			{
+				if (input is InputKey)
+					BindLaneKey((input as InputKey).scancode, lane);
+				else if (input is InputJoystick)
+					BindLaneKey((input as InputJoystick).button, lane);
+				else
+					throw new ApplicationException("Unable to bind unknown type of InputType");
+			}
+		}
+
+		private void BindLaneKey(JoyInput button, int lane)
 		{
 			inputMapper.MapInput(button, InputAction.OnPressedReleased(
 				() => autoplay.PlayerPressKey(lane),
@@ -169,7 +208,7 @@ namespace Pulsus
 			));
 		}
 
-		private void BindPlayerKey(SDL.SDL_Scancode scancode, int lane)
+		private void BindLaneKey(SDL.SDL_Scancode scancode, int lane)
 		{
 			inputMapper.MapInput(scancode, InputAction.OnPressedReleased(
 				() => autoplay.PlayerPressKey(lane),
