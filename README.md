@@ -32,7 +32,9 @@ Linux users:
 
 Building
 ---
-See ThirdParty/readme.md for building third party runtime dependencies.
+Project utilizes C# 6.0 language features, so Visual Studio 2015 (Mono 4.0) or later is required to build the project.
+
+For building third party runtime dependencies, see [ThirdParty/README.md](../ThirdParty/README.md).
 
 License
 ---
