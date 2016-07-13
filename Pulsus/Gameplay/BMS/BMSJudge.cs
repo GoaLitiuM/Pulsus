@@ -261,7 +261,6 @@ namespace Pulsus.Gameplay
 			}
 			else if (difference > timingWindow[4])
 			{
-				// TODO: take a deeper look into MashPoor mechanics and whether combo should break
 				combo = 0;
 				scorePoorCount++;
 			}
@@ -309,9 +308,9 @@ namespace Pulsus.Gameplay
 			else if (Math.Abs(difference) <= timingWindow[3])
 				gaugeHealth += gaugeBadPoor;
 			else if (difference > -timingWindow[5] && difference <= -timingWindow[4])
-				gaugeHealth += gaugeMiss;
-			else if (difference > timingWindow[4])
 				gaugeHealth += gaugeBadPoor;
+			else if (difference > timingWindow[4])
+				gaugeHealth += gaugeMiss;
 			else // long note early release
 				gaugeHealth += gaugeMiss;
 			
