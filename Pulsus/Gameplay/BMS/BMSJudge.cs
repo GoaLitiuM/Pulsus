@@ -170,6 +170,12 @@ namespace Pulsus.Gameplay
 			if (closestNote == null)
 				return;
 
+			if (!HasJudged((closestNote.noteEvent as LongNoteEndEvent).startNote))
+			{
+				// ignore key releases before long note starting point
+				return;
+			}
+
 			JudgeNote(hitTimestamp, closestNote);
 		}
 
@@ -177,7 +183,7 @@ namespace Pulsus.Gameplay
 		{
 			double hitTimestamp = judgeTime;
 
-			NoteScore closestNote = GetClosestNote(hitTimestamp, lane, NoteJudgeType.JudgePress);
+			NoteScore closestNote = GetClosestNote(hitTimestamp, lane, NoteJudgeType.JudgePress | NoteJudgeType.JudgeHold);
 			if (closestNote == null)
 				return;
 
@@ -190,7 +196,7 @@ namespace Pulsus.Gameplay
 			double closestDiff = double.MaxValue;
 			foreach (NoteScore noteScore in pendingNoteScores)
 			{
-				if (noteScore.judgeType != judgeType)
+				if (!judgeType.HasFlag(noteScore.judgeType))
 					continue;
 
 				if (noteScore.noteEvent.lane != lane)
@@ -266,7 +272,11 @@ namespace Pulsus.Gameplay
 				judged = false;
 			}
 			else
-				judged = false;
+			{
+				// Long note early release
+				combo = 0;
+				scorePoorCount++;
+			}
 
 
 			if (combo > scoreLargestCombo)
@@ -285,8 +295,7 @@ namespace Pulsus.Gameplay
 			if (OnNoteJudged != null)
 				OnNoteJudged(noteScore);
 
-			if (judged)
-				AdjustGauge(difference);
+			AdjustGauge(difference);
 		}
 
 		public void AdjustGauge(double difference)
@@ -303,8 +312,8 @@ namespace Pulsus.Gameplay
 				gaugeHealth += gaugeMiss;
 			else if (difference > timingWindow[4])
 				gaugeHealth += gaugeBadPoor;
-			else
-				throw new ApplicationException("Gauge");
+			else // long note early release
+				gaugeHealth += gaugeMiss;
 			
 			// clamp gauge health
 			gaugeHealth = Math.Min(Math.Max(gaugeMinHealth, gaugeHealth), 1.0);

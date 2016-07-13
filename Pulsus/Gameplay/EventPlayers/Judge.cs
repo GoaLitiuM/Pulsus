@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace Pulsus.Gameplay
 {
@@ -54,14 +55,10 @@ namespace Pulsus.Gameplay
 			pendingNoteScores.Add(new NoteScore(noteEvent, noteEvent.timestamp, NoteJudgeType.JudgePress));
 		}
 
-		public override void OnPlayerKeyLong(NoteEvent noteEvent)
+		public override void OnPlayerKeyLong(LongNoteEvent noteEvent)
 		{
-			pendingNoteScores.Add(new NoteScore(noteEvent, noteEvent.timestamp, NoteJudgeType.JudgePress));
-		}
-
-		public override void OnPlayerKeyLongEnd(LongNoteEndEvent noteEndEvent)
-		{
-			pendingNoteScores.Add(new NoteScore(noteEndEvent, noteEndEvent.timestamp, NoteJudgeType.JudgeRelease));
+			pendingNoteScores.Add(new NoteScore(noteEvent, noteEvent.timestamp, NoteJudgeType.JudgeHold));
+			pendingNoteScores.Add(new NoteScore(noteEvent.endNote, noteEvent.endNote.timestamp, NoteJudgeType.JudgeRelease));
 		}
 
 		public override void OnBPM(BPMEvent bpmEvent)
@@ -74,10 +71,24 @@ namespace Pulsus.Gameplay
 
 		public virtual void NotePlayed(double hitTimestamp, NoteScore noteScore)
 		{
-			pendingNoteScores.Remove(noteScore);
-
 			noteScore.hitOffset = hitTimestamp - noteScore.timestamp;
+
+			pendingNoteScores.Remove(noteScore);
 			noteScores.Add(noteScore);
+
+			if (noteScore.judgeType == NoteJudgeType.JudgeHold)
+			{
+				LongNoteEndEvent endEvent = (noteScore.noteEvent as LongNoteEvent).endNote;
+				for (int i = 0; i < pendingNoteScores.Count; i++)
+				{
+					if (pendingNoteScores[i].noteEvent != endEvent)
+						continue;
+
+					// judge endpoint after early release
+					JudgeNote(hitTimestamp, pendingNoteScores[i]);
+					break;
+				}
+			}
 		}
 
 		public bool HasJudged(NoteEvent note)
@@ -93,9 +104,11 @@ namespace Pulsus.Gameplay
 		public abstract void JudgeNote(double hitTimestamp, NoteScore noteScore);
 	}
 
+	[Flags]
 	public enum NoteJudgeType
 	{
-		JudgePress,
-		JudgeRelease,
+		JudgePress = 1,
+		JudgeHold = 2,
+		JudgeRelease = 4,
 	}
 }

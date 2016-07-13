@@ -5,9 +5,9 @@ namespace Pulsus.Gameplay
 	[DebuggerDisplay("{ToString()}")]
 	public class LongNoteEndEvent : NoteEvent
 	{
-		public NoteEvent startNote;
-		public LongNoteEndEvent(int pulse, SoundObject sound, int lane, int length, NoteEvent startNote)
-			: base(pulse, sound, lane, length)
+		public LongNoteEvent startNote;
+		public LongNoteEndEvent(int pulse, SoundObject sound, int lane, LongNoteEvent startNote)
+			: base(pulse, sound, lane)
 		{
 			this.startNote = startNote;
 		}

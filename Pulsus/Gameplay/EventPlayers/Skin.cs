@@ -15,7 +15,7 @@ namespace Pulsus.Gameplay
 				return new LaneObject(noteEvent, position);
 			}
 
-			public static LaneObject CreateLongNote(int lane, NoteEvent noteEvent, double position, double positionEnd)
+			public static LaneObject CreateLongNote(int lane, LongNoteEvent noteEvent, double position, double positionEnd)
 			{
 				return new LaneObject(noteEvent, position, positionEnd);
 			}
@@ -284,6 +284,9 @@ namespace Pulsus.Gameplay
 
 		public void OnKeyPress(int lane)
 		{
+			if (lane >= lastPressTime.Count)
+				return;
+
 			lastPressTime[lane] = timer;
 		}
 
@@ -301,17 +304,7 @@ namespace Pulsus.Gameplay
 			else if (Math.Abs(noteScore.hitOffset) <= judge.timingWindow[3])
 				PrintJudge(JudgeText.Bad, judge.combo);
 			else
-			{
-				if (noteScore.hitOffset < -judge.timingWindow[5])
-					return;
-				else if (noteScore.hitOffset > judge.timingWindow[4])
-					PrintJudge(JudgeText.Poor, judge.combo);
-				else if (noteScore.hitOffset > -judge.timingWindow[5])
-				{
-					PrintJudge(JudgeText.Poor, judge.combo);
-					return;
-				}
-			}
+				PrintJudge(JudgeText.Poor, judge.combo);
 		}
 		
 		public override void OnBGA(BGAEvent bgaEvent)
@@ -388,8 +381,10 @@ namespace Pulsus.Gameplay
 				if (currentEvent.pulse < pulse)
 				{
 					NoteEvent noteEvent = currentEvent as NoteEvent;
-					if (noteEvent == null
-						|| noteEvent.pulse + noteEvent.length < pulse)
+					LongNoteEvent longNoteEvent = currentEvent as LongNoteEvent;
+
+					if (noteEvent == null ||
+						(longNoteEvent != null && longNoteEvent.endNote.pulse < pulse))
 					{
 						firstVisibleNote = index + 1;
 						continue;
@@ -434,6 +429,7 @@ namespace Pulsus.Gameplay
 					else if (currentEvent is NoteEvent)
 					{
 						NoteEvent noteEvent = currentEvent as NoteEvent;
+						LongNoteEvent longNoteEvent = currentEvent as LongNoteEvent;
 						LandmineEvent landmineEvent = currentEvent as LandmineEvent;
 						LongNoteEndEvent lnEndEvent = currentEvent as LongNoteEndEvent;
 
@@ -443,26 +439,26 @@ namespace Pulsus.Gameplay
 						{
 							foreach (LaneObject lastObject in laneObjects)
 							{
-								NoteEvent note = lastObject.laneEvent as NoteEvent;
-								if (note != lnEndEvent.startNote)
+								LongNoteEvent note = lastObject.laneEvent as LongNoteEvent;
+								if (note == null || note != lnEndEvent.startNote)
 									continue;
 
 								lastObject.positionEnd = relPosition;
 								break;
 							}
 						}
-						else if (noteEvent.isLongNote)
+						else if (longNoteEvent != null)
 						{
 							if (oldRel < 0.0)
 								relPosition = oldRel;
 
-							if (noteEvent.pulse <= pulse && index < activeLongNote)
+							if (longNoteEvent.pulse <= pulse && index < activeLongNote)
 								activeLongNote = index;
 
 							// no idea when long note is going to end right now, so assume it doesn't
-							laneObject = LaneObject.CreateLongNote(noteEvent.lane, noteEvent, relPosition, 1.0);
+							laneObject = LaneObject.CreateLongNote(noteEvent.lane, longNoteEvent, relPosition, 1.0);
 						}
-						else
+						else if (relPosition >= 0.0)
 							laneObject = LaneObject.CreateNote(noteEvent.lane, noteEvent, relPosition);
 					}
 
@@ -955,7 +951,8 @@ namespace Pulsus.Gameplay
 
 					int y = (int)Math.Round((1.0 - Math.Max(laneObject.position, 0.0)) * laneHeight);
 
-					if (note.isLongNote) 
+					LongNoteEvent longNote = note as LongNoteEvent;
+					if (longNote != null) 
 					{
 						int yEnd = (int)Math.Round((1.0 - laneObject.positionEnd) * laneHeight);
 						int height = noteHeight + y - yEnd;

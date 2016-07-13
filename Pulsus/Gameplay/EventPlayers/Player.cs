@@ -12,7 +12,7 @@ namespace Pulsus.Gameplay
 		Skin skin;
 
 		public bool autoplay;
-		Dictionary<int, int> channelActive = new Dictionary<int, int>(18);
+		bool[] laneActive = new bool[18];
 
 		public Player(AudioEngine audioEngine, Song song, BMSJudge judge, Skin skin)
 			: base(song)
@@ -28,24 +28,21 @@ namespace Pulsus.Gameplay
 
 			if (skin != null)
 			{
-				List<int> keys = channelActive.Keys.ToList();
-				foreach (int channel in keys)
+				for (int i = 0; i < laneActive.Length; i++)
 				{
-					if (channelActive[channel] >= pulse)
+					if (!laneActive[i])
+						continue;
+
+					bool isScratchLane =
+						i == BMSChannel.GetLaneIndex((int)BMSChannel.KeyBMS.P1Scratch, song.chart.playerChannels, song.chart.players) ||
+						i == BMSChannel.GetLaneIndex((int)BMSChannel.KeyBMS.P2Scratch, song.chart.playerChannels, song.chart.players);
+
+					if (song.chart.hasTurntable && isScratchLane)
 					{
-						if (song.chart.hasTurntable &&
-							(channel == (int)BMSChannel.KeyBMS.P1Scratch || channel == (int)BMSChannel.KeyBMS.P2Scratch))
-						{
-							// only triggers key press effects once for turntable input
-						}
-						else
-							skin.OnKeyPress(channel);
+						// only triggers key press effects once for turntable input
 					}
-					else if (channelActive[channel] != -1)
-					{
-						ReleaseKey(channel, null);
-						channelActive[channel] = -1;
-					}
+					else
+						skin.OnKeyPress(i);
 				}
 			}
 		}
@@ -55,20 +52,28 @@ namespace Pulsus.Gameplay
 			if (!autoplay)
 				return;
 			
-			PressKey(noteEvent.lane, noteEvent.sound, 0);
+			PressKey(noteEvent.lane, noteEvent.sound);
 		}
 
-		public override void OnPlayerKeyLong(NoteEvent noteEvent)
+		public override void OnPlayerKeyLong(LongNoteEvent noteEvent)
 		{
 			if (!autoplay)
 				return;
 
-			PressKey(noteEvent.lane, noteEvent.sound, noteEvent.length);
+			PressKey(noteEvent.lane, noteEvent.sound);
+		}
+
+		public override void OnPlayerKeyLongEnd(LongNoteEndEvent noteEndEvent)
+		{
+			if (!autoplay)
+				return;
+
+			ReleaseKey(noteEndEvent.lane, noteEndEvent.sound);
 		}
 
 		public void PlayerPressKey(int lane)
 		{
-			PressKey(lane, null, int.MaxValue);
+			PressKey(lane, null);
 		}
 
 		public void PlayerReleaseKey(int lane)
@@ -76,7 +81,7 @@ namespace Pulsus.Gameplay
 			ReleaseKey(lane, null);
 		}
 		
-		private void PressKey(int lane, SoundObject value, int length)
+		private void PressKey(int lane, SoundObject value)
 		{
 			if (skin != null)
 				skin.OnKeyPress(lane);
@@ -84,8 +89,7 @@ namespace Pulsus.Gameplay
 			if (judge != null)
 				judge.OnKeyPress(lane);
 
-			if (length > 0)
-				channelActive[lane] = pulse + length;
+			laneActive[lane] = true;
 
 			if (value == null)
 			{
@@ -147,11 +151,12 @@ namespace Pulsus.Gameplay
 				else
 					Log.Warning("Failed to play sound: " + keySound.name);
 			}
-			
 		}
 
 		private void ReleaseKey(int lane, SoundObject value = null)
 		{
+			laneActive[lane] = false;
+
 			if (judge != null)
 				judge.OnKeyRelease(lane);
 		}

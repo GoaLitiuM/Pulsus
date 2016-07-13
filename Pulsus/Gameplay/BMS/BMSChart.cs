@@ -117,8 +117,8 @@ public class BMSChart : Chart
 		List<Event> eventList = new List<Event>(eventCount);
 
 		int longNoteType = GetHeader<int>("LNTYPE");
-		Dictionary<int, NoteEvent> lastLNEvent = new Dictionary<int, NoteEvent>();
-		Dictionary<int, NoteEvent> startLNEvent = new Dictionary<int, NoteEvent>();
+		Dictionary<int, LongNoteEvent> lastLNEvent = new Dictionary<int, LongNoteEvent>();
+		Dictionary<int, LongNoteEvent> startLNEvent = new Dictionary<int, LongNoteEvent>();
 		Dictionary<int, NoteEvent> lastPlayerEvent = new Dictionary<int, NoteEvent>();
 
 		int pulse = 0;
@@ -163,11 +163,12 @@ public class BMSChart : Chart
 						// and does not continue in next measure, so restore the
 						// last skipped event, and end the long note there.
 
-						NoteEvent lastEvent = lastLNEvent[lnChannel];
-						NoteEvent startEvent = startLNEvent[lnChannel];
-						startEvent.length = pulse - startEvent.pulse;
+						LongNoteEvent lastEvent = lastLNEvent[lnChannel];
+						LongNoteEvent startEvent = startLNEvent[lnChannel];
+						LongNoteEndEvent endEvent = new LongNoteEndEvent(pulse, lastEvent.sound, lastEvent.lane, startEvent);
+						startEvent.endNote = endEvent;
 
-						eventList.Add(new LongNoteEndEvent(pulse, lastEvent.sound, lastEvent.lane, 0, startEvent));
+						eventList.Add(endEvent);
 
 						lastLNEvent.Remove(lnChannel);
 						startLNEvent.Remove(lnChannel);
@@ -228,14 +229,15 @@ public class BMSChart : Chart
 
 							int damage = value;
 							soundObjects.TryGetValue(0, out sound);
-							bmsEvent = new LandmineEvent(channelPulse, sound, lane, 0, damage);
+							bmsEvent = new LandmineEvent(channelPulse, sound, lane, damage);
 						}
 						else
 						{
-							NoteEvent noteEvent = new NoteEvent(channelPulse, sound, lane, 0);
+							NoteEvent noteEvent = null;
 							bool isLnObj = lnObjects.Contains(value);
 							if (isLongChannel || isLnObj)
 							{
+								LongNoteEvent longNoteEvent = new LongNoteEvent(channelPulse, sound, lane, null);
 								if (longNoteType == 2)
 								{
 									// ignore section filler events with #LNTYPE 2
@@ -246,7 +248,7 @@ public class BMSChart : Chart
 									{
 										if (value != 0)
 										{
-											lastLNEvent[channel.index] = noteEvent;
+											lastLNEvent[channel.index] = longNoteEvent;
 											continue;
 										}
 										else
@@ -254,35 +256,69 @@ public class BMSChart : Chart
 											// long note breaks here,
 											// replace current event with last skipped LN event.
 
-											NoteEvent lastEvent = lastLNEvent[channel.index];
-											NoteEvent startEvent = startLNEvent[channel.index];
-											startEvent.length = channelPulse - startEvent.pulse;
+											LongNoteEvent startEvent = startLNEvent[channel.index];
+											LongNoteEndEvent endEvent = new LongNoteEndEvent(channelPulse, sound, lane, startEvent);
+											startEvent.endNote = endEvent;
 
 											lastLNEvent.Remove(channel.index);
 											startLNEvent.Remove(channel.index);
 
-											noteEvent = new LongNoteEndEvent(channelPulse, sound, lane, 0, startEvent);
+											noteEvent = endEvent;
 										}
 									}
 									else if (value != 0)
 									{
-										lastLNEvent.Add(channel.index, noteEvent);
-										startLNEvent.Add(channel.index, noteEvent);
+										lastLNEvent.Add(channel.index, longNoteEvent);
+										startLNEvent.Add(channel.index, longNoteEvent);
+										noteEvent = longNoteEvent;
 									}
 								}
 								else if (longNoteType == 1 && value != 0)
 								{
-									NoteEvent lastEvent = null;
-									
-									if (isLnObj)
-										lastEvent = lastPlayerEvent[lane];
-									else
-										lastLNEvent.TryGetValue(channel.index, out lastEvent);
+									LongNoteEvent lastLongNote = null;
 
-									if (lastEvent != null)
+									if (isLnObj)
 									{
-										NoteEvent startEvent = lastEvent;
-										startEvent.length = channelPulse - startEvent.pulse;
+										NoteEvent lastEvent = lastPlayerEvent[lane];
+										if (lastEvent != null)
+										{
+											lastLongNote = new LongNoteEvent(lastEvent.pulse, lastEvent.sound, lastEvent.lane, null);
+
+											bool foundNote = false;
+											for (int j = measureEvents.Count-1; j >= 0; j--)
+											{
+												if (measureEvents[j] != lastEvent)
+													continue;
+
+												measureEvents[j] = lastLongNote;
+												foundNote = true;
+												break;
+											}
+											if (!foundNote)
+											{
+												for (int j = eventList.Count-1; j >= 0; j--)
+												{
+													if (eventList[j] != lastEvent)
+														continue;
+
+													eventList[j] = lastLongNote;
+													foundNote = true;
+													break;
+												}
+											}
+
+											if (!foundNote)
+												throw new ApplicationException("Could not find long note starting point");
+										}
+									}
+									else
+										lastLNEvent.TryGetValue(channel.index, out lastLongNote);
+
+									if (lastLongNote != null)
+									{
+										LongNoteEvent startEvent = lastLongNote;
+										LongNoteEndEvent endEvent = new LongNoteEndEvent(channelPulse, sound, lane, startEvent);
+										startEvent.endNote = endEvent;
 
 										lastLNEvent.Remove(channel.index);
 
@@ -293,14 +329,21 @@ public class BMSChart : Chart
 											releaseSound = sound;
 										}
 
-										noteEvent = new LongNoteEndEvent(channelPulse, releaseSound, lane, 0, startEvent);
+										noteEvent = endEvent;
 									}
 									else if (isLongChannel)
-										lastLNEvent.Add(channel.index, noteEvent);
+									{
+										lastLNEvent.Add(channel.index, longNoteEvent);
+										noteEvent = longNoteEvent;
+									}
 								}
 							}
+							else
+								noteEvent = new NoteEvent(channelPulse, sound, lane);
 
-							lastPlayerEvent[lane] = noteEvent;
+							if (noteEvent != null && !(noteEvent is LongNoteEvent) && !(noteEvent is LongNoteEndEvent))
+								lastPlayerEvent[lane] = noteEvent;
+
 							bmsEvent = noteEvent;
 						}
 					}
@@ -309,20 +352,16 @@ public class BMSChart : Chart
 					else if (channel.index == (int)BMSChannel.Type.BPM)
 					{
 						bmsEvent = new BPMEvent(channelPulse, value);
-						if (value != 0)
-							nextBpm = value;
+						nextBpm = value;
 					}
 					else if (channel.index == (int)BMSChannel.Type.BPMExtended)
 					{
 						double bpmValue = 0.0;
-						if (value != 0 && bpmObjects.TryGetValue(value, out bpmValue))
+						if (bpmObjects.TryGetValue(value, out bpmValue) && bpmValue != 0.0)
 						{
 							bmsEvent = new BPMEvent(channelPulse, bpmValue);
-							if (bpmValue != 0.0)
-							{
-								nextBpm = bpmValue;
-								bpmExValues.Add(channelPulse, bpmValue);
-							}
+							nextBpm = bpmValue;
+							bpmExValues.Add(channelPulse, bpmValue);
 						}
 					}
 					else if (channel.index == (int)BMSChannel.Type.Stop)
@@ -351,7 +390,7 @@ public class BMSChart : Chart
 					else
 						Log.Warning("Unsupported BMS channel: " + channel.index.ToString("X2"));
 					
-					if (value == 0 || bmsEvent == null)
+					if (bmsEvent == null)
 						continue;
 
 					measureEvents.Add(bmsEvent);
@@ -367,30 +406,23 @@ public class BMSChart : Chart
 					e1 is BPMEvent ? 1 : (e2 is BPMEvent ? -1 : 0)));
 			}));
 
-			foreach (var eventIter in measureEvents)
+			foreach (Event bmsEvent in measureEvents)
 			{
-				Event bmsEvent = eventIter;
-
-				if (bmsEvent is NoteEvent)
+				NoteEvent noteEvent = bmsEvent as NoteEvent;
+				if (noteEvent != null)
 				{
 					if (firstPlayerEvent == -1)
 						firstPlayerEvent = eventList.Count;
 
-					if (!(bmsEvent is KeySoundChangeEvent))
+					playerEventCount++;
+
+					if (noteEvent is LandmineEvent)
+						landmineCount++;
+					else
 					{
-						NoteEvent noteEvent = bmsEvent as NoteEvent;
-						int lane = noteEvent.lane;
-
-						playerEventCount++;
-
-						if (bmsEvent is LandmineEvent)
-							landmineCount++;
-						else
-						{
-							noteCount++;
-							if (noteEvent.isLongNote)
-								longNoteCount++;
-						}
+						noteCount++;
+						if (noteEvent is LongNoteEvent)
+							longNoteCount++;
 					}
 				}
 				else if (bmsEvent is BPMEvent)
@@ -412,9 +444,29 @@ public class BMSChart : Chart
 			}
 		}
 
-		// generate event timestamps
-		foreach (Event ev in eventList)
-			ev.timestamp = GetEventTimestamp(ev);
+		for (int i = 0; i < eventList.Count; i++)
+		{
+			Event bmsEvent = eventList[i];
+
+			// generate event timestamps
+			bmsEvent.timestamp = GetEventTimestamp(bmsEvent);
+
+			LongNoteEvent longNoteEvent = bmsEvent as LongNoteEvent;
+			if (longNoteEvent != null)
+			{
+				if (longNoteEvent.endNote == null)
+				{
+					Log.Warning("Longnote is missing end point");
+
+					// turn longnote into regular note
+					longNoteCount--;
+					eventList[i] = new NoteEvent(longNoteEvent.pulse, longNoteEvent.sound, longNoteEvent.lane);
+					eventList[i].timestamp = bmsEvent.timestamp;
+				}
+				else if (longNoteEvent.length <= 0)
+					Log.Warning("Invalid longnote length");
+			}
+		}
 		
 		if (eventList.Count > 0)
 			songLength = eventList[eventList.Count-1].timestamp;
