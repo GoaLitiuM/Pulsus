@@ -59,6 +59,11 @@ namespace Pulsus.Gameplay
 			pendingNoteScores.Add(new NoteScore(noteEvent, noteEvent.timestamp, NoteJudgeType.JudgePress));
 		}
 
+		public override void OnPlayerKeyLongEnd(LongNoteEndEvent noteEndEvent)
+		{
+			pendingNoteScores.Add(new NoteScore(noteEndEvent, noteEndEvent.timestamp, NoteJudgeType.JudgeRelease));
+		}
+
 		public override void OnBPM(BPMEvent bpmEvent)
 		{
 			base.OnBPM(bpmEvent);

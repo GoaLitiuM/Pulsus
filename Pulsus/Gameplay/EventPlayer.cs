@@ -183,8 +183,12 @@ namespace Pulsus.Gameplay
 				else if (noteEvent != null)
 				{
 					LandmineEvent landmineEvent = noteEvent as LandmineEvent;
+					LongNoteEndEvent noteEndEvent = noteEvent as LongNoteEndEvent;
+
 					if (landmineEvent != null)
 						OnLandmine(noteEvent);
+					else if (noteEndEvent != null)
+						OnPlayerKeyLongEnd(noteEndEvent);
 					else if (noteEvent.isLongNote)
 						OnPlayerKeyLong(noteEvent);
 					else
@@ -255,6 +259,11 @@ namespace Pulsus.Gameplay
 		}
 
 		public virtual void OnPlayerKeyLong(NoteEvent noteEvent)
+		{
+			
+		}
+
+		public virtual void OnPlayerKeyLongEnd(LongNoteEndEvent noteEndEvent)
 		{
 			
 		}

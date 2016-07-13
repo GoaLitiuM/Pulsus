@@ -1,8 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using Pulsus;
 
 namespace Pulsus.Gameplay
 {
@@ -166,58 +162,49 @@ namespace Pulsus.Gameplay
 			scoreExMax = chart.noteCount * 2;
 		}
 
-		public void OnKeyRelease(int channelIndex)
+		public void OnKeyRelease(int lane)
 		{
 			double hitTimestamp = judgeTime;
 
-			NoteScore closestNote = null;
-			double closestTimestamp = double.MaxValue;
-			foreach (NoteScore noteScore in pendingNoteScores)
-			{
-				if (noteScore.judgeType != NoteJudgeType.JudgeRelease)
-					continue;
-
-				if (noteScore.noteEvent.lane != channelIndex)
-					continue;
-
-				if (Math.Abs(noteScore.timestamp - hitTimestamp) >= closestTimestamp)
-					continue;
-			
-				closestNote = noteScore;
-				closestTimestamp = noteScore.timestamp;
-			}
-
+			NoteScore closestNote = GetClosestNote(hitTimestamp, lane, NoteJudgeType.JudgeRelease);
 			if (closestNote == null)
 				return;
 
 			JudgeNote(hitTimestamp, closestNote);
 		}
 
-		public void OnKeyPress(int channelIndex, int eventIndex = -1)
+		public void OnKeyPress(int lane)
 		{
 			double hitTimestamp = judgeTime;
 
-			NoteScore closestNote = null;
-			double closestDiff = double.MaxValue;
-			foreach (NoteScore noteScore in pendingNoteScores)
-			{
-				if (noteScore.judgeType != NoteJudgeType.JudgePress)
-					continue;
-
-				if (noteScore.noteEvent.lane != channelIndex)
-					continue;
-
-				if (Math.Abs(noteScore.timestamp - hitTimestamp) >= closestDiff)
-					continue;
-			
-				closestNote = noteScore;
-				closestDiff = Math.Abs(noteScore.timestamp - hitTimestamp);
-			}
-
+			NoteScore closestNote = GetClosestNote(hitTimestamp, lane, NoteJudgeType.JudgePress);
 			if (closestNote == null)
 				return;
 
 			JudgeNote(hitTimestamp, closestNote);
+		}
+
+		private NoteScore GetClosestNote(double hitTimestamp, int lane, NoteJudgeType judgeType)
+		{
+			NoteScore closestNote = null;
+			double closestDiff = double.MaxValue;
+			foreach (NoteScore noteScore in pendingNoteScores)
+			{
+				if (noteScore.judgeType != judgeType)
+					continue;
+
+				if (noteScore.noteEvent.lane != lane)
+					continue;
+
+				double diff = Math.Abs(noteScore.timestamp - hitTimestamp);
+				if (diff >= closestDiff)
+					continue;
+			
+				closestNote = noteScore;
+				closestDiff = diff;
+			}
+
+			return closestNote;
 		}
 
 		public override void JudgeNote(double hitTimestamp, NoteScore noteScore)
