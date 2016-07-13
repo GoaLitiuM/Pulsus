@@ -12,7 +12,6 @@ namespace Pulsus.Gameplay
 		Skin skin;
 
 		public bool autoplay;
-		bool[] laneActive = new bool[18];
 
 		public Player(AudioEngine audioEngine, Song song, BMSJudge judge, Skin skin)
 			: base(song)
@@ -22,38 +21,13 @@ namespace Pulsus.Gameplay
 			this.skin = skin;
 		}
 	
-		public override void UpdateSong()
-		{
-			base.UpdateSong();
-
-			if (skin != null)
-			{
-				for (int i = 0; i < laneActive.Length; i++)
-				{
-					if (!laneActive[i])
-						continue;
-
-					bool isScratchLane =
-						i == BMSChannel.GetLaneIndex((int)BMSChannel.KeyBMS.P1Scratch, song.chart.playerChannels, song.chart.players) ||
-						i == BMSChannel.GetLaneIndex((int)BMSChannel.KeyBMS.P2Scratch, song.chart.playerChannels, song.chart.players);
-
-					if (song.chart.hasTurntable && isScratchLane)
-					{
-						// only triggers key press effects once for turntable input
-					}
-					else
-						skin.OnKeyPress(i);
-				}
-			}
-		}
-
 		public override void OnPlayerKey(NoteEvent noteEvent)
 		{
 			if (!autoplay)
 				return;
 			
 			PressKey(noteEvent.lane, noteEvent.sound);
-			laneActive[noteEvent.lane] = false;
+			ReleaseKey(noteEvent.lane);
 		}
 
 		public override void OnPlayerKeyLong(LongNoteEvent noteEvent)
@@ -89,8 +63,6 @@ namespace Pulsus.Gameplay
 
 			if (judge != null)
 				judge.OnKeyPress(lane);
-
-			laneActive[lane] = true;
 
 			if (value == null)
 			{
@@ -156,7 +128,8 @@ namespace Pulsus.Gameplay
 
 		private void ReleaseKey(int lane, SoundObject value = null)
 		{
-			laneActive[lane] = false;
+			if (skin != null)
+				skin.OnKeyRelease(lane);
 
 			if (judge != null)
 				judge.OnKeyRelease(lane);

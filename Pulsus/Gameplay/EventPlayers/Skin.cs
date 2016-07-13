@@ -51,9 +51,11 @@ namespace Pulsus.Gameplay
 		int lastScrollEvent = 0;
 
 		const bool useInterpolation = true;
-		public const double pressKeyFadeTime = 0.12;
-		const double pressKeyMaxThreshold = pressKeyFadeTime * 0.6;
-		const double pressLaneFadeTime = 0.15;
+		const double pressKeyFadeInTime = 0;
+		const double pressKeyFadeOutTime = 0.12;
+		const double pressKeyMaxThreshold = pressKeyFadeOutTime * 0.6;
+		const double pressLaneFadeInTime = 0;
+		const double pressLaneFadeOutTime = 0.15;
 
 		int keyCount = 0;
 		int playerCount = 0;
@@ -63,7 +65,8 @@ namespace Pulsus.Gameplay
 		const bool hideMissedNotes = false;
 
 		private List<LaneObject> laneObjects = new List<LaneObject>(100);
-		private List<double> lastPressTime = new List<double>();
+		private double[] laneLastPress;
+		private int[] laneActive;
 
 		private Renderer renderer;
 		private BMSJudge judge;
@@ -174,8 +177,6 @@ namespace Pulsus.Gameplay
 			bgaLayer2 = new BGAImage(null, Color.Black, Color.Black);
 			bgaPoor = new BGAImage(null, Color.Black, Color.Black);
 
-			lastPressTime.AddRange(Enumerable.Repeat(double.MinValue, 10));
-
 			string skinPath = Path.Combine("Skins", SettingsManager.instance.skin, "gfx") + "/";
 			textureNote1 = new Texture2D(skinPath + "Note1.png");
 			textureNote2 = new Texture2D(skinPath + "Note2.png");
@@ -220,10 +221,15 @@ namespace Pulsus.Gameplay
 					laneWidths[i] = (i % 2 == 0) ? textureNote1.width : textureNote2.width;
 			}
 
-			noteHitFrames = new int[keyCount];
-			noteHitFrameTimers = new double[keyCount];
-			for (int i=0; i<keyCount; i++)
+			noteHitFrames = new int[playerCount * keyCount];
+			noteHitFrameTimers = new double[playerCount * keyCount];
+			laneLastPress = new double[playerCount * keyCount];
+			laneActive = new int[playerCount * keyCount];
+			for (int i = 0; i < playerCount * keyCount; i++)
+			{
 				noteHitFrames[i] = -1;
+				laneLastPress[i] = double.MinValue;
+			}
 
 			Settings settings = SettingsManager.instance;
 			baseScrollTime = settings.gameplay.scrollTime;
@@ -284,10 +290,14 @@ namespace Pulsus.Gameplay
 
 		public void OnKeyPress(int lane)
 		{
-			if (lane >= lastPressTime.Count)
-				return;
+			laneLastPress[lane] = timer;
+			laneActive[lane]++;
+		}
 
-			lastPressTime[lane] = timer;
+		public void OnKeyRelease(int lane)
+		{
+			laneLastPress[lane] = timer;
+			laneActive[lane]--;
 		}
 
 		public void OnNoteJudged(NoteScore noteScore)
@@ -531,26 +541,42 @@ namespace Pulsus.Gameplay
 				Int2 size = judgeFont.MeasureSize(judgeStr);
 				judgePosOffset = -size.x / 2;
 			}
-
 		}
 
 		private float GetLanePressFade(int lane)
 		{
-			double press = Math.Max(pressLaneFadeTime - (timer - lastPressTime[lane]), 0.0);
+			double fadeTime = pressLaneFadeOutTime;
+			double press = timer - laneLastPress[lane];
+			if (laneActive[lane] > 0 && lane != 0)
+				fadeTime = pressLaneFadeInTime;
 
-			float fade = (float)(press / pressLaneFadeTime);
-			return fade;
+			press = Math.Min(Math.Max(press, 0.0), fadeTime);
+
+			if (laneActive[lane] == 0)
+				press = fadeTime - press;
+			
+			if (fadeTime != 0.0f)
+				return (float)(press / fadeTime);
+			else
+				return 1.0f;
 		}
 
 		private float GetKeyPressFade(int lane)
 		{
-			double press = Math.Max(pressKeyFadeTime - (timer - lastPressTime[lane]), 0.0);
+			double fadeTime = pressKeyFadeOutTime;
+			double press = timer - laneLastPress[lane];
+			if (laneActive[lane] > 0 && lane != 0)
+				fadeTime = pressKeyFadeInTime;
+			
+			press = Math.Min(Math.Max(press, 0.0), fadeTime);
 
-			if (press > pressKeyMaxThreshold)
-				press = pressKeyFadeTime;
+			if (laneActive[lane] == 0)
+				press = fadeTime - press;
 
-			float fade = (float)(press / pressKeyFadeTime);
-			return fade;
+			if (fadeTime != 0.0f)
+				return (float)(press / fadeTime);
+			else
+				return 1.0f;
 		}
 
 		public void Render(double deltaTime)
@@ -776,7 +802,7 @@ namespace Pulsus.Gameplay
 				spriteRenderer.Draw(textureTTBG, ttPos, new Color(1.0f, 1.0f * fade, 1.0f * fade));
 
 				float rotationSpeed = (float)(deltaTime * Math.PI * 2 * 45.0 / 60.0);
-				if (1.0f - fade > 0.0f)
+				if (laneActive[0] != 0)
 					turntableRotation -= rotationSpeed; // player touches the TT
 				else
 					turntableRotation += rotationSpeed;
@@ -960,12 +986,8 @@ namespace Pulsus.Gameplay
 						int height = noteHeight + y - yEnd;
 
 						// long note activation effect
-						
-						if (Math.Abs(lastPressTime[lane] - timer) <= pressLaneFadeTime * 0.5)
-						{
-							if (laneObject.position <= 0)
-								texture = textureActive;
-						}
+						if (laneActive[lane] != 0 && laneObject.position <= 0)
+							texture = textureActive;
 
 						// dimm missed long notes
 						if (judge.HasJudged(longNote.endNote))
