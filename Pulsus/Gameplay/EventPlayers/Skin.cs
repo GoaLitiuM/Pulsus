@@ -954,17 +954,26 @@ namespace Pulsus.Gameplay
 					LongNoteEvent longNote = note as LongNoteEvent;
 					if (longNote != null) 
 					{
+						Color color = Color.White;
+
 						int yEnd = (int)Math.Round((1.0 - laneObject.positionEnd) * laneHeight);
 						int height = noteHeight + y - yEnd;
 
 						// long note activation effect
+						
 						if (Math.Abs(lastPressTime[lane] - timer) <= pressLaneFadeTime * 0.5)
+						{
 							if (laneObject.position <= 0)
 								texture = textureActive;
+						}
+
+						// dimm missed long notes
+						if (judge.HasJudged(longNote.endNote))
+							color *= 0.55f;
 
 						Int2 notePos = laneStartPos + new Int2(laneOffsetX, yEnd);
 						spriteRenderer.Draw(texture, new Rectangle(
-							notePos.x, notePos.y, noteWidth, height), Color.White);
+							notePos.x, notePos.y, noteWidth, height), color);
 					}
 					else // regular note
 					{
