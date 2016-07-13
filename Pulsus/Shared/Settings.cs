@@ -88,9 +88,28 @@ namespace Pulsus
 
 	public class InputSettings
 	{
+		public string default5k = "5k";
+		public string default7k = "7k";
+		public string default9k = "9k";
+
 		public Dictionary<string, InputLayout> layouts = new Dictionary<string, InputLayout>
 		{
-			["general"] = new InputLayoutTT
+			["general"] = new InputLayout
+			(
+				new Tuple<string, InputType[]>("exit", new InputType[]
+				{
+					new InputKey(SDL.SDL_Scancode.SDL_SCANCODE_ESCAPE),
+				}),
+				new Tuple<string, InputType[]>("scrollSpeedInc", new InputType[]
+				{
+					new InputKey(SDL.SDL_Scancode.SDL_SCANCODE_KP_PLUS),
+				}),
+				new Tuple<string, InputType[]>("scrollSpeedDec", new InputType[]
+				{
+					new InputKey(SDL.SDL_Scancode.SDL_SCANCODE_KP_MINUS),
+				})
+			),
+			["5k"] = new InputLayoutTT
 			(
 				new InputType[] // turntable
 				{
@@ -99,7 +118,47 @@ namespace Pulsus
 					new InputJoystick(JoyInput.Axis1Up),
 					new InputJoystick(JoyInput.Axis1Down),
 				},
-				new InputType[][] // keys
+				new InputType[][] // keyboard layout: shift + zx_,.
+				{
+					new InputType[]
+					{
+						new InputKey(SDL.SDL_Scancode.SDL_SCANCODE_Z),
+						new InputJoystick(JoyInput.Button4),
+					},
+					new InputType[]
+					{
+						new InputKey(SDL.SDL_Scancode.SDL_SCANCODE_X),
+						new InputJoystick(JoyInput.Button7),
+					},
+					new InputType[]
+					{
+						new InputKey(SDL.SDL_Scancode.SDL_SCANCODE_C),
+						new InputKey(SDL.SDL_Scancode.SDL_SCANCODE_SPACE),
+						new InputKey(SDL.SDL_Scancode.SDL_SCANCODE_M),
+						new InputJoystick(JoyInput.Button3),
+					},
+					new InputType[]
+					{
+						new InputKey(SDL.SDL_Scancode.SDL_SCANCODE_COMMA),
+						new InputJoystick(JoyInput.Button8),
+					},
+					new InputType[]
+					{
+						new InputKey(SDL.SDL_Scancode.SDL_SCANCODE_PERIOD),
+						new InputJoystick(JoyInput.Button2),
+					},
+				}
+			),
+			["7k"] = new InputLayoutTT
+			(
+				new InputType[] // turntable
+				{
+					new InputKey(SDL.SDL_Scancode.SDL_SCANCODE_LSHIFT),
+					new InputKey(SDL.SDL_Scancode.SDL_SCANCODE_RSHIFT),
+					new InputJoystick(JoyInput.Axis1Up),
+					new InputJoystick(JoyInput.Axis1Down),
+				},
+				new InputType[][] // keyboard layout: shift + zxc_,.-
 				{
 					new InputType[]
 					{
@@ -137,59 +196,59 @@ namespace Pulsus
 						new InputKey(SDL.SDL_Scancode.SDL_SCANCODE_SLASH),
 						new InputJoystick(JoyInput.Axis1Left),
 					},
-				},
-				new Tuple<string, InputType[]>("exit", new InputType[]
-				{
-					new InputKey(SDL.SDL_Scancode.SDL_SCANCODE_ESCAPE),
-				}),
-				new Tuple<string, InputType[]>("scrollSpeedInc", new InputType[]
-				{
-					new InputKey(SDL.SDL_Scancode.SDL_SCANCODE_KP_PLUS),
-				}),
-				new Tuple<string, InputType[]>("scrollSpeedDec", new InputType[]
-				{
-					new InputKey(SDL.SDL_Scancode.SDL_SCANCODE_KP_MINUS),
-				})
-			),
-			["5k"] = new InputLayoutTT
-			(
-				new InputType[] { },
-				new InputType[][]
-				{
-					new InputType[] { },
-					new InputType[] { },
-					new InputType[] { },
-					new InputType[] { },
-					new InputType[] { },
-				}
-			),
-			["7k"] = new InputLayoutTT
-			(
-				new InputType[] { },
-				new InputType[][]
-				{
-					new InputType[] { },
-					new InputType[] { },
-					new InputType[] { },
-					new InputType[] { },
-					new InputType[] { },
-					new InputType[] { },
-					new InputType[] { },
 				}
 			),
 			["9k"] = new InputLayoutKeys
 			(
-				new InputType[][]
+				new InputType[][]	// keyboard layout: <zxc_m,.-
 				{
-					new InputType[] { },
-					new InputType[] { },
-					new InputType[] { },
-					new InputType[] { },
-					new InputType[] { },
-					new InputType[] { },
-					new InputType[] { },
-					new InputType[] { },
-					new InputType[] { },
+					new InputType[]
+					{
+						new InputKey(SDL.SDL_Scancode.SDL_SCANCODE_NONUSBACKSLASH),
+						new InputJoystick(JoyInput.Button1),
+					},
+					new InputType[]
+					{
+						new InputKey(SDL.SDL_Scancode.SDL_SCANCODE_Z),
+						new InputJoystick(JoyInput.Button2),
+					},
+					new InputType[]
+					{
+						new InputKey(SDL.SDL_Scancode.SDL_SCANCODE_X),
+						new InputJoystick(JoyInput.Button8),
+					},
+					new InputType[]
+					{
+						new InputKey(SDL.SDL_Scancode.SDL_SCANCODE_C),
+						new InputJoystick(JoyInput.Button3),
+					},
+					new InputType[]
+					{
+						new InputKey(SDL.SDL_Scancode.SDL_SCANCODE_V),
+						new InputKey(SDL.SDL_Scancode.SDL_SCANCODE_SPACE),
+						new InputKey(SDL.SDL_Scancode.SDL_SCANCODE_N),
+						new InputJoystick(JoyInput.Button7),
+					},
+					new InputType[]
+					{
+						new InputKey(SDL.SDL_Scancode.SDL_SCANCODE_M),
+						new InputJoystick(JoyInput.Button4),
+					},
+					new InputType[]
+					{
+						new InputKey(SDL.SDL_Scancode.SDL_SCANCODE_COMMA),
+						new InputJoystick(JoyInput.Button6),
+					},
+					new InputType[]
+					{
+						new InputKey(SDL.SDL_Scancode.SDL_SCANCODE_PERIOD),
+						new InputJoystick(JoyInput.Axis1Up),
+					},
+					new InputType[]
+					{
+						new InputKey(SDL.SDL_Scancode.SDL_SCANCODE_SLASH),
+						new InputJoystick(JoyInput.Button5),
+					},
 				}
 			),
 		};

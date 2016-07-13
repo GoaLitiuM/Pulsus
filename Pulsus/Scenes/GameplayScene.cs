@@ -83,11 +83,11 @@ namespace Pulsus
 			InputLayout generalLayout = settings.input.layouts["general"];
 			int laneCount = chart.playerChannels;
 			if (laneCount == 6)
-				settings.input.layouts.TryGetValue("5k", out keyLayout);
+				settings.input.layouts.TryGetValue(settings.input.default5k, out keyLayout);
 			if (laneCount == 8 || keyLayout == null)
-				settings.input.layouts.TryGetValue("7k", out keyLayout);
+				settings.input.layouts.TryGetValue(settings.input.default7k, out keyLayout);
 			if (laneCount == 9 || keyLayout == null)
-				settings.input.layouts.TryGetValue("9k", out keyLayout);
+				settings.input.layouts.TryGetValue(settings.input.default9k, out keyLayout);
 
 			InputLayout layout = null;
 			if (keyLayout != null)
