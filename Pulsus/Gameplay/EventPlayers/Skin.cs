@@ -374,6 +374,9 @@ namespace Pulsus.Gameplay
 		{
 			laneObjects.Clear();
 
+			if (!playing)
+				return;
+
 			int activeLongNote = int.MaxValue;
 			int firstVisibleNote = lastScrollEvent;
 			double laneBpm = bpm;
