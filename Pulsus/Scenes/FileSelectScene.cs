@@ -50,6 +50,8 @@ namespace Pulsus
 			// file dialog messes up the current directory path under Linux systems
 			Environment.CurrentDirectory = oldCurrentDirectory;
 
+			game.window.Focus();
+
 			if (result != DialogResult.Ok)
 			{
 				active = false;

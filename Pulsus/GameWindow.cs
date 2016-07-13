@@ -8,7 +8,7 @@ namespace Pulsus
 	{
 		public bool closing;
 
-		private IntPtr handle;
+		private IntPtr handle; // SDL_Window
 
 		public string Title
 		{
@@ -65,10 +65,7 @@ namespace Pulsus
 
 			// Windows only: spawning settings window early may cause
 			// the game window to not appear on foreground.
-
-			SDL.SDL_SysWMinfo wmi = GetPlatformWindowInfo();
-			if (wmi.subsystem == SDL.SDL_SYSWM_TYPE.SDL_SYSWM_WINDOWS)
-				SetForegroundWindow(wmi.info.win.window); 
+			Focus();
 
 			Title = title;
 		}
@@ -119,6 +116,18 @@ namespace Pulsus
 		public void Show()
 		{
 			SDL.SDL_ShowWindow(handle);
+		}
+
+		public void Focus()
+		{
+			SDL.SDL_SysWMinfo wmi = GetPlatformWindowInfo();
+			if (wmi.subsystem == SDL.SDL_SYSWM_TYPE.SDL_SYSWM_WINDOWS)
+			{
+				// SDL_RaiseWindow doesn't seem to work on Windows at all
+				SetForegroundWindow(wmi.info.win.window);
+			}
+			else
+				SDL.SDL_RaiseWindow(handle);
 		}
 
 		[DllImport("user32.dll")]
