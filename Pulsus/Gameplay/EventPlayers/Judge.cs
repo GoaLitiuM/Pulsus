@@ -43,6 +43,12 @@ namespace Pulsus.Gameplay
 			}
 		}
 
+		public override void OnSongEnd()
+		{
+			// prevent judge from stopping prematurely, as the processAheadTime
+			// affects the time how much ahead the judge is from other players.
+		}
+
 		public override void OnPlayerKey(int eventIndex, NoteEvent value)
 		{
 			pendingNoteScores.Add(new NoteScore(value, value.timestamp, NoteJudgeType.JudgePress));
