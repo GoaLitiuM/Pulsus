@@ -796,6 +796,10 @@ namespace Pulsus.Gameplay
 				firstKeyPos = ttPos;
 				laneX = textureTTBG.width + 2;
 			}
+			else if (keyCount == 9)
+			{
+				firstKeyPos += new Int2(38, 8);
+			}
 			else
 				throw new NotImplementedException("Skin layout for " + keyCount.ToString() + " lanes not defined");
 

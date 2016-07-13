@@ -6,7 +6,7 @@ Features
 ---
 - Supports following file formats (not completely):
  - bms/bme/bml/pms, RDM-LN, MGQ-LN
-- Single-play support for 5key and 7key modes, DP and 9key are not supported at the moment
+- Single-Play support for 5key, 7key and 9key modes, Double-Play is not supported at the moment
 - Basic gameplay and judge using similar timing gates from LR2
 - Engine Framework:
  - Window ([SDL2](https://www.libsdl.org/) + [SDL2-CS](https://github.com/flibitijibibo/SDL2-CS))
