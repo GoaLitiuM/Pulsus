@@ -282,10 +282,11 @@ public class BMSChart : Chart
 										NoteEvent lastEvent = lastPlayerEvent[lane];
 										if (lastEvent != null)
 										{
+											lastPlayerEvent[lane] = null;
 											lastLongNote = new LongNoteEvent(lastEvent.pulse, lastEvent.sound, lastEvent.lane, null);
 
 											bool foundNote = false;
-											for (int j = measureEvents.Count-1; j >= 0; j--)
+											for (int j = measureEvents.Count - 1; j >= 0; j--)
 											{
 												if (measureEvents[j] != lastEvent)
 													continue;
@@ -296,7 +297,7 @@ public class BMSChart : Chart
 											}
 											if (!foundNote)
 											{
-												for (int j = eventList.Count-1; j >= 0; j--)
+												for (int j = eventList.Count - 1; j >= 0; j--)
 												{
 													if (eventList[j] != lastEvent)
 														continue;
@@ -310,6 +311,8 @@ public class BMSChart : Chart
 											if (!foundNote)
 												throw new ApplicationException("Could not find long note starting point");
 										}
+										else
+											noteEvent = new NoteEvent(channelPulse, sound, lane);
 									}
 									else
 										lastLNEvent.TryGetValue(channel.index, out lastLongNote);
@@ -339,10 +342,10 @@ public class BMSChart : Chart
 								}
 							}
 							else
+							{
 								noteEvent = new NoteEvent(channelPulse, sound, lane);
-
-							if (noteEvent != null && !(noteEvent is LongNoteEvent) && !(noteEvent is LongNoteEndEvent))
 								lastPlayerEvent[lane] = noteEvent;
+							}
 
 							bmsEvent = noteEvent;
 						}
