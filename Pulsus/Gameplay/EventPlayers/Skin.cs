@@ -591,6 +591,8 @@ namespace Pulsus.Gameplay
 			RenderNoteHit(deltaTime, laneStartPos + new Int2(0, laneHeight));
 			RenderGauge(deltaTime, laneStartPos + new Int2(-9, laneHeight + 94));
 
+			spriteRenderer.DrawText(Game.debugFont, "Scroll: " + SettingsManager.instance.gameplay.scrollTime.ToString(), new Int2(10, 720 - Game.debugFont.pointSize - 10), Color.White);
+
 			Int2 textPos = new Int2(390, 440);
 
 			spriteRenderer.DrawText(Game.debugFont, "BPM: " + bpm.ToString(), textPos + new Int2(0, 720 - (Game.debugFont.pointSize * 2) - 450), Color.White);
