@@ -166,11 +166,6 @@ namespace Pulsus.Gameplay
 			scoreExMax = chart.noteCount * 2;
 		}
 
-		public override void OnPlayerKeyChange(int eventIndex, KeySoundChangeEvent value)
-		{
-
-		}
-
 		public void OnKeyRelease(int channelIndex)
 		{
 			double hitTimestamp = judgeTime;

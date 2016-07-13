@@ -12,20 +12,20 @@ namespace Pulsus.Gameplay
 			this.audioEngine = audioEngine;
 		}
 
-		public override void OnBGM(int eventIndex, SoundEvent value)
+		public override void OnBGM(SoundEvent soundEvent)
 		{
-			if (value.sound == null)
+			if (soundEvent.sound == null)
 				return;
 
-			if (value.sound.sound != null)
+			if (soundEvent.sound.sound != null)
 			{
 				if (realtime)
-					audioEngine.Play(value.sound.sound, (float)chart.volume);
+					audioEngine.Play(soundEvent.sound.sound, (float)chart.volume);
 				else
-					audioEngine.PlayScheduled(value.timestamp, value.sound.sound, (float)chart.volume);
+					audioEngine.PlayScheduled(soundEvent.timestamp, soundEvent.sound.sound, (float)chart.volume);
 			}
 			else
-				Log.Warning("Failed to play sound " + value.sound.name);
+				Log.Warning("Failed to play sound " + soundEvent.sound.name);
 		}
 	}
 }

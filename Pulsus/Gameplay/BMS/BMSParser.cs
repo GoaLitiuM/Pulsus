@@ -457,7 +457,7 @@ public class BMSParser : ChartParser
 		string filepath = line.Substring(pathPos+1);
 		int index = Utility.FromBase36(base36);
 
-		data.bitmapObjects[index] = new BGAObject(filepath, base36);
+		data.bgaObjects[index] = new BGAObject(filepath, base36);
 	}
 
 	private static void OnBPM(BMSChart data, string line)

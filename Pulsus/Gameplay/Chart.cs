@@ -34,7 +34,7 @@ namespace Pulsus.Gameplay
 		public List<Tuple<int, int, int>> measurePositions = new List<Tuple<int, int, int>>();
 
 		public Dictionary<int, SoundObject> soundObjects = new Dictionary<int, SoundObject>();
-		public Dictionary<int, BGAObject> bitmapObjects = new Dictionary<int, BGAObject>();
+		public Dictionary<int, BGAObject> bgaObjects = new Dictionary<int, BGAObject>();
 		public Dictionary<int, double> bpmObjects = new Dictionary<int, double>();
 		public Dictionary<int, int> stopObjects = new Dictionary<int, int>();
 		public Dictionary<int, double> measureLengthObjects = new Dictionary<int, double>();
@@ -44,11 +44,11 @@ namespace Pulsus.Gameplay
 
 		public void Dispose()
 		{
-			foreach (BGAObject bitmap in bitmapObjects.Values)
-				bitmap.Dispose();
+			foreach (BGAObject bga in bgaObjects.Values)
+				bga.Dispose();
 
 			soundObjects.Clear();
-			bitmapObjects.Clear();
+			bgaObjects.Clear();
 		}
 
 		public double GetTimeFromPulse(int pulse)

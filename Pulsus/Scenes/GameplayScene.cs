@@ -69,7 +69,7 @@ namespace Pulsus
 			playerGraph.SetStartPosition(startPulse);
 			playerGraph.AdjustTimeline(-adjustTimeline);
 
-			// load sound and bitmap objects
+			// load sound and bga objects
 			if (settings.songPreload)
 				loader.PreloadAll();
 			else

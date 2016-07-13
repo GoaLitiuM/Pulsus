@@ -50,20 +50,20 @@ namespace Pulsus.Gameplay
 			}
 		}
 
-		public override void OnPlayerKey(int eventIndex, NoteEvent value)
+		public override void OnPlayerKey(NoteEvent noteEvent)
 		{
 			if (!autoplay)
 				return;
 			
-			PressKey(value.lane, value.sound, 0);
+			PressKey(noteEvent.lane, noteEvent.sound, 0);
 		}
 
-		public override void OnPlayerKeyLong(int eventIndex, NoteEvent value)
+		public override void OnPlayerKeyLong(NoteEvent noteEvent)
 		{
 			if (!autoplay)
 				return;
 
-			PressKey(value.lane, value.sound, value.length);
+			PressKey(noteEvent.lane, noteEvent.sound, noteEvent.length);
 		}
 
 		public void PlayerPressKey(int lane)

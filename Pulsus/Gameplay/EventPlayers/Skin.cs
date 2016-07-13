@@ -149,7 +149,7 @@ namespace Pulsus.Gameplay
 				this.transparent = transparent;
 			}
 
-			public BGAObject bitmap;
+			public BGAObject bga;
 			public Texture2D texture;
 			public Color color;
 			public Color transparent;
@@ -314,47 +314,44 @@ namespace Pulsus.Gameplay
 			}
 		}
 		
-		public override void OnBGA(int eventIndex, BGAEvent value)
+		public override void OnBGA(BGAEvent bgaEvent)
 		{
-			if (value.bitmap == null)
+			if (bgaEvent.bga == null)
 				return;
 
 			if (disableBGA)
 				return;
 
-			//if (value.type != BGAEvent.BGAType.BGA)
-			//	return;
-
-			BGAObject bitmap = value.bitmap;
+			BGAObject bga = bgaEvent.bga;
 			Texture2D texture = null;
 			Color color = Color.Black;
 
-			if (bitmap != null)
+			if (bga != null)
 			{
-				texture = bitmap.texture;
+				texture = bga.texture;
 
-				if (bitmap.texture != null)
+				if (bga.texture != null)
 					color = Color.White;
 				else
-					Log.Warning("Failed to show bitmap: " + value.bitmap.name);
+					Log.Warning("Failed to show BGA object: " + bgaEvent.bga.name);
 
-				bitmap.Start();
+				bga.Start();
 			}
 
-			if (value.type == BGAEvent.BGAType.BGA)
+			if (bgaEvent.type == BGAEvent.BGAType.BGA)
 			{
-				bgaBase.bitmap = bitmap;
-				bgaBase.texture = bitmap.texture;
+				bgaBase.bga = bga;
+				bgaBase.texture = bga.texture;
 				bgaBase.color = color;
 			}
-			else if (value.type == BGAEvent.BGAType.Poor)
+			else if (bgaEvent.type == BGAEvent.BGAType.Poor)
 			{
-				bgaPoor.texture = bitmap.texture;
+				bgaPoor.texture = bga.texture;
 				bgaPoor.color = color;
 			}
-			else if (value.type == BGAEvent.BGAType.Layer1)
+			else if (bgaEvent.type == BGAEvent.BGAType.Layer1)
 			{
-				bgaLayer1.texture = bitmap.texture;
+				bgaLayer1.texture = bga.texture;
 				bgaLayer1.color = color;
 			}
 
@@ -364,8 +361,8 @@ namespace Pulsus.Gameplay
 		public override void Update(double deltaTime)
 		{
 			timer += deltaTime;
-			if (bgaBase.bitmap != null)
-				bgaBase.bitmap.Update(deltaTime);
+			if (bgaBase.bga != null)
+				bgaBase.bga.Update(deltaTime);
 
 			base.Update(deltaTime);
 		}

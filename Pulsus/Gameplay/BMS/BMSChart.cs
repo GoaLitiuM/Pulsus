@@ -337,8 +337,8 @@ public class BMSChart : Chart
 						channel.index == (int)BMSChannel.Type.BGALayer ||
 						channel.index == (int)BMSChannel.Type.BGAPoor)
 					{
-						BGAObject bitmap = null;
-						bitmapObjects.TryGetValue(value, out bitmap);
+						BGAObject bga = null;
+						bgaObjects.TryGetValue(value, out bga);
 
 						BGAEvent.BGAType type = BGAEvent.BGAType.BGA;
 						if (channel.index == (int)BMSChannel.Type.BGALayer)
@@ -346,7 +346,7 @@ public class BMSChart : Chart
 						else if (channel.index == (int)BMSChannel.Type.BGAPoor)
 							type = BGAEvent.BGAType.Poor;
 
-						bmsEvent = new BGAEvent(channelPulse, bitmap, type);
+						bmsEvent = new BGAEvent(channelPulse, bga, type);
 					}
 					else
 						Log.Warning("Unsupported BMS channel: " + channel.index.ToString("X2"));

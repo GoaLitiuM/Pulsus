@@ -8,10 +8,10 @@ namespace Pulsus.Gameplay
 		Thread loadThread;
 
 		Queue<SoundObject> soundQueue = new Queue<SoundObject>();
-		Queue<BGAObject> bitmapQueue = new Queue<BGAObject>();
+		Queue<BGAObject> bgaQueue = new Queue<BGAObject>();
 
 		HashSet<SoundObject> soundUniques = new HashSet<SoundObject>();
-		HashSet<BGAObject> bitmapUniques = new HashSet<BGAObject>();
+		HashSet<BGAObject> bgaUniques = new HashSet<BGAObject>();
 
 		bool queueObjects;
 		const double preloadAheadTime = 20.0;
@@ -35,9 +35,9 @@ namespace Pulsus.Gameplay
 				loadThread.Abort();
 
 			soundQueue.Clear();
-			bitmapQueue.Clear();
+			bgaQueue.Clear();
 			soundUniques.Clear();
-			bitmapUniques.Clear();
+			bgaUniques.Clear();
 		}
 
 		public void Preload()
@@ -72,9 +72,9 @@ namespace Pulsus.Gameplay
 				bool success = value.Load(song.path);
 			}
 
-			while (bitmapQueue.Count > 0)
+			while (bgaQueue.Count > 0)
 			{
-				BGAObject value = bitmapQueue.Dequeue();
+				BGAObject value = bgaQueue.Dequeue();
 				bool success = value.Load(song.path);
 			}
 		}
@@ -104,25 +104,25 @@ namespace Pulsus.Gameplay
 			}
 		}
 
-		public override void OnSoundObject(int eventIndex, SoundEvent value)
+		public override void OnSoundObject(SoundEvent soundEvent)
 		{
 			if (!queueObjects)
 				return;
 
-			if (value.sound == null)
+			if (soundEvent.sound == null)
 				return;
 
-			if (value.sound.loaded || soundUniques.Contains(value.sound))
+			if (soundEvent.sound.loaded || soundUniques.Contains(soundEvent.sound))
 				return;
 
-			soundUniques.Add(value.sound);
+			soundUniques.Add(soundEvent.sound);
 			lock (soundQueue)
 			{
-				soundQueue.Enqueue(value.sound);
+				soundQueue.Enqueue(soundEvent.sound);
 			}
 		}
 
-		public override void OnImageObject(int eventIndex, BGAEvent value)
+		public override void OnBGAObject(BGAEvent bgaEvent)
 		{
 			if (disableBGA)
 				return;
@@ -130,16 +130,16 @@ namespace Pulsus.Gameplay
 			if (!queueObjects)
 				return;
 
-			if (value.bitmap == null)
+			if (bgaEvent.bga == null)
 				return;
 
-			if (value.bitmap.loaded || bitmapUniques.Contains(value.bitmap))
+			if (bgaEvent.bga.loaded || bgaUniques.Contains(bgaEvent.bga))
 				return;
 
-			bitmapUniques.Add(value.bitmap);
-			lock (bitmapQueue)
+			bgaUniques.Add(bgaEvent.bga);
+			lock (bgaQueue)
 			{
-				bitmapQueue.Enqueue(value.bitmap);
+				bgaQueue.Enqueue(bgaEvent.bga);
 			}
 		}
 
@@ -168,16 +168,16 @@ namespace Pulsus.Gameplay
 
 				{
 					int count = 0;
-					lock (bitmapQueue)
-						count = bitmapQueue.Count;
+					lock (bgaQueue)
+						count = bgaQueue.Count;
 
 					while (count > 0)
 					{
 						BGAObject value = null;
-						lock (bitmapQueue)
+						lock (bgaQueue)
 						{
-							value = bitmapQueue.Dequeue();
-							count = bitmapQueue.Count;
+							value = bgaQueue.Dequeue();
+							count = bgaQueue.Count;
 						}
 
 						if (!value.loaded)

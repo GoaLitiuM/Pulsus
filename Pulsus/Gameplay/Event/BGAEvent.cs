@@ -5,13 +5,13 @@ namespace Pulsus.Gameplay
 	[DebuggerDisplay("{ToString()}")]
 	public class BGAEvent : Event
 	{
-		public BGAObject bitmap;
+		public BGAObject bga;
 		public BGAType type;
 
-		public BGAEvent(int pulse, BGAObject bitmap, BGAType type = BGAType.BGA)
+		public BGAEvent(int pulse, BGAObject bga, BGAType type = BGAType.BGA)
 			: base(pulse)
 		{
-			this.bitmap = bitmap;
+			this.bga = bga;
 			this.type = type;
 		}
 

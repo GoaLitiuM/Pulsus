@@ -257,7 +257,6 @@ namespace Pulsus.Graphics
 				if (!File.Exists(texturePath))
 					break;
 
-				//Texture2D texture = FFmpegHelper.TextureFromFile(texturePath);
 				Texture2D texture = new Texture2D(texturePath);
 				if (texture == null)
 					break;

@@ -49,19 +49,20 @@ namespace Pulsus.Gameplay
 			// affects the time how much ahead the judge is from other players.
 		}
 
-		public override void OnPlayerKey(int eventIndex, NoteEvent value)
+		public override void OnPlayerKey(NoteEvent noteEvent)
 		{
-			pendingNoteScores.Add(new NoteScore(value, value.timestamp, NoteJudgeType.JudgePress));
+			pendingNoteScores.Add(new NoteScore(noteEvent, noteEvent.timestamp, NoteJudgeType.JudgePress));
 		}
 
-		public override void OnPlayerKeyLong(int eventIndex, NoteEvent value)
+		public override void OnPlayerKeyLong(NoteEvent noteEvent)
 		{
-			pendingNoteScores.Add(new NoteScore(value, value.timestamp, NoteJudgeType.JudgePress));
+			pendingNoteScores.Add(new NoteScore(noteEvent, noteEvent.timestamp, NoteJudgeType.JudgePress));
 		}
 
-		public override void OnBPM(int eventIndex, BPMEvent value)
+		public override void OnBPM(BPMEvent bpmEvent)
 		{
-			base.OnBPM(eventIndex, value);
+			base.OnBPM(bpmEvent);
+
 			if (nextBpm < 0)
 				nextBpm = -nextBpm;
 		}

@@ -167,40 +167,40 @@ namespace Pulsus.Gameplay
 			Event currentEvent = eventList[index];
 
 			if (currentEvent is MeasureLengthEvent)
-				OnMeasureLength(index, currentEvent as MeasureLengthEvent);
+				OnMeasureLength(currentEvent as MeasureLengthEvent);
 			else if (currentEvent is BPMEvent)
-				OnBPM(index, currentEvent as BPMEvent);
+				OnBPM(currentEvent as BPMEvent);
 			else if (currentEvent is SoundEvent)
 			{
 				SoundEvent soundEvent = currentEvent as SoundEvent;
 				NoteEvent noteEvent = soundEvent as NoteEvent;
 				KeySoundChangeEvent keySoundEvent = soundEvent as KeySoundChangeEvent;
 
-				OnSoundObject(index, soundEvent);
+				OnSoundObject(soundEvent);
 
 				if (keySoundEvent != null)
-					OnPlayerKeyChange(index, keySoundEvent);
+					OnPlayerKeyChange(keySoundEvent);
 				else if (noteEvent != null)
 				{
 					LandmineEvent landmineEvent = noteEvent as LandmineEvent;
 					if (landmineEvent != null)
-						OnLandmine(index, noteEvent);
+						OnLandmine(noteEvent);
 					else if (noteEvent.isLongNote)
-						OnPlayerKeyLong(index, noteEvent);
+						OnPlayerKeyLong(noteEvent);
 					else
-						OnPlayerKey(index, noteEvent);
+						OnPlayerKey(noteEvent);
 				}
 				else
-					OnBGM(index, soundEvent);
+					OnBGM(soundEvent);
 			}		
 			else if (currentEvent is StopEvent)
-				OnStop(index, currentEvent as StopEvent);
+				OnStop(currentEvent as StopEvent);
 			else if (currentEvent is BGAEvent)
 			{
 				BGAEvent bgaEvent = currentEvent as BGAEvent;
 
-				OnImageObject(index, bgaEvent);
-				OnBGA(index, bgaEvent);
+				OnBGAObject(bgaEvent);
+				OnBGA(bgaEvent);
 			}
 		}
 
@@ -222,65 +222,60 @@ namespace Pulsus.Gameplay
 				StopPlayer(false);
 		}
 
-		public virtual void OnSoundObject(int eventIndex, SoundEvent value)
+		public virtual void OnSoundObject(SoundEvent soundEvent)
 		{
 			if (!playing)
 				return;
 		}
 
-		public virtual void OnImageObject(int eventIndex, BGAEvent value)
+		public virtual void OnBGAObject(BGAEvent bgaEvent)
 		{
 			if (!playing)
 				return;
 		}
 
-		public virtual void OnMeasureLength(int eventIndex, MeasureLengthEvent value)
+		public virtual void OnMeasureLength(MeasureLengthEvent measureLengthEvent)
 		{
 
 		}
 
-		public virtual void OnBPM(int eventIndex, BPMEvent value)
+		public virtual void OnBPM(BPMEvent bpmEvent)
 		{
-			nextBpm = value.bpm;
+			nextBpm = bpmEvent.bpm;
 		}
 
-		public virtual void OnBGM(int eventIndex, SoundEvent value)
-		{
-
-		}
-
-		public virtual void OnPlayerKey(int eventIndex, NoteEvent value)
+		public virtual void OnBGM(SoundEvent bgmEvent)
 		{
 
 		}
 
-		public virtual void OnPlayerKeyLong(int eventIndex, NoteEvent value)
+		public virtual void OnPlayerKey(NoteEvent noteEvent)
 		{
-			
+
 		}
 
-		public virtual void OnLandmine(int eventIndex, NoteEvent value)
+		public virtual void OnPlayerKeyLong(NoteEvent noteEvent)
 		{
 			
 		}
 
-		public virtual void OnPlayerKeyChange(int eventIndex, KeySoundChangeEvent value)
+		public virtual void OnLandmine(NoteEvent noteEvent)
+		{
+			
+		}
+
+		public virtual void OnPlayerKeyChange(KeySoundChangeEvent keySoundChangeEvent)
 		{
 
 		}
 
-		public virtual void OnStop(int eventIndex, StopEvent value)
+		public virtual void OnStop(StopEvent stopEvent)
 		{
-			stopPulse = value.stopPulse;
-			stopLeft = (double)value.stopPulse / resolution * 60.0 / bpm;
+			stopPulse = stopEvent.stopPulse;
+			stopLeft = (double)stopEvent.stopPulse / resolution * 60.0 / bpm;
 		}
 
-		public virtual void OnStopEnd(int eventIndex, StopEvent value)
-		{
-
-		}
-
-		public virtual void OnBGA(int eventIndex, BGAEvent value)
+		public virtual void OnBGA(BGAEvent bgaEvent)
 		{
 
 		}

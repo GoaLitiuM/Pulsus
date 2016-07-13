@@ -70,7 +70,7 @@ namespace Pulsus.Gameplay
 			path = Utility.FindRealFile(Path.Combine(basePath, path), lookupPaths, lookupExtensions);
 			if (!File.Exists(path))
 			{
-				Log.Warning("Bitmap not found: " + path);
+				Log.Warning("BGA file not found: " + path);
 				return false;
 			}
 
@@ -106,7 +106,7 @@ namespace Pulsus.Gameplay
 					video.Dispose();
 				video = null;
 
-				Log.Error("Failed to load bitmap object " + Path.GetFileName(path));
+				Log.Error("Failed to load bga object " + Path.GetFileName(path));
 				return false;
 			}
 
