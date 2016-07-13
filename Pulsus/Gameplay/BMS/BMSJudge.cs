@@ -223,14 +223,17 @@ namespace Pulsus.Gameplay
 
 			bool fast = difference < 0;
 			bool judged = true;
+			bool release = false;
 
 			if (Math.Abs(difference) <= timingWindow[0])
 			{
+				// P.Great
 				combo++;
 				scorePGreatCount++;
 			}
 			else if (Math.Abs(difference) <= timingWindow[1])
 			{
+				// Great
 				if (fast)
 					delayFastCount++;
 				else
@@ -241,6 +244,7 @@ namespace Pulsus.Gameplay
 			}
 			else if (Math.Abs(difference) <= timingWindow[2])
 			{
+				// Good
 				if (fast)
 					delayFastCount2++;
 				else
@@ -251,6 +255,7 @@ namespace Pulsus.Gameplay
 			}
 			else if (Math.Abs(difference) <= timingWindow[3])
 			{
+				// Bad
 				if (fast)
 					delayFastCount2++;
 				else
@@ -259,24 +264,31 @@ namespace Pulsus.Gameplay
 				combo = 0;
 				scoreBadCount++;
 			}
-			else if (difference > timingWindow[4])
-			{
-				combo = 0;
-				scorePoorCount++;
-			}
-			else if (difference > -timingWindow[5] && difference <= -timingWindow[4])
-			{
-				// Early miss, same as miss but no combo reset
-				scorePoorCount++;
-				judged = false;
-			}
 			else
 			{
-				// Long note early release
-				combo = 0;
-				scorePoorCount++;
+				if (noteScore.judgeType != NoteJudgeType.JudgeRelease)
+				{
+					if (difference > timingWindow[4])
+					{
+						// Poor, late miss
+						combo = 0;
+						scorePoorCount++;
+						release = true;
+					}
+					else if (difference > -timingWindow[5] && difference <= -timingWindow[4])
+					{
+						// Poor, early miss, apply penalty but no combo reset and judge
+						scorePoorCount++;
+						judged = false;
+					}
+				}
+				else
+				{
+					// Long note early release
+					combo = 0;
+					scorePoorCount++;
+				}
 			}
-
 
 			if (combo > scoreLargestCombo)
 				scoreLargestCombo = combo;
@@ -290,6 +302,21 @@ namespace Pulsus.Gameplay
 
 			if (judged)
 				NotePlayed(hitTimestamp, noteScore);
+
+			if (release && noteScore.judgeType == NoteJudgeType.JudgeHold)
+			{
+				// judge endpoint after early release
+				LongNoteEndEvent endEvent = (noteScore.noteEvent as LongNoteEvent).endNote;
+				for (int i = 0; i < pendingNoteScores.Count; i++)
+				{
+					if (pendingNoteScores[i].noteEvent != endEvent)
+						continue;
+
+					JudgeNote(hitTimestamp, pendingNoteScores[i]);
+					break;
+				}
+			}
+			
 
 			if (OnNoteJudged != null)
 				OnNoteJudged(noteScore);

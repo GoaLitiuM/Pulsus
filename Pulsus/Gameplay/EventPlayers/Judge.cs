@@ -75,20 +75,6 @@ namespace Pulsus.Gameplay
 
 			pendingNoteScores.Remove(noteScore);
 			noteScores.Add(noteScore);
-
-			if (noteScore.judgeType == NoteJudgeType.JudgeHold)
-			{
-				LongNoteEndEvent endEvent = (noteScore.noteEvent as LongNoteEvent).endNote;
-				for (int i = 0; i < pendingNoteScores.Count; i++)
-				{
-					if (pendingNoteScores[i].noteEvent != endEvent)
-						continue;
-
-					// judge endpoint after early release
-					JudgeNote(hitTimestamp, pendingNoteScores[i]);
-					break;
-				}
-			}
 		}
 
 		public bool HasJudged(NoteEvent note)
