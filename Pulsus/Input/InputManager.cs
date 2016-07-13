@@ -127,9 +127,9 @@ namespace Pulsus.Input
 
 	public enum JoyInput : int
 	{
-		Unknown = 0,
+		Unknown = int.MaxValue,
 
-		Button1,
+		Button1 = 0,
 		Button2,
 		Button3,
 		Button4,
@@ -175,7 +175,5 @@ namespace Pulsus.Input
 		Axis2Left,
 		Axis2Right,
 		Axis2X,
-
-		//Count,
 	}
 }
