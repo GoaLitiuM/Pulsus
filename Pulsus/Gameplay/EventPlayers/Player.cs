@@ -53,6 +53,7 @@ namespace Pulsus.Gameplay
 				return;
 			
 			PressKey(noteEvent.lane, noteEvent.sound);
+			laneActive[noteEvent.lane] = false;
 		}
 
 		public override void OnPlayerKeyLong(LongNoteEvent noteEvent)
