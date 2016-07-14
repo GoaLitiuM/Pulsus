@@ -162,7 +162,18 @@ namespace Pulsus.Gameplay
 			scoreExMax = chart.noteCount * 2;
 		}
 
-		public void OnKeyRelease(int lane)
+		public void OnKeyPress(int lane, NoteEvent pressNote = null)
+		{
+			double hitTimestamp = judgeTime;
+
+			NoteScore closestNote = GetClosestNote(hitTimestamp, lane, NoteJudgeType.JudgePress | NoteJudgeType.JudgeHold);
+			if (closestNote == null)
+				return;
+
+			JudgeNote(hitTimestamp, closestNote);
+		}
+
+		public void OnKeyRelease(int lane, NoteEvent pressNote = null)
 		{
 			double hitTimestamp = judgeTime;
 
@@ -175,17 +186,6 @@ namespace Pulsus.Gameplay
 				// ignore key releases before long note starting point
 				return;
 			}
-
-			JudgeNote(hitTimestamp, closestNote);
-		}
-
-		public void OnKeyPress(int lane)
-		{
-			double hitTimestamp = judgeTime;
-
-			NoteScore closestNote = GetClosestNote(hitTimestamp, lane, NoteJudgeType.JudgePress | NoteJudgeType.JudgeHold);
-			if (closestNote == null)
-				return;
 
 			JudgeNote(hitTimestamp, closestNote);
 		}

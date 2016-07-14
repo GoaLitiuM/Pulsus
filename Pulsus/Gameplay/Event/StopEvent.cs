@@ -5,12 +5,12 @@ namespace Pulsus.Gameplay
 	[DebuggerDisplay("{ToString()}")]
 	public class StopEvent : Event
 	{
-		public int stopPulse;
+		public long stopTime;
 
-		public StopEvent(int pulse, int stopTime)
+		public StopEvent(long pulse, long stopTime)
 			: base(pulse)
 		{
-			this.stopPulse = stopTime;
+			this.stopTime = stopTime;
 		}
 	}
 }

@@ -6,9 +6,9 @@ namespace Pulsus.Gameplay
 	public class Event
 	{
 		public double timestamp;
-		public int pulse;
+		public long pulse;
 
-		public Event(int pulse)
+		public Event(long pulse)
 		{
 			this.pulse = pulse;
 		}

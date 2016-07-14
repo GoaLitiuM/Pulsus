@@ -6,7 +6,7 @@ namespace Pulsus.Gameplay
 	public class LongNoteEndEvent : NoteEvent
 	{
 		public LongNoteEvent startNote;
-		public LongNoteEndEvent(int pulse, SoundObject sound, int lane, LongNoteEvent startNote)
+		public LongNoteEndEvent(long pulse, SoundObject sound, int lane, LongNoteEvent startNote)
 			: base(pulse, sound, lane)
 		{
 			this.startNote = startNote;

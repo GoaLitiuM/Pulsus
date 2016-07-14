@@ -121,7 +121,7 @@ public class BMSChart : Chart
 		Dictionary<int, LongNoteEvent> startLNEvent = new Dictionary<int, LongNoteEvent>();
 		Dictionary<int, NoteEvent> lastPlayerEvent = new Dictionary<int, NoteEvent>();
 
-		int pulse = 0;
+		long pulse = 0;
 		double currentBpm = bpmObjects[0];
 
 		double measureLength = 1.0;
@@ -186,23 +186,17 @@ public class BMSChart : Chart
 			measureLength = measure.measureLength;
 
 			// mark measure position
-			measurePositions.Add(new Tuple<int, int, int>(measure.index, eventList.Count, pulse));
+			measurePositions.Add(new Tuple<int, int, long>(measure.index, eventList.Count, pulse));
 			MeasureMarkerEvent measureMarker = new MeasureMarkerEvent(pulse);
 			eventList.Add(measureMarker);
 
-
-			int lcmBeats = measure.channelList.Count > 0 ? 1 : 0;
-			for (int i = 0; i < measure.channelList.Count; i++)
-				lcmBeats = Utility.lcm(measure.channelList[i].values.Count, lcmBeats);
-
-			int stoppedValue = 0;
 			double nextBpm = 0.0;
 	
-			Dictionary<int, double> bpmExValues = new Dictionary<int, double>();
+			Dictionary<long, double> bpmExValues = new Dictionary<long, double>();
 			foreach (BMSChannel channel in measure.channelList)
 			{
-				int channelPulse = pulse;
-				int beatPulse = (resolution * 4) / channel.values.Count;
+				long channelPulse = pulse;
+				long beatPulse = (resolution * 4) / channel.values.Count;
 				int lane = BMSChannel.GetLaneIndex(channel.index, playerChannels, players);
 				bool isLongChannel = BMSChannel.IsLong(channel.index);
 
@@ -371,9 +365,9 @@ public class BMSChart : Chart
 					{
 						int stopValue = 0;
 						stopObjects.TryGetValue(value, out stopValue);
-						bmsEvent = new StopEvent(channelPulse, (int)(stopValue / 192.0 * resolution * 4));
 
-						stoppedValue = stopValue;
+						long stopTime = (long)(stopValue / 192.0 * resolution * 4);
+						bmsEvent = new StopEvent(channelPulse, stopTime);
 					}
 					else if (channel.index == (int)BMSChannel.Type.BGA ||
 						channel.index == (int)BMSChannel.Type.BGALayer ||

@@ -15,7 +15,7 @@ namespace Pulsus.Gameplay
 			players.Add(player);
 		}
 
-		public void SetStartPosition(int startPulse)
+		public void SetStartPosition(long startPulse)
 		{
 			foreach (EventPlayer player in players)
 				player.startPulse = startPulse;

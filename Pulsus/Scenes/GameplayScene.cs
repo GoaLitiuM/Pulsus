@@ -57,7 +57,7 @@ namespace Pulsus
 				autoplay.startOffset += judgeOffset;
 
 			double adjustTimeline = 0.0;
-			int startPulse = 0;
+			long startPulse = 0;
 			if (settings.startMeasure > 0)
 				startPulse = chart.measurePositions[settings.startMeasure].Item3;
 			else if (chart != null && chart.firstPlayerEvent != -1)

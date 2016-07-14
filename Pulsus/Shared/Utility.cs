@@ -150,6 +150,25 @@ namespace Pulsus
 			return a;
 		}
 
+		public static long lcm(long a, long b)
+		{
+			checked
+			{
+				return (a / gcf(a, b)) * b;
+			}
+		}
+
+		public static long gcf(long a, long b)
+		{
+			while (b != 0)
+			{
+				long temp = b;
+				b = a % b;
+				a = temp;
+			}
+			return a;
+		}
+
 		// returns value between min and max (exclusive)
 		public static int Range(this Random random, int min, int max)
 		{

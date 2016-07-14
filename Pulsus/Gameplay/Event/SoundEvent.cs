@@ -7,7 +7,7 @@ namespace Pulsus.Gameplay
 	{
 		public SoundObject sound;
 
-		public SoundEvent(int pulse, SoundObject sound)
+		public SoundEvent(long pulse, SoundObject sound)
 			: base(pulse)
 		{
 			this.sound = sound;

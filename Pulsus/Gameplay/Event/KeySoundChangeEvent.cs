@@ -7,7 +7,7 @@ namespace Pulsus.Gameplay
 	{
 		public int lane;
 
-		public KeySoundChangeEvent(int pulse, SoundObject sound, int lane)
+		public KeySoundChangeEvent(long pulse, SoundObject sound, int lane)
 			: base(pulse, sound)
 		{
 			this.lane = lane;

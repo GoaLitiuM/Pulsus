@@ -415,7 +415,7 @@ namespace Pulsus.Gameplay
 				}
 				else if (currentEvent is StopEvent)
 				{
-					double stop = (double)(currentEvent as StopEvent).stopPulse / resolution * 60.0 / laneBpm;
+					double stop = (double)(currentEvent as StopEvent).stopTime / resolution * 60.0 / laneBpm;
 					double timestamp = currentEvent.timestamp;
 
 					if (timestamp < currentTime)

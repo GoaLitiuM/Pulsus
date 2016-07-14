@@ -7,7 +7,7 @@ namespace Pulsus.Gameplay
 	{
 		public int lane { get; private set; }
 
-		public NoteEvent(int pulse, SoundObject sound, int lane)
+		public NoteEvent(long pulse, SoundObject sound, int lane)
 			: base(pulse, sound)
 		{
 			this.lane = lane;

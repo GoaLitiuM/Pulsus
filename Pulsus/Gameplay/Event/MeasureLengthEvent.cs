@@ -7,7 +7,7 @@ namespace Pulsus.Gameplay
 	{
 		public double measureLength;
 
-		public MeasureLengthEvent(int pulse, double measureLength = 1.0)
+		public MeasureLengthEvent(long pulse, double measureLength = 1.0)
 			: base(pulse)
 		{
 			this.measureLength = measureLength;

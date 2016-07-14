@@ -7,7 +7,7 @@ namespace Pulsus.Gameplay
 	{
 		int damage;
 
-		public LandmineEvent(int pulse, SoundObject sound, int lane, int damage)
+		public LandmineEvent(long pulse, SoundObject sound, int lane, int damage)
 			: base(pulse, sound, lane)
 		{
 			this.damage = damage;

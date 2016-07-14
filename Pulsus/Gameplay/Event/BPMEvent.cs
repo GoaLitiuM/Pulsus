@@ -7,7 +7,7 @@ namespace Pulsus.Gameplay
 	{
 		public double bpm;
 
-		public BPMEvent(int pulse, double bpm)
+		public BPMEvent(long pulse, double bpm)
 			: base(pulse)
 		{
 			this.bpm = bpm;

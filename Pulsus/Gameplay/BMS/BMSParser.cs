@@ -269,32 +269,34 @@ public class BMSParser : ChartParser
 			data.players = 1;
 
 		// find the most optimal resolution for this chart
-		data.resolution = 1;
-		const int maxResolution = int.MaxValue / (1000 * 4);
+		long resolution = 1;
+		const long maxResolution = long.MaxValue / (1000 * 4);
 		try
 		{
 			foreach (BMSMeasure measure in data.measureList)
 			{
 				foreach (BMSChannel channel in measure.channelList)
 				{
-					if (data.resolution % channel.values.Count != 0)
-						data.resolution = Utility.lcm(data.resolution, channel.values.Count);
+					if (resolution % channel.values.Count != 0)
+						resolution = Utility.lcm(resolution, channel.values.Count);
 				}
 			}
 		}
 		catch (ArithmeticException)
 		{
-			data.resolution = 0;
+			resolution = 0;
 		}
 		finally
 		{
-			if (data.resolution <= 0 || data.resolution > maxResolution)
+			if (resolution <= 0 || resolution > maxResolution)
 			{
-				data.resolution = maxResolution;
+				resolution = maxResolution;
 				Log.Warning("Required object resolution is too high for accurate playback");
 			}
 		}
 		
+		data.resolution = resolution;
+
 		return data;
 	}
 

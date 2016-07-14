@@ -18,11 +18,11 @@ namespace Pulsus.Gameplay
 
 		public int currentMeasure = 0;
 		public double currentTime = 0.0;
-		public int pulse = 0;
-		public int stopPulse = 0;
-		public int startPulse = 0;
+		public long pulse = 0;
+		public long stopPulse = 0;
+		public long startPulse = 0;
 		public double stopLeft = 0.0;
-		public int resolution = 0;
+		public long resolution = 0;
 
 		protected int lastEventIndex = 0;
 		public double bpm = 0.0;
@@ -113,7 +113,7 @@ namespace Pulsus.Gameplay
 
 				currentTime += deltaTime * timeMultiplier;
 
-				int lastPulse = pulse;
+				long lastPulse = pulse;
 				pulse = chart.GetPulseFromTime(currentTime);
 
 				if (timeMultiplier < 0)
@@ -281,8 +281,8 @@ namespace Pulsus.Gameplay
 
 		public virtual void OnStop(StopEvent stopEvent)
 		{
-			stopPulse = stopEvent.stopPulse;
-			stopLeft = (double)stopEvent.stopPulse / resolution * 60.0 / bpm;
+			stopPulse = stopEvent.stopTime;
+			stopLeft = (double)stopEvent.stopTime / resolution * 60.0 / bpm;
 		}
 
 		public virtual void OnBGA(BGAEvent bgaEvent)

@@ -8,7 +8,7 @@ namespace Pulsus.Gameplay
 		public BGAObject bga;
 		public BGAType type;
 
-		public BGAEvent(int pulse, BGAObject bga, BGAType type = BGAType.BGA)
+		public BGAEvent(long pulse, BGAObject bga, BGAType type = BGAType.BGA)
 			: base(pulse)
 		{
 			this.bga = bga;

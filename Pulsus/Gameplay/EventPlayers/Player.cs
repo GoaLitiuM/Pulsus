@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using Pulsus.Audio;
 
 namespace Pulsus.Gameplay
@@ -26,7 +24,7 @@ namespace Pulsus.Gameplay
 			if (!autoplay)
 				return;
 			
-			PressKey(noteEvent.lane, noteEvent.sound);
+			PressKey(noteEvent.lane, noteEvent.sound, noteEvent);
 			ReleaseKey(noteEvent.lane);
 		}
 
@@ -35,7 +33,7 @@ namespace Pulsus.Gameplay
 			if (!autoplay)
 				return;
 
-			PressKey(noteEvent.lane, noteEvent.sound);
+			PressKey(noteEvent.lane, noteEvent.sound, noteEvent);
 		}
 
 		public override void OnPlayerKeyLongEnd(LongNoteEndEvent noteEndEvent)
@@ -56,13 +54,13 @@ namespace Pulsus.Gameplay
 			ReleaseKey(lane, null);
 		}
 		
-		private void PressKey(int lane, SoundObject value)
+		private void PressKey(int lane, SoundObject value, NoteEvent pressNote = null)
 		{
 			if (skin != null)
 				skin.OnKeyPress(lane);
 
 			if (judge != null)
-				judge.OnKeyPress(lane);
+				judge.OnKeyPress(lane, pressNote);
 
 			if (value == null)
 			{
