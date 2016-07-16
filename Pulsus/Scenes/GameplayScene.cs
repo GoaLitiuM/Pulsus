@@ -142,26 +142,24 @@ namespace Pulsus
 				active = false;
 			}));
 			
-			double scrollStep = 0.01;
+			const double scrollStep = 0.001;
 
-			BindKey(layout.GetInputs("scrollSpeedInc"), InputAction.OnPressed(() =>
+			BindKey(layout.GetInputs("scrollSpeedInc"), InputAction.OnDown(() =>
 			{
 				skin.baseScrollTime += scrollStep;
 				if (skin.baseScrollTime >= 10.0)
 					skin.baseScrollTime = 10.0;
 
 				settings.gameplay.scrollTime = skin.baseScrollTime;
-				Log.Info("scrollTime: " + skin.baseScrollTime.ToString("0.00"));
 			}));
 
-			BindKey(layout.GetInputs("scrollSpeedDec"), InputAction.OnPressed(() =>
+			BindKey(layout.GetInputs("scrollSpeedDec"), InputAction.OnDown(() =>
 			{
 				skin.baseScrollTime -= scrollStep;
 				if (skin.baseScrollTime < scrollStep)
 					skin.baseScrollTime = scrollStep;
 
 				settings.gameplay.scrollTime = skin.baseScrollTime;
-				Log.Info("scrollTime: " + skin.baseScrollTime.ToString("0.00"));
 			}));
 			
 			if (!settings.gameplay.autoplay)
