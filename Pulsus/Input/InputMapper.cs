@@ -6,17 +6,20 @@ namespace Pulsus.Input
 {
 	public class InputMapper
 	{
-		InputManager input;
+		private InputManager input;
+		private double timer;
+		private double repeatRate = 1.0 / 60.0;
+		private double repeatDelay = 0.250;
 
-		const float axisDeadzone = 0.1f;
-		const short axisDeadzoneInt = (short)(Int16.MaxValue * axisDeadzone);
+		private const float axisDeadzone = 0.1f;
+		private const short axisDeadzoneInt = (short)(Int16.MaxValue * axisDeadzone);
 
-		Dictionary<InputAction, bool> blankState = new Dictionary<InputAction, bool>();
-		Dictionary<InputAction, bool> currentState;
-		Dictionary<InputAction, bool> lastState;
+		private Dictionary<InputAction, bool> blankState = new Dictionary<InputAction, bool>();
+		private Dictionary<InputAction, bool> currentState;
+		private Dictionary<InputAction, bool> lastState;
 
-		List<Tuple<SDL.SDL_Scancode, InputAction>> keyboardMapping = new List<Tuple<SDL.SDL_Scancode, InputAction>>();
-		List<Tuple<JoyInput, InputAction>> joystickMapping = new List<Tuple<JoyInput, InputAction>>();
+		private List<Tuple<SDL.SDL_Scancode, InputAction>> keyboardMapping = new List<Tuple<SDL.SDL_Scancode, InputAction>>();
+		private List<Tuple<JoyInput, InputAction>> joystickMapping = new List<Tuple<JoyInput, InputAction>>();
 
 		public InputMapper(InputManager input)
 		{
@@ -39,7 +42,7 @@ namespace Pulsus.Input
 		{
 			if (inputAction == null)
 				throw new ApplicationException("MapInput inputAction is null");
-			else if (inputAction.pressed == null && inputAction.released == null && inputAction.down == null)
+			else if (inputAction.onPressed == null && inputAction.onReleased == null && inputAction.onDown == null)
 				throw new ApplicationException("MapInput inputAction has no actions");
 
 			if (!blankState.ContainsKey(inputAction))
@@ -94,8 +97,10 @@ namespace Pulsus.Input
 				currentState[t.Item2] |= input.KeyDown(t.Item1);
 		}
 
-		public void Update()
+		public void Update(double deltaTime)
 		{
+			timer += deltaTime;
+
 			var tempState = lastState;
 			lastState = currentState;
 			currentState = tempState;
@@ -116,18 +121,38 @@ namespace Pulsus.Input
 
 				if (pressed)
 				{
-					if (state.Key.down != null)
-						state.Key.down();
 					if (!lastPressed)
 					{
-						if (state.Key.pressed != null)
-							state.Key.pressed();
+						if (state.Key.onPressed != null)
+							state.Key.onPressed();
+
+						if (state.Key.onDown != null && state.Key.useRepeatRate)
+							state.Key.onDown();
+
+						state.Key.lastPressed = timer;
+					}
+
+					if (state.Key.onDown != null)
+					{
+						if (state.Key.useRepeatRate)
+						{
+							if (timer - state.Key.lastProcessed > repeatRate && timer - state.Key.lastPressed > repeatDelay)
+							{
+								state.Key.onDown();
+								state.Key.lastProcessed = timer;
+							}
+						}
+						else
+						{
+							state.Key.onDown();
+							state.Key.lastProcessed = timer;
+						}
 					}
 				}
 				else if (!pressed && lastPressed)
 				{
-					if (state.Key.released != null)
-						state.Key.released();
+					if (state.Key.onReleased != null)
+						state.Key.onReleased();
 				}
 			}
 		}

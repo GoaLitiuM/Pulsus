@@ -218,7 +218,7 @@ namespace Pulsus
 
 		public override void Update(double deltaTime)
 		{
-			inputMapper.Update();
+			inputMapper.Update(deltaTime);
 			playerGraph.Update(deltaTime);
 		}
 
