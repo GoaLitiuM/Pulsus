@@ -15,6 +15,9 @@ namespace Pulsus
 		public static Version version { get; private set; }
 		public static string versionDisplay { get; private set; }
 		public static string versionLongDisplay { get; private set; }
+		public static string platform { get; private set; }
+		public static string platformVersion { get; private set; }
+		public static string platformId { get; private set; }
 
 		public static Eto.Forms.Application etoApplication;
 		public static EventWaitHandle etoWaitHandle = new EventWaitHandle(false, EventResetMode.ManualReset);
@@ -37,6 +40,9 @@ namespace Pulsus
 			versionDisplay = version.Major.ToString() + "." + version.Minor.ToString() +
 				(version.Build != 0 ? ("." + version.Build.ToString()) : "");
 			versionLongDisplay = assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>().InformationalVersion;
+			platform = Utility.GetPlatform();
+			platformVersion = Utility.GetPlatformVersion();
+			platformId = (Environment.OSVersion.Platform == PlatformID.Win32NT ? "Win" : platform) + (Environment.Is64BitProcess ? "-x64" : "-x86");
 
 			// Fixes weird behaviour when using drag'n'drop over the exe:
 			// Working directory changes to the path where the dragged
@@ -53,7 +59,7 @@ namespace Pulsus
 			Log.SetLogFile(name + ".log");
 
 			Log.Text("{0} {1} ({2})", name, versionDisplay, Environment.Is64BitProcess ? "64-bit" : "32-bit");
-			Log.Text("{0} ({1})", Environment.OSVersion.ToString(), Environment.Is64BitOperatingSystem ? "64-bit" : "32-bit");
+			Log.Text("{0} {1} ({2})", platform, platformVersion, Environment.Is64BitOperatingSystem ? "64-bit" : "32-bit");
 
 			// locale independent date and number formatting
 			CultureInfo.DefaultThreadCurrentCulture = CultureInfo.InvariantCulture;

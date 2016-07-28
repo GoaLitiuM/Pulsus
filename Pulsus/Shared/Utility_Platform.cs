@@ -77,6 +77,108 @@ namespace Pulsus
 				SDL.SDL_Delay((uint)(usec * 1000));
 		}
 
+		public static string GetPlatform()
+		{
+			if (Environment.OSVersion.Platform == PlatformID.Unix || Environment.OSVersion.Platform == PlatformID.Unix)
+			{
+				try
+				{
+					string osName = "";
+
+					Process process = new Process();
+					process.StartInfo.FileName = "uname";
+					process.StartInfo.UseShellExecute = false;
+					process.StartInfo.RedirectStandardOutput = true;
+					process.OutputDataReceived += (sender, e) => osName += e.Data;
+
+					process.Start();
+					process.BeginOutputReadLine();
+					process.WaitForExit();
+
+					return osName;
+				}
+				catch
+				{
+					return Environment.OSVersion.Platform.ToString();
+				}
+			}
+			else if (Environment.OSVersion.Platform == PlatformID.Win32NT)
+				return "Windows";
+			else
+				return Environment.OSVersion.Platform.ToString();
+		}
+
+		public static string GetPlatformVersion()
+		{
+			if (Environment.OSVersion.Platform == PlatformID.Unix || Environment.OSVersion.Platform == PlatformID.MacOSX)
+			{
+				try
+				{
+					string distribution = "";
+					string version = "";
+
+					Process process = new Process();
+					process.StartInfo.UseShellExecute = false;
+					process.StartInfo.RedirectStandardOutput = true;
+
+					if (Environment.OSVersion.Platform == PlatformID.Unix)
+					{
+						process.StartInfo.FileName = "lsb_release";
+						process.StartInfo.Arguments = "-i -r";
+						process.OutputDataReceived += (sender, e) =>
+						{
+							if (e.Data.Contains("Distributor ID:"))
+								distribution += e.Data.Replace("Distributor ID:", "").Trim();
+							else if (e.Data.Contains("Release:"))
+								version += e.Data.Replace("Release:", "").Trim();
+						};
+					}
+					else if (Environment.OSVersion.Platform == PlatformID.MacOSX)
+					{
+						process.StartInfo.FileName = "sw_vers";
+						process.OutputDataReceived += (sender, e) =>
+						{
+							if (e.Data.Contains("ProductName:"))
+								distribution += e.Data.Replace("ProductName:", "").Trim();
+							else if (e.Data.Contains("ProductVersion:"))
+								version += e.Data.Replace("ProductVersion:", "").Trim();
+						};
+					}
+
+					process.Start();
+					process.BeginOutputReadLine();
+					process.WaitForExit();
+
+					return distribution + " " + version;
+				}
+				catch
+				{
+					return Environment.OSVersion.VersionString;
+				}
+			}
+			else if (Environment.OSVersion.Platform == PlatformID.Win32NT)
+			{
+				int major = Environment.OSVersion.Version.Major;
+				int minor = Environment.OSVersion.Version.Minor;
+				int build = Environment.OSVersion.Version.Build;
+
+				if (major == 6 && minor == 0)
+					return "Vista";
+				else if (major == 6 && minor == 1)
+					return "7";
+				else if (major == 6 && minor == 2)
+					return "8";
+				else if (major == 6 && minor == 3)
+					return "8.1";
+				else if (major == 10)
+					return String.Format("{0} (Build {1})", major.ToString(), build.ToString());
+				else
+					return Environment.OSVersion.VersionString;
+			}
+			else
+				return Environment.OSVersion.VersionString;
+		}
+
 		[DllImport("ntdll.dll")]
 		static extern int NtSetTimerResolution(int DesiredResolution, bool SetResolution, out int CurrentResolution);
 		
