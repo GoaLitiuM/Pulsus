@@ -19,6 +19,18 @@ namespace Pulsus
 		public static string platformVersion { get; private set; }
 		public static string platformId { get; private set; }
 
+		private static string _basePath;
+		public static string basePath
+		{
+			get
+			{
+				if (_basePath == null)
+					_basePath = Directory.GetParent(Assembly.GetExecutingAssembly().Location).FullName;
+
+				return _basePath;
+			}
+		}
+
 		public static Eto.Forms.Application etoApplication;
 		public static EventWaitHandle etoWaitHandle = new EventWaitHandle(false, EventResetMode.ManualReset);
 		private static Thread etoThread;

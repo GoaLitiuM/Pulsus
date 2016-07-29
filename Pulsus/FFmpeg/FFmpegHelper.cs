@@ -10,6 +10,18 @@ namespace Pulsus.FFmpeg
 {
 	public static class FFmpegHelper
 	{
+		private static string _ffmpegPath;
+		public static string ffmpegPath
+		{
+			get
+			{
+				if (_ffmpegPath == null)
+					_ffmpegPath = Path.Combine(Program.basePath, "ffmpeg", Environment.Is64BitProcess ? "x64" : "x86");
+
+				return _ffmpegPath;
+			}
+		}
+
 		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
 		private delegate int ReadStreamDelegate(IntPtr opaque, IntPtr buf, int buf_size);
 
@@ -38,15 +50,11 @@ namespace Pulsus.FFmpeg
 
 		public static void Init()
 		{
-			string executablePath = Path.GetDirectoryName(System.Reflection.Assembly.GetEntryAssembly().Location);
-			string ffmpegPath = Path.Combine("ffmpeg", Environment.Is64BitProcess ? "x64" : "x86");
-			string ffmpegPathFull = Path.Combine(executablePath, ffmpegPath);
-
 			switch (Environment.OSVersion.Platform)
 			{
 				case PlatformID.Win32NT:
 					string envPath = Environment.GetEnvironmentVariable("PATH");
-					Environment.SetEnvironmentVariable("PATH", envPath + ";" + ffmpegPathFull);
+					Environment.SetEnvironmentVariable("PATH", envPath + ";" + ffmpegPath);
 					break;
 				case PlatformID.Unix:
 				case PlatformID.MacOSX:
@@ -82,7 +90,7 @@ namespace Pulsus.FFmpeg
 			{
 				string msg = "Failed to initialize FFmpeg.";
 				if (Environment.OSVersion.Platform != PlatformID.Win32NT)
-					msg += " Please install FFmpeg (3.0.2), or install the static FFmpeg binaries to \"" + ffmpegPathFull + "\"";
+					msg += " Please install FFmpeg (3.0.2), or install the static FFmpeg binaries to \"" + ffmpegPath + "\"";
 				Program.OnCaughtException(exception, msg);
 			}
 		}
