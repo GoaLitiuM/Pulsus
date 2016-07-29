@@ -65,6 +65,9 @@ namespace Pulsus
 			CultureInfo.DefaultThreadCurrentCulture = CultureInfo.InvariantCulture;
 			Thread.CurrentThread.CurrentCulture = CultureInfo.InvariantCulture;
 
+			// close Eto on exit
+			AppDomain.CurrentDomain.ProcessExit += (sender, e) => EtoClose();
+
 			//SettingsManager.LoadDefaults();
 			SettingsManager.LoadPersistent();
 			SettingsManager.SavePersistent();	// refresh with new fields
@@ -74,11 +77,7 @@ namespace Pulsus
 			if (settings.showSettings)
 			{
 				if (!ShowSettings(false))
-				{
-					// exit early
-					EtoClose();
-					return; 
-				}
+					return; // exit early
 			}
 
 			FFmpegHelper.Init();
@@ -88,7 +87,6 @@ namespace Pulsus
 
 			SettingsManager.SavePersistent();
 
-			EtoClose();
 		}
 
 		public static void EtoStartup()
