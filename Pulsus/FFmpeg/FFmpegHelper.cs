@@ -50,25 +50,11 @@ namespace Pulsus.FFmpeg
 
 		public static void Init()
 		{
-			switch (Environment.OSVersion.Platform)
-			{
-				case PlatformID.Win32NT:
-					string envPath = Environment.GetEnvironmentVariable("PATH");
-					Environment.SetEnvironmentVariable("PATH", envPath + ";" + ffmpegPath);
-					break;
-				case PlatformID.Unix:
-				case PlatformID.MacOSX:
-					// in cases where the system does not have ffmpeg installed,
-					// allow loading ffmpeg binaries from the subfolder instead.
-					string currentValue = Environment.GetEnvironmentVariable("LD_LIBRARY_PATH");
-					if (string.IsNullOrWhiteSpace(currentValue) == false && currentValue.Contains(ffmpegPath) == false)
-					{
-						string newValue = currentValue + Path.PathSeparator + ffmpegPath;
-						Environment.SetEnvironmentVariable("LD_LIBRARY_PATH", newValue);
-					}
-					break;
-			}
-
+			// specify additional search path where ffmpeg binaries should be loaded from
+			string envVariable = Environment.OSVersion.Platform == PlatformID.Win32NT ? "PATH" : "LD_LIBRARY_PATH";
+			string oldValue = Environment.GetEnvironmentVariable(envVariable);
+			Environment.SetEnvironmentVariable(envVariable, ffmpegPath + Path.PathSeparator + oldValue);
+			
 			try
 			{
 				ffmpeg.av_register_all();
