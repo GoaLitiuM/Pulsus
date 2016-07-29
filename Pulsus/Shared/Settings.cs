@@ -13,6 +13,7 @@ namespace Pulsus
 	public class Settings
 	{
 		public string skin = "goa";
+		public bool checkUpdates = false;
 		public List<string> songPaths = new List<string>()
 		{
 			"Songs/",
