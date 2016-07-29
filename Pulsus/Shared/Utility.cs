@@ -88,6 +88,12 @@ namespace Pulsus
 			}
 		}
 
+		public static string GetVersionString(Version version)
+		{
+			return string.Format("{0}.{1}{2}",
+				version.Major.ToString(), version.Minor.ToString(), version.Build != 0 ? ("." + version.Build.ToString()) : "");
+		}
+
 		public static long gcf(long a, long b)
 		{
 			while (b != 0)

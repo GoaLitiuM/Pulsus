@@ -37,8 +37,7 @@ namespace Pulsus
 			Assembly assembly = Assembly.GetExecutingAssembly();
 			name = assembly.GetName().Name;
 			version = assembly.GetName().Version;
-			versionDisplay = version.Major.ToString() + "." + version.Minor.ToString() +
-				(version.Build != 0 ? ("." + version.Build.ToString()) : "");
+			versionDisplay = Utility.GetVersionString(version);
 			versionLongDisplay = assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>().InformationalVersion;
 			platform = Utility.GetPlatform();
 			platformVersion = Utility.GetPlatformVersion();
