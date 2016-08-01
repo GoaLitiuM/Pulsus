@@ -38,14 +38,6 @@ namespace Pulsus
 
 		private static bool restart = false;
 
-		private struct UpdateInfo
-		{
-			public Version version;
-			public string date;
-			public string changelog;
-			public string downloadUrl;
-		}
-		
 		[STAThread]
 		static void Main()
 		{
@@ -98,13 +90,12 @@ namespace Pulsus
 			Settings settings = SettingsManager.instance;
 
 			// clean up residual files from update
-			CleanUpdateFiles();
+			Updater.CleanUpdateFiles();
 
-			if (settings.checkUpdates)
+			//if (settings.checkUpdates)
 			{
-				Log.Info("Checking for updates...");
-				UpdateInfo updateInfo = GetLatestUpdate();
-				if (updateInfo.version > version)
+				UpdateInfo updateInfo = Updater.GetLatestUpdate();
+				if (updateInfo.version >= version)
 				{
 					if (!string.IsNullOrEmpty(updateInfo.downloadUrl))
 					{
@@ -142,8 +133,8 @@ namespace Pulsus
 
 						if (result == 1)
 						{
-							string updateFile = DownloadUpdate(updateInfo);
-							ApplyUpdate(updateFile, updateInfo);
+							string updateFile = Updater.DownloadUpdate(updateInfo);
+							Updater.ApplyUpdate(updateFile, updateInfo);
 							restart = true;
 							return; // exit early
 						}
@@ -228,142 +219,7 @@ namespace Pulsus
 				return settingsWindow.Show();
 		}
 
-		private static UpdateInfo GetLatestUpdate()
-		{
-			UpdateInfo info = new UpdateInfo();
-			info.version = new Version(0, 0, 0);
-
-			string url = "https://api.github.com/repos/goalitium/pulsus/releases/latest";
-
-			System.Net.HttpWebRequest request = (System.Net.HttpWebRequest)System.Net.HttpWebRequest.Create(url);
-			request.UserAgent = Program.name;
-			request.Timeout = 2000;
-
-			try
-			{
-				using (var response = request.GetResponse())
-				{
-					using (StreamReader stream = new StreamReader(response.GetResponseStream()))
-					{
-						var result = Newtonsoft.Json.Linq.JObject.Parse(stream.ReadToEnd());
-
-						info = new UpdateInfo()
-						{
-							changelog = result.Value<string>("body"),
-							version = Version.Parse(result.Value<string>("tag_name")),
-							date = result.Value<string>("published_at"),
-						};
-
-						foreach (var asset in result.GetValue("assets").Children())
-						{
-							string filename = asset.Value<string>("name");
-							string[] tokens = filename.Split(new char[] { '_' });
-
-							string fileVersion = tokens[1];
-							string filePlatform = tokens[2].Replace(".zip", "");
-							if (tokens.Length >= 4)
-							{
-								// old release format: Program_Version_OS_Arch
-								filePlatform += "-" + tokens[3].Replace(".zip", "");
-							}
-
-							if (filePlatform.Equals(platformId, StringComparison.OrdinalIgnoreCase))
-							{
-								info.downloadUrl = asset.Value<string>("browser_download_url");
-								break;
-							}
-						}
-					}
-				}
-			}
-			catch (Exception e)
-			{
-				Log.Warning("Failed to retrieve latest update information: " + e.Message);
-			}
-
-			return info;
-		}
-
-		private static void CleanUpdateFiles()
-		{
-			foreach (string file in Directory.EnumerateFiles(basePath, "*.tmp", SearchOption.TopDirectoryOnly))
-				File.Delete(file);
-
-			foreach (string file in Directory.EnumerateFiles(FFmpegHelper.ffmpegPath, "*.tmp", SearchOption.TopDirectoryOnly))
-				File.Delete(file);
-		}
-
-		private static string DownloadUpdate(UpdateInfo updateInfo)
-		{
-			string filename = Path.GetFileName(updateInfo.downloadUrl);
-			string outputDir = Path.Combine(Path.GetTempPath(), Program.name + "Cache");
-			string outputFile = Path.Combine(outputDir, filename);
-
-			if (!File.Exists(outputFile))
-			{
-				Log.Info("Downloading update " + Utility.GetVersionString(updateInfo.version) + "...");
-				if (!Directory.Exists(outputDir))
-					Directory.CreateDirectory(outputDir);
-
-				System.Net.WebClient webClient = new System.Net.WebClient();
-				webClient.DownloadFile(updateInfo.downloadUrl, outputFile);
-			}
-			else
-				Log.Warning("Update files already present at: " + outputFile);
-
-			return outputFile;
-		}
-
-		private static void ApplyUpdate(string updateFile, UpdateInfo updateInfo)
-		{
-			Log.Info("Applying update " + Utility.GetVersionString(updateInfo.version));
-
-			string exePath = Assembly.GetExecutingAssembly().Location;
-			try
-			{
-				using (ZipArchive archive = ZipFile.OpenRead(updateFile))
-				{
-					foreach (ZipArchiveEntry entry in archive.Entries)
-					{
-						string entryOutPath = Path.Combine(basePath, entry.FullName);
-						if (!entry.FullName.EndsWith("/"))
-						{
-							try
-							{
-								// save the old executable so it can be restored in case of failure
-								if (entryOutPath.Equals(exePath, StringComparison.Ordinal))
-									File.Move(entryOutPath, entryOutPath + ".tmp");
-
-								entry.ExtractToFile(entryOutPath, true);
-							}
-							catch (IOException)
-							{
-								// file is in use, rename it and delete it during next launch
-								File.Move(entryOutPath, entryOutPath + ".tmp");
-								entry.ExtractToFile(entryOutPath, true);
-							}
-						}
-						else
-							Directory.CreateDirectory(entryOutPath);
-					}
-				}
-			}
-			catch (Exception e)
-			{
-				// restore old executable back
-				if (File.Exists(exePath + ".tmp"))
-				{
-					if (File.Exists(exePath))
-						File.Delete(exePath);
-
-					File.Move(exePath + ".tmp", exePath);
-				}
-
-				throw new ApplicationException("Failed to install update: " + e.Message);
-			}
-
-			File.Delete(updateFile);
-		}
+		
 
 		public static void OnCaughtException(Exception exception, string description = null)
 		{

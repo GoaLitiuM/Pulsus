@@ -213,6 +213,7 @@
     <Compile Include="Shared\Utility.cs" />
     <Compile Include="GameWindow.cs" />
     <Compile Include="Shared\Utility_Platform.cs" />
+    <Compile Include="Updater.cs" />
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
