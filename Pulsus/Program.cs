@@ -92,10 +92,10 @@ namespace Pulsus
 			// clean up residual files from update
 			Updater.CleanUpdateFiles();
 
-			//if (settings.checkUpdates)
+			if (settings.checkUpdates)
 			{
 				UpdateInfo updateInfo = Updater.GetLatestUpdate();
-				if (updateInfo.version >= version)
+				if (updateInfo.version > version)
 				{
 					if (!string.IsNullOrEmpty(updateInfo.downloadUrl))
 					{
