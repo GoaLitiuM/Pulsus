@@ -13,15 +13,18 @@ namespace Pulsus
 		public RenderAudioScene(Game game, string inputPath, string outputPath)
 			: base(game, false)
 		{
-			if (song == null)
+			if (string.IsNullOrEmpty(outputPath))
+			{
+				Log.Error("Output is missing");
 				return;
+			}
 
+			Song song = new Song(inputPath);
 			song.Load();
-
-			if (string.IsNullOrWhiteSpace(Path.GetExtension(renderPath)))
-				renderPath += ".wav";
-
 			song.GenerateEvents();
+
+			if (string.IsNullOrWhiteSpace(Path.GetExtension(outputPath)))
+				outputPath += ".wav";
 
 			foreach (var sound in song.chart.soundObjects)
 				sound.Value.Load(song.path);
@@ -46,7 +49,7 @@ namespace Pulsus
 			byte[] audioData = audio.RenderAudio();
 			if (audioData.Length > 0)
 			{
-				FFmpegHelper.SaveSound(renderPath,
+				FFmpegHelper.SaveSound(outputPath,
 					audioData, audioData.Length/4, audio.audioSpec.freq);
 			}
 		}

@@ -155,6 +155,7 @@
     <Compile Include="Gameplay\NoteScore.cs" />
     <Compile Include="Graphics\FrameBuffer.cs" />
     <Compile Include="Graphics\TextureAtlas.cs" />
+    <Compile Include="Scenes\DumpTimestampsScene.cs" />
     <Compile Include="Scenes\FileSelectScene.cs" />
     <Compile Include="Scenes\RenderAudioScene.cs" />
     <Compile Include="FFmpeg\FFmpegContext.cs" />

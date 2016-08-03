@@ -120,10 +120,15 @@ namespace Pulsus
 							temporary.skin = value;
 							break;
 						case "--render":
+							temporary.outputMode = OutputMode.Render;
 							temporary.audio.driver = Audio.AudioDriver.File;
 							temporary.audio.bufferLength = 4096;
 							temporary.audio.volume = 100;
-							temporary.renderPath = value;
+							temporary.outputPath = value;
+							break;
+						case "--dump-timestamps":
+							temporary.outputMode = OutputMode.DumpTimestamps;
+							temporary.outputPath = value;
 							break;
 						default:
 							return false;

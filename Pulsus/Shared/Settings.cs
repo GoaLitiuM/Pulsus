@@ -31,7 +31,10 @@ namespace Pulsus
 		public string playPath;
 
 		[JsonIgnore]
-		public string renderPath;
+		public OutputMode outputMode = OutputMode.Render;
+
+		[JsonIgnore]
+		public string outputPath;
 
 		[JsonIgnore]
 		public int startMeasure;
@@ -289,5 +292,12 @@ namespace Pulsus
 
 		//[JsonConverter(typeof(StringEnumConverter))]
 		//public RandomMode randomMode;
+	}
+
+	public enum OutputMode
+	{
+		None,
+		Render,
+		DumpTimestamps,
 	}
 }

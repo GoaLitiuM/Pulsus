@@ -98,8 +98,10 @@ namespace Pulsus
 
 			Log.Clear();
 
-			if (audio.audioDriver == AudioDriver.File)
-				sceneManager.Push(new RenderAudioScene(this, new Song(settings.playPath), settings.renderPath));
+			if (settings.outputMode == OutputMode.Render)
+				sceneManager.Push(new RenderAudioScene(this, settings.playPath, settings.outputPath));
+			else if (settings.outputMode == OutputMode.DumpTimestamps)
+				sceneManager.Push(new DumpTimestampsScene(this, settings.playPath, settings.outputPath));
 			else if (settings.playPath != null)
 				sceneManager.Push(new GameplayScene(this, new Song(settings.playPath)));
 			else
