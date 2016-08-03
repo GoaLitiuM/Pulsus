@@ -363,7 +363,7 @@ public class BMSChart : Chart
 					}
 					else if (channel.index == (int)BMSChannel.Type.Stop)
 					{
-						int stopValue = 0;
+						double stopValue = 0;
 						stopObjects.TryGetValue(value, out stopValue);
 
 						long stopTime = (long)(stopValue / 192.0 * resolution * 4);

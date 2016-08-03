@@ -488,7 +488,7 @@ public class BMSParser : ChartParser
 	private static void OnStop(BMSChart data, string line)
 	{
 		int index = Utility.FromBase36(line.Substring(5, 2));
-		int value = int.Parse(line.Substring(line.IndexOf(" ") + 1));
+		double value = double.Parse(line.Substring(line.IndexOf(" ") + 1));
 
 		data.stopObjects[index] = value;
 	}

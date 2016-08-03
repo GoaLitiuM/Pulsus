@@ -36,7 +36,7 @@ namespace Pulsus.Gameplay
 		public Dictionary<int, SoundObject> soundObjects = new Dictionary<int, SoundObject>();
 		public Dictionary<int, BGAObject> bgaObjects = new Dictionary<int, BGAObject>();
 		public Dictionary<int, double> bpmObjects = new Dictionary<int, double>();
-		public Dictionary<int, int> stopObjects = new Dictionary<int, int>();
+		public Dictionary<int, double> stopObjects = new Dictionary<int, double>();
 		public Dictionary<int, double> measureLengthObjects = new Dictionary<int, double>();
 		public HashSet<int> lnObjects = new HashSet<int>();
 
