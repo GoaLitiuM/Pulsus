@@ -8,28 +8,27 @@ namespace Pulsus
 {
 	public class FileSelectScene : Scene
 	{
-		string lastPath;
 		public FileSelectScene(Game game) : base(game)
 		{
-			lastPath = Environment.CurrentDirectory;
 			Settings settings = SettingsManager.instance;
 
 			if (settings.songPaths.Count > 0)
-				lastPath = settings.songPaths[0];
+			{
+				string startPath = settings.songPaths[0];
+				if (!Path.IsPathRooted(startPath))
+					startPath = Path.Combine(Program.basePath, startPath);
+
+				if (Directory.Exists(startPath))
+					Environment.CurrentDirectory = startPath;
+			}
 		}
 
 		public override void Dispose()
 		{
 		}
 
-		private void ShowDialog(string path)
+		private void ShowDialog()
 		{
-			path = Path.GetFullPath(path).TrimEnd(new char[] { '/', '\\', });
-			if (!File.Exists(path))
-				path = null;
-
-			string oldCurrentDirectory = Environment.CurrentDirectory;
-
 			string filePath = null;
 			DialogResult result = DialogResult.Cancel;
 			Program.EtoInvoke(() =>
@@ -41,14 +40,9 @@ namespace Pulsus
 					"Be-Music Source Files",
 					new string[] { ".bms", ".bme", ".bml", ".pms" }));
 				
-				//dialog.Directory = new Uri(path);
-				dialog.FileName = path;
 				result = dialog.ShowDialog(Program.etoApplication.MainForm);
 				filePath = dialog.FileName;
 			});
-
-			// file dialog messes up the current directory path under Linux systems
-			Environment.CurrentDirectory = oldCurrentDirectory;
 
 			game.window.Focus();
 
@@ -57,8 +51,6 @@ namespace Pulsus
 				active = false;
 				return;
 			}
-
-			lastPath = Directory.GetParent(filePath).FullName;
 
 			game.sceneManager.Push(new GameplayScene(game, new Song(filePath)));
 		}
@@ -72,7 +64,7 @@ namespace Pulsus
 			}
 
 			// select file dialog
-			ShowDialog(lastPath);
+			ShowDialog();
 		}
 
 		public override void Draw(double deltaTime)

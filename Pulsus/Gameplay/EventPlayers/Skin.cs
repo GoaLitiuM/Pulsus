@@ -177,33 +177,36 @@ namespace Pulsus.Gameplay
 			bgaLayer2 = new BGAImage(null, Color.Black, Color.Black);
 			bgaPoor = new BGAImage(null, Color.Black, Color.Black);
 
-			string skinPath = Path.Combine("Skins", SettingsManager.instance.skin, "gfx") + "/";
-			textureNote1 = new Texture2D(skinPath + "Note1.png");
-			textureNote2 = new Texture2D(skinPath + "Note2.png");
-			textureNote3 = new Texture2D(skinPath + "Note3.png");
-			textureNote1LN = new Texture2D(skinPath + "Note1LN.png");
-			textureNote2LN = new Texture2D(skinPath + "Note2LN.png");
-			textureNote3LN = new Texture2D(skinPath + "Note3LN.png");
-			textureLaneBG1 = new Texture2D(skinPath + "LaneBG1.png");
-			textureLaneBG2 = new Texture2D(skinPath + "LaneBG2.png");
-			textureLaneBG3 = new Texture2D(skinPath + "LaneBG3.png");
-			textureKeyW = new Texture2D(skinPath + "KeyW.png");
-			textureKeyB = new Texture2D(skinPath + "KeyB.png");
-			textureKeyNormal = new Texture2D(skinPath + "KeyNormal.png");
-			textureKeyWide = new Texture2D(skinPath + "KeyWide.png");
-			textureLanePress1 = new Texture2D(skinPath + "LanePress1.png");
-			textureLanePress2 = new Texture2D(skinPath + "LanePress2.png");
-			textureLanePress3 = new Texture2D(skinPath + "LanePress3.png");
-			textureTTBG = new Texture2D(skinPath + "TTBackground.png");
-			textureTTRotator = new Texture2D(skinPath + "TTRotator.png");
-			textureLaneGlow = new Texture2D(skinPath + "LaneGlow.png");
-			textureProgressBG = new Texture2D(skinPath + "ProgressBG.png");
-			textureProgressBar = new Texture2D(skinPath + "ProgressBar.png");
-			textureNoteHit = new TextureAtlas(new Texture2D(skinPath + "NoteHit.png"), 200, 200, 10);
-			textureGaugeTick = new Texture2D(skinPath + "GaugeTick.png");
-			textureGaugeTickOff = new Texture2D(skinPath + "GaugeTickOff.png");
-			textureGaugeTickTop = new Texture2D(skinPath + "GaugeTickTop.png");
-			textureGaugeTickTopOff = new Texture2D(skinPath + "GaugeTickTopOff.png");
+			string skinPath = Path.Combine(Program.basePath, "Skins", SettingsManager.instance.skin);
+			string gfxPath = Path.Combine(skinPath, "gfx" + Path.DirectorySeparatorChar);
+			string fontPath = Path.Combine(skinPath, "fonts");
+
+			textureNote1 = new Texture2D(gfxPath + "Note1.png");
+			textureNote2 = new Texture2D(gfxPath + "Note2.png");
+			textureNote3 = new Texture2D(gfxPath + "Note3.png");
+			textureNote1LN = new Texture2D(gfxPath + "Note1LN.png");
+			textureNote2LN = new Texture2D(gfxPath + "Note2LN.png");
+			textureNote3LN = new Texture2D(gfxPath + "Note3LN.png");
+			textureLaneBG1 = new Texture2D(gfxPath + "LaneBG1.png");
+			textureLaneBG2 = new Texture2D(gfxPath + "LaneBG2.png");
+			textureLaneBG3 = new Texture2D(gfxPath + "LaneBG3.png");
+			textureKeyW = new Texture2D(gfxPath + "KeyW.png");
+			textureKeyB = new Texture2D(gfxPath + "KeyB.png");
+			textureKeyNormal = new Texture2D(gfxPath + "KeyNormal.png");
+			textureKeyWide = new Texture2D(gfxPath + "KeyWide.png");
+			textureLanePress1 = new Texture2D(gfxPath + "LanePress1.png");
+			textureLanePress2 = new Texture2D(gfxPath + "LanePress2.png");
+			textureLanePress3 = new Texture2D(gfxPath + "LanePress3.png");
+			textureTTBG = new Texture2D(gfxPath + "TTBackground.png");
+			textureTTRotator = new Texture2D(gfxPath + "TTRotator.png");
+			textureLaneGlow = new Texture2D(gfxPath + "LaneGlow.png");
+			textureProgressBG = new Texture2D(gfxPath + "ProgressBG.png");
+			textureProgressBar = new Texture2D(gfxPath + "ProgressBar.png");
+			textureNoteHit = new TextureAtlas(new Texture2D(gfxPath + "NoteHit.png"), 200, 200, 10);
+			textureGaugeTick = new Texture2D(gfxPath + "GaugeTick.png");
+			textureGaugeTickOff = new Texture2D(gfxPath + "GaugeTickOff.png");
+			textureGaugeTickTop = new Texture2D(gfxPath + "GaugeTickTop.png");
+			textureGaugeTickTopOff = new Texture2D(gfxPath + "GaugeTickTopOff.png");
 
 			playerCount = song.chart.players;
 			keyCount = song.chart.playerChannels;
@@ -238,8 +241,7 @@ namespace Pulsus.Gameplay
 
 			baseBpm = chart.bpm;
 
-			judgeFont = new Font(Path.Combine("Skins", SettingsManager.instance.skin, "fonts",
-				"HNkani.ttf"),
+			judgeFont = new Font(Path.Combine(fontPath, "HNkani.ttf"),
 				46, FontStyle.Normal, false);
 		}
 

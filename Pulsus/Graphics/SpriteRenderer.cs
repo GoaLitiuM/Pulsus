@@ -75,21 +75,13 @@ namespace Pulsus.Graphics
 
 			ortho = Matrix4.Ortho(0, 0, width, -height, 0, -1000000f);
 
-			string shaderPath = "";
+			string shaderPath = renderer.shaderPath;
 			switch (renderer.rendererType)
 			{
-				case RendererType.Direct3D11:
-					shaderPath = Path.Combine("shaders", "dx11");
-					break;
 				case RendererType.Direct3D9:
-					shaderPath = Path.Combine("shaders", "dx9");
-					
 					// half texel offset
 					ortho[12] += -0.5f * ortho[0];
 					ortho[13] += -0.5f * ortho[5];
-					break;
-				case RendererType.OpenGL:
-					shaderPath = Path.Combine("shaders", "opengl");
 					break;
 				default:
 					break;

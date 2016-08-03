@@ -58,19 +58,8 @@ namespace Pulsus
 			platformVersion = Utility.GetPlatformVersion();
 			platformId = (Environment.OSVersion.Platform == PlatformID.Win32NT ? "Win" : platform) + (Environment.Is64BitProcess ? "-x64" : "-x86");
 
-			// Fixes weird behaviour when using drag'n'drop over the exe:
-			// Working directory changes to the path where the dragged
-			// dragged file is located. This corrects it by using
-			// the correct working directory path in the first argument.
-			
-			string[] args = Environment.GetCommandLineArgs();
-			string dropFile = args.Length > 1 ? Directory.GetParent(args[args.Length-1]).FullName : "";
-
-			if (Environment.CurrentDirectory == dropFile && args.Length > 1)
-				Environment.CurrentDirectory = Directory.GetParent(Path.GetFullPath(args[0])).FullName;
-
 			// setup logging file
-			Log.SetLogFile(name + ".log");
+			Log.SetLogFile(Path.Combine(basePath, name + ".log"));
 
 			Log.Text("{0} {1} ({2})", name, versionDisplay, Environment.Is64BitProcess ? "64-bit" : "32-bit");
 			Log.Text("{0} {1} ({2})", platform, platformVersion, Environment.Is64BitOperatingSystem ? "64-bit" : "32-bit");
@@ -85,7 +74,7 @@ namespace Pulsus
 			//SettingsManager.LoadDefaults();
 			SettingsManager.LoadPersistent();
 			SettingsManager.SavePersistent();	// refresh with new fields
-			SettingsManager.ParseArgs(args);
+			SettingsManager.ParseArgs(Environment.GetCommandLineArgs());
 
 			Settings settings = SettingsManager.instance;
 
@@ -218,8 +207,6 @@ namespace Pulsus
 			using (SettingsWindow settingsWindow = new SettingsWindow(false))
 				return settingsWindow.Show();
 		}
-
-		
 
 		public static void OnCaughtException(Exception exception, string description = null)
 		{

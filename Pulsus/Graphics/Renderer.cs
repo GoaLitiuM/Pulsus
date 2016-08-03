@@ -12,6 +12,8 @@ namespace Pulsus.Graphics
 
 		Uniform textureColor;
 
+		public string shaderPath { get; private set; }
+
 		public ShaderProgram defaultProgram { get; private set; }
 		
 		public SpriteRenderer spriteRenderer { get; internal set; }
@@ -61,23 +63,24 @@ namespace Pulsus.Graphics
 			}
 
 			Reset(width, height, flags);
-			spriteRenderer = new SpriteRenderer(this, width, height);
-
-			string shaderPath = "";
+			
+			shaderPath = Path.Combine(Program.basePath, "Shaders");
 			switch (rendererType)
 			{
 				case RendererType.Direct3D11:
-					shaderPath = Path.Combine("Shaders", "dx11");
+					shaderPath = Path.Combine(shaderPath, "dx11");
 					break;
 				case RendererType.Direct3D9:
-					shaderPath = Path.Combine("Shaders", "dx9");
+					shaderPath = Path.Combine(shaderPath, "dx9");
 					break;
 				case RendererType.OpenGL:
-					shaderPath = Path.Combine("Shaders", "opengl");
+					shaderPath = Path.Combine(shaderPath, "opengl");
 					break;
 				default:
-					break;
+					throw new ApplicationException("No shader path defined for renderer " + rendererType.ToString());
 			}
+
+			spriteRenderer = new SpriteRenderer(this, width, height);
 	
 			defaultProgram = new ShaderProgram(
 				Path.Combine(shaderPath, "default_vs.bin"),

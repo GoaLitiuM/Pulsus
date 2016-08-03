@@ -22,6 +22,8 @@ namespace Pulsus.Graphics
 		private static int loadedFonts = 0;
 		private static bool cacheFonts;
 
+		private static readonly string cachePath = Path.Combine(Path.GetTempPath(), Program.name + "Cache");
+
 		public Font(string path, int pointSize, FontStyle style = FontStyle.Normal, bool unicode = true)
 		{
 			cacheFonts = SettingsManager.instance.engine.cacheFonts;
@@ -29,8 +31,14 @@ namespace Pulsus.Graphics
 			this.style = style;
 			this.unicode = unicode;
 
-			if (SDL_ttf.TTF_WasInit() == 0 && SDL_ttf.TTF_Init() != 0)
-				throw new ApplicationException("Failed to initialize Truetype: " + SDL.SDL_GetError());
+			if (SDL_ttf.TTF_WasInit() == 0)
+			{
+				if (SDL_ttf.TTF_Init() != 0)
+					throw new ApplicationException("Failed to initialize SDL_ttf: " + SDL.SDL_GetError());
+
+				if (!File.Exists(cachePath))
+					Directory.CreateDirectory(cachePath);
+			}
 
 			handle = SDL_ttf.TTF_OpenFont(path, pointSize);
 			if (handle == IntPtr.Zero)
@@ -224,8 +232,7 @@ namespace Pulsus.Graphics
 
 		private bool LoadGlyphDataCached()
 		{
-			string tempPath = Path.Combine(Path.GetTempPath(), Program.name + "Cache");
-			string glyphPath = Path.Combine(tempPath, GetCacheFilename() + ".bin");
+			string glyphPath = Path.Combine(cachePath, GetCacheFilename() + ".bin");
 
 			if (!File.Exists(glyphPath))
 				return false;
@@ -248,12 +255,11 @@ namespace Pulsus.Graphics
 		private bool LoadTextureDataCached()
 		{
 			string fileTemplate = GetCacheFilename();
-			string tempPath = Path.Combine(Path.GetTempPath(), Program.name + "Cache");
 
 			int id = 0;
 			while (true)
 			{
-				string texturePath = Path.Combine(tempPath, fileTemplate + "_" + id.ToString() + ".png");
+				string texturePath = Path.Combine(cachePath, fileTemplate + "_" + id.ToString() + ".png");
 				if (!File.Exists(texturePath))
 					break;
 
@@ -269,11 +275,7 @@ namespace Pulsus.Graphics
 
 		private void CacheGlyphData()
 		{
-			string tempPath = Path.Combine(Path.GetTempPath(), Program.name + "Cache");
-			string glyphPath = Path.Combine(tempPath, GetCacheFilename() + ".bin");
-
-			if (!File.Exists(tempPath))
-				Directory.CreateDirectory(tempPath);
+			string glyphPath = Path.Combine(cachePath, GetCacheFilename() + ".bin");
 
 			using (Stream stream = File.Open(glyphPath, FileMode.CreateNew))
 			{
@@ -289,12 +291,7 @@ namespace Pulsus.Graphics
 
 		private void CacheTextureData(byte[] data, int textureId)
 		{
-			string tempPath = Path.Combine(Path.GetTempPath(), Program.name + "Cache");
-			string texturePath = Path.Combine(tempPath, GetCacheFilename() + "_" + textureId.ToString() + ".png");
-
-			if (!File.Exists(tempPath))
-				Directory.CreateDirectory(tempPath);
-
+			string texturePath = Path.Combine(cachePath, GetCacheFilename() + "_" + textureId.ToString() + ".png");
 			FFmpegHelper.SaveImagePNG(texturePath, data, textureSize, textureSize);
 		}
 

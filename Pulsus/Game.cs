@@ -5,6 +5,7 @@ using Pulsus.Graphics;
 using Pulsus.Audio;
 using Pulsus.Input;
 using Pulsus.Gameplay;
+using System.IO;
 
 namespace Pulsus
 {
@@ -22,6 +23,7 @@ namespace Pulsus
 		public AudioEngine audio;
 		public InputManager inputManager;
 
+		private readonly string debugFontPath = Path.Combine(Program.basePath, "Skins/goa/fonts/DroidSansFallback.ttf");
 		public static Font debugFont;
 
 		public Game()
@@ -92,7 +94,6 @@ namespace Pulsus
 			inputManager = new InputManager();
 			
 			Log.Info("Loading debug font...");
-			string debugFontPath = "Skins/goa/fonts/DroidSansFallback.ttf";
 			debugFont = new Font(debugFontPath, 24, FontStyle.Normal, false);
 
 			Log.Clear();
