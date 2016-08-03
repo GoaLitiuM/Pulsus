@@ -139,7 +139,7 @@ namespace Pulsus
 
 			BindKey(layout.GetInputs("exit"), InputAction.OnPressed(() =>
 			{
-				active = false;
+				Close();
 			}));
 			
 			const double scrollStep = 0.001;

@@ -28,7 +28,7 @@ namespace Pulsus
 
 		public void Push(Scene scene)
 		{
-			if (!scene.active)
+			if (!scene.isActive)
 				return;
 
 			if (currentScene != null)
@@ -55,7 +55,7 @@ namespace Pulsus
 
 		public void Update(double deltaTime)
 		{
-			if (currentScene == null || !currentScene.active)
+			if (currentScene == null || !currentScene.isActive)
 			{
 				if (!Pop())
 					return;
@@ -69,7 +69,7 @@ namespace Pulsus
 
 		public void Draw(double deltaTime)
 		{
-			if (currentScene == null || !currentScene.active)
+			if (currentScene == null || !currentScene.isActive)
 				return;
 
 			if (sceneChanged == 0)

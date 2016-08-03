@@ -10,9 +10,9 @@ namespace Pulsus
 		BGM songPlayer;
 		Player autoplay;
 
-		public RenderAudioScene(Game game, Song song, string renderPath) : base(game)
+		public RenderAudioScene(Game game, string inputPath, string outputPath)
+			: base(game, false)
 		{
-			active = false;
 			if (song == null)
 				return;
 

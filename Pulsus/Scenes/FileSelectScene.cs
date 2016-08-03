@@ -48,7 +48,7 @@ namespace Pulsus
 
 			if (result != DialogResult.Ok)
 			{
-				active = false;
+				Close();
 				return;
 			}
 
@@ -59,7 +59,7 @@ namespace Pulsus
 		{
 			if (input.KeyPressed(SDL.SDL_Scancode.SDL_SCANCODE_ESCAPE))
 			{
-				active = false;
+				Close();
 				return;
 			}
 
