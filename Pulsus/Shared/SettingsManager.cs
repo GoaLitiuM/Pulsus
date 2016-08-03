@@ -97,17 +97,16 @@ namespace Pulsus
 		{
 			if (key.StartsWith("-"))
 			{
-				key = key.TrimStart(new char[] { '-', ' ', });
 				key = key.ToLower();
 
 				switch (key)
 				{
-					case "settings":
-					case "config":
+					case "--settings":
+					case "--config":
 						temporary.showSettings = true;
 						break;
-					case "autoplay":
-					case "a":
+					case "--autoplay":
+					case "-a":
 						temporary.gameplay.assistMode = AssistMode.Autoplay;
 						break;
 					default:
@@ -117,10 +116,10 @@ namespace Pulsus
 				{
 					switch (key)
 					{
-						case "skin":
+						case "--skin":
 							temporary.skin = value;
 							break;
-						case "render":
+						case "--render":
 							temporary.audio.driver = Audio.AudioDriver.File;
 							temporary.audio.bufferLength = 4096;
 							temporary.audio.volume = 100;
