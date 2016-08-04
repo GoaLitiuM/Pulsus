@@ -71,10 +71,18 @@ namespace Pulsus
 			playerGraph.AdjustTimeline(-adjustTimeline);
 
 			// load sound and bga objects
+
+			System.Diagnostics.Stopwatch loadTimer = System.Diagnostics.Stopwatch.StartNew();
 			if (settings.songPreload)
 				loader.PreloadAll();
 			else
+			{
+				// preload all BGA objects
+				loader.PreloadAll(false, true);
 				loader.Preload(); // preload few seconds ahead
+			}
+			loadTimer.Stop();
+			Log.Info("Preload finished in " + loadTimer.Elapsed.TotalSeconds.ToString() + "s");
 
 			// bind input
 			inputMapper = new InputMapper(game.inputManager);

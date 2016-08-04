@@ -13,15 +13,16 @@ namespace Pulsus.Gameplay
 		HashSet<SoundObject> soundUniques = new HashSet<SoundObject>();
 		HashSet<BGAObject> bgaUniques = new HashSet<BGAObject>();
 
-		bool queueObjects;
+		bool loadSounds = true;
+		bool loadBgas = true;
 		const double preloadAheadTime = 20.0;
 		bool disableBGA;
+
+		System.Diagnostics.Stopwatch loadTimer;
 
 		public Loader(Song song)
 			: base(song)
 		{
-			timeMultiplier = 5000.0;
-
 			loadThread = new Thread(new ThreadStart(LoadThread));
 			loadThread.Name = "ObjectLoaderThread";
 			loadThread.IsBackground = true;
@@ -40,21 +41,38 @@ namespace Pulsus.Gameplay
 			bgaUniques.Clear();
 		}
 
-		public void Preload()
+		public void Preload(bool preloadSound = true, bool preloadBga = true, double preloadAheadTime = Loader.preloadAheadTime)
 		{
-			Log.Info("Preloading objects");
-			currentTime = preloadAheadTime;
-			pulse = chart.GetPulseFromTime(preloadAheadTime);
+			loadSounds = preloadSound;
+			loadBgas = preloadBga;
+
+			if (loadSounds && loadBgas)
+				Log.Info("Preloading objects " + preloadAheadTime.ToString() + "s ahead");
+			else if (loadSounds)
+				Log.Info("Preloading sound objects " + preloadAheadTime.ToString() + "s ahead");
+			else if (loadBgas)
+				Log.Info("Preloading BGA objects " + preloadAheadTime.ToString() + "s ahead");
+
+			Seek(0.0);
+			Seek(preloadAheadTime);
+			
 			StartPreload();
 		}
 
-		public void PreloadAll()
+		public void PreloadAll(bool preloadSound = true, bool preloadBga = true)
 		{
-			Log.Info("Preloading all objects");
-			var last = eventList[eventList.Count-1];
-			currentTime = last.timestamp;
-			pulse = last.pulse;
+			loadSounds = preloadSound;
+			loadBgas = preloadBga;
 
+			if (loadSounds && loadBgas)
+				Log.Info("Preloading all objects");
+			else if (loadSounds)
+				Log.Info("Preloading all sound objects");
+			else if (loadBgas)
+				Log.Info("Preloading all BGA objects");
+
+			Seek(0.0);
+			Seek(eventList[eventList.Count-1]);
 			StartPreload();
 		}
 
@@ -63,25 +81,37 @@ namespace Pulsus.Gameplay
 			if (chart == null)
 				return;
 
-			queueObjects = true;
 			UpdateSong();
+
+			int soundCount = soundQueue.Count;
+			int bgaCount = bgaQueue.Count;
 
 			while (soundQueue.Count > 0)
 			{
 				SoundObject value = soundQueue.Dequeue();
-				bool success = value.Load(song.path);
+				value.Load(song.path);
 			}
 
 			while (bgaQueue.Count > 0)
 			{
 				BGAObject value = bgaQueue.Dequeue();
-				bool success = value.Load(song.path);
+				value.Load(song.path);
 			}
+
+			Log.Info("Preloaded  {0} sound objects, {1} BGA objects", soundCount, bgaCount);
+
+			loadSounds = true;
+			loadBgas = true;
 		}
 
 		public override void StartPlayer()
 		{
 			base.StartPlayer();
+
+			Seek(0.0);
+			Seek(eventList[eventList.Count-1]);
+
+			loadTimer = System.Diagnostics.Stopwatch.StartNew();
 			loadThread.Start();
 		}
 
@@ -106,7 +136,7 @@ namespace Pulsus.Gameplay
 
 		public override void OnSoundObject(SoundEvent soundEvent)
 		{
-			if (!queueObjects)
+			if (!loadSounds)
 				return;
 
 			if (soundEvent.sound == null)
@@ -127,7 +157,7 @@ namespace Pulsus.Gameplay
 			if (disableBGA)
 				return;
 
-			if (!queueObjects)
+			if (!loadBgas)
 				return;
 
 			if (bgaEvent.bga == null)
@@ -147,50 +177,42 @@ namespace Pulsus.Gameplay
 		{
 			while (true)
 			{
+				SoundObject sound = null;
+				BGAObject bga = null;
+
+				if (soundQueue.Count > 0 && Monitor.TryEnter(soundQueue))
 				{
-					int count = 0;
-					lock (soundQueue)
-						count = soundQueue.Count;
-
-					while (count > 0)
+					try
 					{
-						SoundObject value = null;
-						lock (soundQueue)
-						{
-							value = soundQueue.Dequeue();
-							count = soundQueue.Count;
-						}
-
-						if (!value.loaded)
-							value.Load(song.path);
+						sound = soundQueue.Dequeue();
+					}
+					finally
+					{
+						Monitor.Exit(soundQueue);
+					}
+				}
+				else if (bgaQueue.Count > 0 && Monitor.TryEnter(bgaQueue))
+				{
+					try
+					{
+						bga = bgaQueue.Dequeue();
+					}
+					finally
+					{
+						Monitor.Exit(bgaQueue);
 					}
 				}
 
-				{
-					int count = 0;
-					lock (bgaQueue)
-						count = bgaQueue.Count;
-
-					while (count > 0)
-					{
-						BGAObject value = null;
-						lock (bgaQueue)
-						{
-							value = bgaQueue.Dequeue();
-							count = bgaQueue.Count;
-						}
-
-						if (!value.loaded)
-							value.Load(song.path);
-					}
-				}
-
-				// no more objects are getting queued, stop here
-				if (!playing)
+				if (sound != null && !sound.loaded)
+					sound.Load(song.path);
+				else if (bga != null && !bga.loaded)
+					bga.Load(song.path);
+				else if (!playing && soundQueue.Count == 0 && bgaQueue.Count == 0)
 					break;
-
-				Thread.Sleep(1);
 			}
+
+			loadTimer.Stop();
+			Log.Warning("Background loading finished in " + loadTimer.Elapsed.TotalSeconds.ToString() + "s");
 		}
 	}
 }

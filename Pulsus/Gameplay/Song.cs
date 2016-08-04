@@ -21,28 +21,32 @@ namespace Pulsus.Gameplay
 			{ ".bme", typeof(BMSParser) },
 			{ ".bml", typeof(BMSParser) },
 			{ ".pms", typeof(BMSParser) },
-
-			{ ".xxx", typeof(BMSParser) },	// not meant to be played, for sabun makers
 		}; 
 
-		static readonly string[] supportedFileFormats = parsers.Keys.ToArray();
+		public static readonly string[] supportedFileFormats = parsers.Keys.ToArray();
 
-		private static string fileSearchPattern;
+		private static string _supportedSearchPattern;
+		public static string supportedSearchPattern
+		{
+			get
+			{
+				if (_supportedSearchPattern == null)
+				{
+					_supportedSearchPattern = "";
+
+					foreach (string format in supportedFileFormats)
+						_supportedSearchPattern += format + "|";
+
+					if (_supportedSearchPattern.Contains("|"))
+						_supportedSearchPattern = _supportedSearchPattern.Remove(_supportedSearchPattern.LastIndexOf("|"));
+				}
+				return _supportedSearchPattern;
+			}
+		}
 
 		public Song(string path)
 		{
 			this.path = path;
-
-			if (fileSearchPattern == null)
-			{
-				fileSearchPattern = "";
-
-				foreach (string format in supportedFileFormats)
-					fileSearchPattern += format + "|";
-
-				if (fileSearchPattern.Contains("|"))
-					fileSearchPattern = fileSearchPattern.Remove(fileSearchPattern.LastIndexOf("|"));
-			}
 		}
 
 		public void Dispose()

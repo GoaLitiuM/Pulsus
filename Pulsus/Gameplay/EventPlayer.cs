@@ -132,6 +132,24 @@ namespace Pulsus.Gameplay
 				pulse = eventList[eventList.Count-1].pulse;
 		}
 
+		public virtual void Seek(double time)
+		{
+			if (time < currentTime)
+				lastEventIndex = 0;
+
+			currentTime = time;
+			pulse = chart.GetPulseFromTime(time);
+		}
+
+		public virtual void Seek(Event @event)
+		{
+			if (@event.timestamp < currentTime)
+				lastEventIndex = 0;
+
+			currentTime = @event.timestamp;
+			pulse = @event.pulse;
+		}
+
 		public virtual void UpdateSong()
 		{
 			int i = lastEventIndex;

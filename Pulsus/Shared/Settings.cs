@@ -13,7 +13,13 @@ namespace Pulsus
 	public class Settings
 	{
 		public string skin = "goa";
+
+		// check for new updates at startup
 		public bool checkUpdates = false;
+
+		// fully load song data beforehand
+		public bool songPreload = false;
+
 		public List<string> songPaths = new List<string>()
 		{
 			"Songs/",
@@ -38,9 +44,6 @@ namespace Pulsus
 
 		[JsonIgnore]
 		public int startMeasure;
-
-		[JsonIgnore]
-		public bool songPreload = true;
 
 		[JsonIgnore]
 		public bool showSettings;
