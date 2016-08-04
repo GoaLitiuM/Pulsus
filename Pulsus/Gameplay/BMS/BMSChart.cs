@@ -16,6 +16,7 @@ public class BMSChart : Chart
 	public override double gaugeTotal { get { return GetHeader<double>("TOTAL"); } }
 	public override double gaugeMultiplier { get { return 1.0; } }
 	public override double volume { get { return GetHeader<double>("VOLWAV") / 100.0; } }
+	public override int playLevel { get { return GetHeader<int>("PLAYLEVEL"); } }
 
 	private Dictionary<string, object> headerObjects = new Dictionary<string, object>()
 	{
