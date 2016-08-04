@@ -72,12 +72,13 @@ namespace Pulsus.FFmpeg
 					FFmpegHelper.av_log_set_callback(logPtr);
 				}
 			}
-			catch (DllNotFoundException exception)
+			catch (DllNotFoundException e)
 			{
-				string msg = "Failed to initialize FFmpeg.";
+				string description = "Failed to initialize FFmpeg.";
 				if (Environment.OSVersion.Platform != PlatformID.Win32NT)
-					msg += " Please install FFmpeg (3.0.2), or install the static FFmpeg binaries to \"" + ffmpegPath + "\"";
-				Program.OnCaughtException(exception, msg);
+					description += " Please install FFmpeg (3.0.2), or install the static FFmpeg binaries to \"" + ffmpegPath + "\"";
+				
+				throw new DllNotFoundException(description, e);
 			}
 		}
 

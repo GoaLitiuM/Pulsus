@@ -35,8 +35,9 @@ namespace Pulsus
 		public static Eto.Forms.Application etoApplication;
 		public static EventWaitHandle etoWaitHandle = new EventWaitHandle(false, EventResetMode.ManualReset);
 		private static Thread etoThread;
-
-		private static bool restart = false;
+	
+		private static bool restart;
+		private static bool hideErrorDialog;
 
 		[STAThread]
 		static void Main()
@@ -77,6 +78,12 @@ namespace Pulsus
 			SettingsManager.ParseArgs(Environment.GetCommandLineArgs());
 
 			Settings settings = SettingsManager.instance;
+
+			// start Eto context when not doing any command-line processing
+			if (settings.outputMode == OutputMode.None)
+				EtoStartup();
+			else
+				hideErrorDialog = true;
 
 			// clean up residual files from update
 			Updater.CleanUpdateFiles();
@@ -162,13 +169,25 @@ namespace Pulsus
 
 		public static void EtoStartup()
 		{
+			if (etoThread != null)
+				return;
+
 			// run Eto UI in separate thread
 			etoThread = new Thread(new ThreadStart(() =>
 			{
-				using (etoApplication = new Eto.Forms.Application())
+				try
 				{
-					etoApplication.Initialized += (s, e) => etoWaitHandle.Set();
-					etoApplication.Run();
+
+					using (etoApplication = new Eto.Forms.Application())
+					{
+						etoApplication.Initialized += (s, e) => etoWaitHandle.Set();
+						etoApplication.Run();
+					}
+				}
+				catch
+				{
+					etoWaitHandle.Set();
+					throw;
 				}
 			}));
 			etoThread.SetApartmentState(ApartmentState.STA);
@@ -208,38 +227,41 @@ namespace Pulsus
 				return settingsWindow.Show();
 		}
 
-		public static void OnCaughtException(Exception exception, string description = null)
+		public static void OnCaughtException(Exception exception)
 		{
-			if (description == null)
-				description = exception.GetType().Name;
+			Log.Fatal("{0} {1}\n{2}", exception.Message,
+				exception.InnerException != null ? ("\n" + exception.InnerException.Message) : "",
+				exception.StackTrace);
 
-			Log.Fatal((string.IsNullOrEmpty(description) ? "" : (description + ": ")) + exception.Message + "\n" + exception.StackTrace);
-
-			if (!string.IsNullOrEmpty(description))
-				description += "\n\n";
-
-			string exceptionMessage = exception.Message;
-			if (exceptionMessage.Length > 80)
+			if (!hideErrorDialog)
 			{
-				string[] words = exceptionMessage.Split(new char[] { ' '/*, '\n'*/ });
-				string line = "";
-				exceptionMessage = "";
-				for (int i = 0; i < words.Length; i++)
+				string message = string.Format("{0} {1}\n{2}\n\nSee {3} for more details.", exception.Message,
+					exception.InnerException != null ? ("\n\n" + exception.InnerException.Message + "\n") : "",
+					exception.StackTrace, Log.logPath);
+
+				bool fallbackError = false;
+				try
 				{
-					if (line.Length + words[i].Length > 80)
+					EtoInvoke(() =>
 					{
-						exceptionMessage += line + "\n";
-						line = "";
-					}
-					line += words[i] + " ";
+						Eto.Forms.MessageBox.Show(message, "Pulsus Error", Eto.Forms.MessageBoxType.Error);
+					});
 				}
-				exceptionMessage += line;
+				catch
+				{
+					fallbackError = true;
+				}
+				
+				if (fallbackError)
+				{
+					if (etoThread != null && Thread.CurrentThread != etoThread)
+						etoThread.Abort();
+
+					SDL.SDL_ShowSimpleMessageBox(SDL.SDL_MessageBoxFlags.SDL_MESSAGEBOX_ERROR,
+						"Pulsus Error", message, IntPtr.Zero);
+				}
 			}
 
-			SDL.SDL_ShowSimpleMessageBox(SDL.SDL_MessageBoxFlags.SDL_MESSAGEBOX_ERROR,
-					"Pulsus Error", description + exceptionMessage + "\n\nSee " + Log.logPath + " for more details.", IntPtr.Zero);
-	
-			EtoInvoke(() => etoApplication.Quit());
 			Environment.Exit(1);
 		}
 	}
