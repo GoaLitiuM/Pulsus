@@ -31,7 +31,7 @@ namespace Pulsus
 		public string playPath;
 
 		[JsonIgnore]
-		public OutputMode outputMode = OutputMode.Render;
+		public OutputMode outputMode;
 
 		[JsonIgnore]
 		public string outputPath;

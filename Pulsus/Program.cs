@@ -177,7 +177,6 @@ namespace Pulsus
 			{
 				try
 				{
-
 					using (etoApplication = new Eto.Forms.Application())
 					{
 						etoApplication.Initialized += (s, e) => etoWaitHandle.Set();
