@@ -94,7 +94,7 @@ namespace Pulsus
 			inputManager = new InputManager();
 			
 			Log.Info("Loading debug font...");
-			debugFont = new Font(debugFontPath, 24, FontStyle.Normal, false);
+			debugFont = new Font(debugFontPath, 24, FontStyle.Normal, true);
 
 			Log.Clear();
 

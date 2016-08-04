@@ -54,7 +54,10 @@ namespace Pulsus.Graphics
 			if (cacheFonts)
 			{
 				if (LoadGlyphDataCached() && LoadTextureDataCached())
+				{
+					Log.Info("Font: Using cached font data");
 					generateTextures = false;
+				}
 				else
 				{
 					glyphs = null;
@@ -96,6 +99,8 @@ namespace Pulsus.Graphics
 
 		private void GenerateGlyphData(ushort characterCount)
 		{
+			Log.Info("Font: Generating glyph data for {0} characters", characterCount);
+			
 			glyphs = new FontGlyph[characterCount];
 
 			for (ushort i = 0; i < characterCount; ++i)
@@ -114,6 +119,8 @@ namespace Pulsus.Graphics
 
 		private void GenerateTextures(ushort characterCount)
 		{
+			Log.Info("Font: Generating font textures");
+
 			byte[] textureData = new byte[textureSize*textureSize*4];
 			textures.Add(new Texture2D(textureSize, textureSize));
 
@@ -275,6 +282,7 @@ namespace Pulsus.Graphics
 
 		private void CacheGlyphData()
 		{
+			Log.Info("Font: Saving glyph data to cache...");
 			string glyphPath = Path.Combine(cachePath, GetCacheFilename() + ".bin");
 
 			using (Stream stream = File.Open(glyphPath, FileMode.CreateNew))
@@ -291,6 +299,7 @@ namespace Pulsus.Graphics
 
 		private void CacheTextureData(byte[] data, int textureId)
 		{
+			Log.Info("Font: Saving texture data to cache...");
 			string texturePath = Path.Combine(cachePath, GetCacheFilename() + "_" + textureId.ToString() + ".png");
 			FFmpegHelper.SaveImagePNG(texturePath, data, textureSize, textureSize);
 		}
