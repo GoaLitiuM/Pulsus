@@ -57,6 +57,8 @@ namespace Pulsus
 					inputs[i] = new InputJoystick(joyButton);
 				else if ((scancode = SDL.SDL_GetScancodeFromName(key)) != SDL.SDL_Scancode.SDL_SCANCODE_UNKNOWN)
 					inputs[i] = new InputKey(scancode);
+				else if (Enum.TryParse<SDL.SDL_Scancode>("SDL_SCANCODE_" + key, true, out scancode))
+					inputs[i] = new InputKey(scancode);
 				else
 					throw new ApplicationException("Unable to parse input key: " + key);
 			}
@@ -99,7 +101,16 @@ namespace Pulsus
 			this.scancode = scancode;
 		}
 
-		public string Name { get { return SDL.SDL_GetScancodeName(scancode); } }
+		public string Name
+		{
+			get
+			{
+				string name = SDL.SDL_GetScancodeName(scancode);
+				if (string.IsNullOrEmpty(name))
+					name = scancode.ToString().Replace("SDL_SCANCODE_", "");
+				return name;
+			}
+		}
 	}
 
 	public class InputJoystick : InputType
