@@ -95,8 +95,6 @@ namespace Pulsus.Graphics
 			colorProgram = new ShaderProgram(
 				Path.Combine(shaderPath, "color_vs.bin"),
 				Path.Combine(shaderPath, "color_fs.bin"));
-
-			renderer.SetUniform(colorKeyUniform, Color.Black.AsARGB().AsFloat4());
 		}
 
 		public void Dispose()
@@ -125,6 +123,7 @@ namespace Pulsus.Graphics
 			if (program == null)
 				throw new ArgumentException("Invalid ShaderProgram");
 
+			renderer.SetViewFrameBuffer(currentViewport, null);
 			renderer.SetProjectionTransform(currentViewport, ortho);
 			renderer.SetViewport(currentViewport, 0, 0, width, height);
 			currentProgram = program;
@@ -268,11 +267,6 @@ namespace Pulsus.Graphics
 		public void Clear(Color color)
 		{
 			renderer.Clear(currentViewport, color);
-		}
-
-		public void Clear(Color color, ClearTargets clearTargets)
-		{
-			renderer.Clear(currentViewport, color, clearTargets);
 		}
 
 		public void SetFrameBuffer(FrameBuffer framebuffer)

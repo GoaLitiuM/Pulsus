@@ -109,6 +109,11 @@ namespace Pulsus.Graphics
 		public void Present()
 		{
 			Bgfx.Frame();
+
+			// reset all used views
+			for (int i = 0; i < spriteRenderer.currentViewport; i++)
+				Bgfx.SetViewClear((byte)i, ClearTargets.None, 0, 0, 0);
+
 			spriteRenderer.currentViewport = 0;
 		}
 		
@@ -144,12 +149,12 @@ namespace Pulsus.Graphics
 		/// <summary> Clears color and depth buffers. </summary>
 		public void Clear(int viewport, Color color)
 		{
-			Clear(viewport, color, ClearTargets.Color | ClearTargets.Depth);
+			Clear(viewport, ClearTargets.Color | ClearTargets.Depth, color);
 		}
 
-		public void Clear(int viewport, Color color, ClearTargets clearTargets)
+		public void Clear(int viewport, ClearTargets clearTargets, Color color, float depth = 1.0f, byte stencil = 0)
 		{
-			Bgfx.SetViewClear((byte)viewport, clearTargets, (int)color.GetRGBA());
+			Bgfx.SetViewClear((byte)viewport, clearTargets, (int)color.GetRGBA(), depth, stencil);
 			Bgfx.Touch((byte)viewport);
 		}
 
@@ -222,7 +227,7 @@ namespace Pulsus.Graphics
 			if (framebuffer != null)
 				Bgfx.SetViewFrameBuffer((byte)viewport, framebuffer.handle);
 			else
-				Bgfx.SetViewFrameBuffer((byte)viewport, SharpBgfx.FrameBuffer.Invalid);
+				Bgfx.SetViewFrameBuffer((byte)viewport, FrameBuffer.Invalid);
 		}
 
 		public void SetUniform(Uniform uniform, int value)

@@ -597,6 +597,7 @@ namespace Pulsus.Gameplay
 			
 			SpriteRenderer spriteRenderer = renderer.spriteRenderer;
 			spriteRenderer.Begin();
+			spriteRenderer.Clear(Color.Black);
 
 			RenderLanes(deltaTime, laneStartPos);
 

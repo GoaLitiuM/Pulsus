@@ -1,12 +1,27 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Reflection;
 using SharpBgfx;
 
 namespace Pulsus.Graphics
 {
 	public class FrameBuffer : IDisposable
 	{
+		public static readonly SharpBgfx.FrameBuffer Invalid;// = SharpBgfx.FrameBuffer.Invalid;
+
 		public SharpBgfx.FrameBuffer handle { get; internal set; }
+
+		static FrameBuffer()
+		{
+			// BUG: SharpBgfx does not define invalid handle correctly (should be ushort.MaxValue, not 0)
+
+			object invalid = Invalid;
+
+			invalid.GetType().GetField("handle",
+				BindingFlags.NonPublic | BindingFlags.Instance).SetValue(invalid, ushort.MaxValue);
+
+			Invalid = (SharpBgfx.FrameBuffer)invalid;
+		}
 
 		public FrameBuffer(int width, int height, TextureFlags flags = TextureFlags.None, TextureFormat format = TextureFormat.BGRA8)
 		{

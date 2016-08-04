@@ -223,14 +223,13 @@ namespace Pulsus
 				updateTicks = 0;
 			}	
 
+			sceneManager.Draw(deltaTime);
+
 			renderer.spriteRenderer.Begin();
-			renderer.spriteRenderer.Clear(Color.Black);
 			renderer.spriteRenderer.DrawText(debugFont,
 				"FPS: " + (1.0 / debugFrametime).ToString("0.0") + " TPS: " + debugTickrate.ToString("0"),
 				new Int2(0, 0), Color.White);
 			renderer.spriteRenderer.End();
-
-			sceneManager.Draw(deltaTime);
 
 			renderer.Present();	
 		}
