@@ -172,11 +172,18 @@ namespace Pulsus
 			
 			if (!settings.gameplay.autoplay)
 			{
-				BindLaneKey(layout.GetInputs("turntable"), 0);
+				int laneOffset;
+				if (song.chart.hasTurntable)
+				{
+					laneOffset = 0;
+					BindLaneKey(layout.GetInputs("turntable"), 0);
+				}
+				else
+					laneOffset = -1;
 
 				int keyCount = 9;
-				for (int key = 0; key <= keyCount; key++)
-					BindLaneKey(layout.GetKeyInputs(key), key);
+				for (int key = 1; key <= keyCount; key++)
+					BindLaneKey(layout.GetKeyInputs(key), key+laneOffset);
 			}
 		}
 

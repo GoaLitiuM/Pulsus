@@ -42,6 +42,7 @@ namespace Pulsus.Gameplay
 		public HashSet<int> lnObjects = new HashSet<int>();
 
 		public bool hasTurntable { get { return playerChannels == 6 || playerChannels == 8; } }
+		public int playerKeyCount { get { return (playerChannels - (hasTurntable ? 1 : 0)) * players; } }
 
 		public void Dispose()
 		{
