@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Text;
 
@@ -36,11 +37,10 @@ namespace Pulsus
 
 		public static void SetLogFile(string path)
 		{
+			if (logPath != null)
+				throw new ApplicationException("Log path already set");
+
 			logPath = path;
-
-			if (File.Exists(logPath))
-				File.Delete(logPath);
-
 			logStream = new StreamWriter(File.Open(logPath, FileMode.Create), Encoding.UTF8);
 		}
 
@@ -65,6 +65,7 @@ namespace Pulsus
 			fstr = "[I] " + fstr;
 
 			Console.WriteLine(fstr);
+			Debug.WriteLine(fstr);
 
 			logStream.WriteLine(fstr);
 			FlushLog();
@@ -76,6 +77,7 @@ namespace Pulsus
 			fstr = "[W] " + fstr;
 
 			Console.WriteLine(fstr);
+			Debug.WriteLine(fstr);
 
 			lastMessageTime = DateTime.UtcNow;
 			logList.Add(new LogMessage(fstr, lastMessageTime));
@@ -92,6 +94,7 @@ namespace Pulsus
 			fstr = "[E] " + fstr;
 
 			Console.WriteLine(fstr);
+			Debug.WriteLine(fstr);
 
 			lastMessageTime = DateTime.UtcNow;
 			logList.Add(new LogMessage(fstr, lastMessageTime));
@@ -105,16 +108,18 @@ namespace Pulsus
 		public static void Fatal(string str, params object[] args)
 		{
 			string fstr = string.Format(str, args);
+
 			fstr = "[F] " + fstr;
+			fstr = fstr.Replace("\n", "\n[F] ");
 
 			Console.WriteLine(fstr);
+			Debug.WriteLine(fstr);
 
 			lastMessageTime = DateTime.UtcNow;
 			logList.Add(new LogMessage(fstr, lastMessageTime));
 
 			logStream.WriteLine(fstr);
 			logStream.Flush();
-			//throw new ApplicationException(fstr);
 		}
 	}
 }
