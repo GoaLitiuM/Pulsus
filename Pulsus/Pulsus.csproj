@@ -136,6 +136,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Gameplay\Event\LongNoteEvent.cs" />
+    <Compile Include="Graphics\SubTexture.cs" />
     <Compile Include="Properties\AssemblyInfo_Version.cs" />
     <Compile Include="Audio\Sound.cs" />
     <Compile Include="Audio\SoundInstance.cs" />

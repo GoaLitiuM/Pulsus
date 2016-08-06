@@ -1,40 +1,29 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Pulsus.Graphics
 {
-	public class TextureAtlas : IDisposable
+	public static class TextureAtlas
 	{
-		public Texture2D texture { get; }
-		public int frameCount { get; }
-		public int gridWidth { get; }
-		public int gridHeight { get; }
-
-		public TextureAtlas(Texture2D texture, int gridWidth, int gridHeight, int frameCount)
+		/// <summary> Creates an array of sub-textures from texture atlas where sub-images are aligned in a grid pattern</summary>
+		/// <param name="texture">Texture atlas</param>
+		/// <param name="elementWidth">Width of a single element in the grid</param>
+		/// <param name="elementHeight">Height of a single element in the grid</param>
+		/// <param name="elementCount">Number of elements in the grid</param>
+		public static SubTexture[] CreateFromGrid(Texture2D texture, int elementWidth, int elementHeight, int elementCount)
 		{
-			this.texture = texture;
-			this.gridWidth = gridWidth;
-			this.gridHeight = gridHeight;
-			this.frameCount = frameCount;
-		}
+			if (elementCount <= 0)
+				throw new ArgumentOutOfRangeException("Invalid number of elements");
 
-		public void Dispose()
-		{
-			texture.Dispose();
-		}
+			SubTexture[] subTextures = new SubTexture[elementCount];
 
-		public Rectangle GetSourceRect(int frame)
-		{
-			if (frame < 0 || frame >= frameCount)
-				throw new IndexOutOfRangeException();
+			for (int i = 0; i < elementCount; i++)
+			{
+				int x = (i * elementWidth) % texture.width;
+				int y = ((i * elementWidth) / texture.width) * elementHeight;
+				subTextures[i] = new SubTexture(texture, new Rectangle(x, y, elementWidth, elementHeight));
+			}
 
-			int x = (frame * gridWidth) % texture.width;
-			int y = ((frame * gridWidth) / texture.width) * gridHeight;
-
-			return new Rectangle(x, y, gridWidth, gridHeight);
+			return subTextures;
 		}
 	}
 }

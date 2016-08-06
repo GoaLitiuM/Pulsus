@@ -92,7 +92,8 @@ namespace Pulsus.Gameplay
 		Texture2D textureLaneGlow;
 		Texture2D textureProgressBG;
 		Texture2D textureProgressBar;
-		TextureAtlas textureNoteHit;
+		Texture2D textureNoteHit;
+		SubTexture[] textureNoteHitFrames;
 		Texture2D textureGaugeTick;
 		Texture2D textureGaugeTickOff;
 		Texture2D textureGaugeTickTop;
@@ -202,7 +203,8 @@ namespace Pulsus.Gameplay
 			textureLaneGlow = new Texture2D(gfxPath + "LaneGlow.png");
 			textureProgressBG = new Texture2D(gfxPath + "ProgressBG.png");
 			textureProgressBar = new Texture2D(gfxPath + "ProgressBar.png");
-			textureNoteHit = new TextureAtlas(new Texture2D(gfxPath + "NoteHit.png"), 200, 200, 10);
+			textureNoteHit = new Texture2D(gfxPath + "NoteHit.png");
+			textureNoteHitFrames = TextureAtlas.CreateFromGrid(textureNoteHit, 200, 200, 10);
 			textureGaugeTick = new Texture2D(gfxPath + "GaugeTick.png");
 			textureGaugeTickOff = new Texture2D(gfxPath + "GaugeTickOff.png");
 			textureGaugeTickTop = new Texture2D(gfxPath + "GaugeTickTop.png");
@@ -1110,7 +1112,7 @@ namespace Pulsus.Gameplay
 					Int2 effectSize = new Int2(100, 100);
 					Rectangle effectRect = new Rectangle(hitStartPos + new Int2(xOffset + ((laneWidth - effectSize.x) / 2), -effectSize.y / 2),
 						effectSize);
-					spriteRenderer.Draw(textureNoteHit, noteHitFrames[i], effectRect, Color.White);
+					spriteRenderer.Draw(textureNoteHitFrames[noteHitFrames[i]], effectRect, Color.White);
 
 					noteHitFrameTimers[i] += deltaTime;
 					while (noteHitFrameTimers[i] >= noteHitFrametime)
@@ -1118,7 +1120,7 @@ namespace Pulsus.Gameplay
 						noteHitFrameTimers[i] -= noteHitFrametime;
 						noteHitFrames[i]++;
 
-						if (noteHitFrames[i] >= textureNoteHit.frameCount)
+						if (noteHitFrames[i] >= textureNoteHitFrames.Length)
 						{
 							noteHitFrames[i] = -1;
 							noteHitFrameTimers[i] = 0.0;

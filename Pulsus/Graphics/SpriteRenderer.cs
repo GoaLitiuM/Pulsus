@@ -280,66 +280,68 @@ namespace Pulsus.Graphics
 
 		public void Draw(Texture2D texture, Int2 pos, Color color)
 		{
-			AddSprite(texture, pos, new Int2(texture.width, texture.height), 0, 0, 0, new Rectangle(0, 0, 0, 0), color);
+			AddSprite(texture, pos, new Int2(texture.width, texture.height),
+				0, 0, 0, new Rectangle(0, 0, 0, 0), color);
 		}
 
 		public void Draw(Texture2D texture, Int2 pos, float rotation, Color color)
 		{
-			AddSprite(texture, pos, new Int2(texture.width, texture.height), rotation, texture.width/2.0f, texture.height/2.0f, new Rectangle(0, 0, 0, 0), color);
+			AddSprite(texture, pos, new Int2(texture.width, texture.height),
+				rotation, texture.width/2.0f, texture.height/2.0f, new Rectangle(0, 0, 0, 0), color);
 		}
 
 		public void Draw(Texture2D texture, Rectangle rect, Color color)
 		{
-			AddSprite(texture, new Int2(rect.x, rect.y), new Int2(rect.width, rect.height), 0, 0, 0, new Rectangle(0, 0, 0, 0), color);
+			AddSprite(texture, new Int2(rect.x, rect.y), new Int2(rect.width, rect.height),
+				0, 0, 0, new Rectangle(0, 0, 0, 0), color);
 		}
 
 		public void Draw(Texture2D texture, Rectangle rect, float rotation, Color color)
 		{
-			AddSprite(texture, new Int2(rect.x, rect.y), new Int2(rect.width, rect.height), rotation, rect.width/2.0f, rect.height/2.0f, new Rectangle(0, 0, 0, 0), color);
+			AddSprite(texture, new Int2(rect.x, rect.y), new Int2(rect.width, rect.height),
+				rotation, rect.width/2.0f, rect.height/2.0f, new Rectangle(0, 0, 0, 0), color);
 		}
 
-		public void Draw(TextureAtlas textureAtlas, int frame, Int2 pos, Color color)
+		public void Draw(SubTexture subTexture, Int2 pos, Color color)
 		{
-			Texture2D texture = textureAtlas.texture;
-			Rectangle sourceRect = textureAtlas.GetSourceRect(frame);
-			AddSprite(texture, pos, new Int2(sourceRect.width, sourceRect.height), 0, 0, 0, sourceRect, color);
+			AddSprite(subTexture.texture, pos, new Int2(subTexture.sourceRect.width, subTexture.sourceRect.height),
+				0, 0, 0, subTexture.sourceRect, color);
 		}
 
-		public void Draw(TextureAtlas textureAtlas, int frame, Int2 pos, float rotation, Color color)
+		public void Draw(SubTexture subTexture, Int2 pos, float rotation, Color color)
 		{
-			Texture2D texture = textureAtlas.texture;
-			Rectangle sourceRect = textureAtlas.GetSourceRect(frame);
-			AddSprite(texture, pos, new Int2(sourceRect.width, sourceRect.height), rotation, texture.width/2.0f, texture.height/2.0f, sourceRect, color);
+			AddSprite(subTexture.texture, pos, new Int2(subTexture.sourceRect.width, subTexture.sourceRect.height),
+				rotation, subTexture.texture.width/2.0f, subTexture.texture.height/2.0f, subTexture.sourceRect, color);
 		}
 
-		public void Draw(TextureAtlas textureAtlas, int frame, Rectangle rect, Color color)
+		public void Draw(SubTexture subTexture, Rectangle rect, Color color)
 		{
-			Texture2D texture = textureAtlas.texture;
-			Rectangle sourceRect = textureAtlas.GetSourceRect(frame);
-			AddSprite(texture, new Int2(rect.x, rect.y), new Int2(rect.width, rect.height), 0, 0, 0, sourceRect, color);
+			AddSprite(subTexture.texture, new Int2(rect.x, rect.y), new Int2(rect.width, rect.height),
+				0, 0, 0, subTexture.sourceRect, color);
 		}
 
-		public void Draw(TextureAtlas textureAtlas, int frame, Rectangle rect, float rotation, Color color)
+		public void Draw(SubTexture subTexture, Rectangle rect, float rotation, Color color)
 		{
-			Texture2D texture = textureAtlas.texture;
-			Rectangle sourceRect = textureAtlas.GetSourceRect(frame);
-			AddSprite(texture, new Int2(rect.x, rect.y), new Int2(rect.width, rect.height), rotation, rect.width/2.0f, rect.height/2.0f, sourceRect, color);
+			AddSprite(subTexture.texture, new Int2(rect.x, rect.y), new Int2(rect.width, rect.height),
+				rotation, rect.width/2.0f, rect.height/2.0f, subTexture.sourceRect, color);
 		}
 
 		public void DrawColor(Int2 pos, Int2 size, Color color)
 		{
-			AddSprite(pixel, pos, new Int2(size.x, size.y), 0, 0, 0, new Rectangle(0, 0, 0, 0), color);
+			AddSprite(pixel, pos, new Int2(size.x, size.y),
+				0, 0, 0, new Rectangle(0, 0, 0, 0), color);
 		}
 
 		public void DrawColor(Rectangle rect, Color color)
 		{
-			AddSprite(pixel, new Int2(rect.x, rect.y), new Int2(rect.width, rect.height), 0, 0, 0, new Rectangle(0, 0, 0, 0), color);
+			AddSprite(pixel, new Int2(rect.x, rect.y), new Int2(rect.width, rect.height),
+				0, 0, 0, new Rectangle(0, 0, 0, 0), color);
 		}
 
 		public void DrawPart(Texture2D texture, Int2 pos, Rectangle sourceRect, Color color)
 		{
 			Int2 size;
-			if (sourceRect.width*sourceRect.height != 0)
+			if (sourceRect.width * sourceRect.height != 0)
 				size = new Int2(sourceRect.width, sourceRect.height);
 			else
 				size = new Int2(texture.width, texture.height);
