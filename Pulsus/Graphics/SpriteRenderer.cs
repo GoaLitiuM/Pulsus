@@ -73,7 +73,7 @@ namespace Pulsus.Graphics
 
 			pixel = new Texture2D(new byte[] { 255, 255, 255, 255 }, 1, 1);
 
-			ortho = Matrix4.Ortho(0, 0, width, -height, 0, -1000000f);
+			ortho = Matrix4.Ortho(0, 0, width, -height, 0f, 1000000f);
 
 			string shaderPath = renderer.shaderPath;
 			switch (renderer.rendererType)
@@ -141,8 +141,6 @@ namespace Pulsus.Graphics
 				return;
 			}
 
-			// TODO: sort sprites by shader and texture
-
 			VertexTextureColor[] vertices = new VertexTextureColor[4];
 			ushort[] indices = new ushort[6];
 
@@ -157,17 +155,18 @@ namespace Pulsus.Graphics
 			for (int i = 0, batchLeft = 0, batchSize = 0; i < spriteBatch.Count; i++)
 			{
 				Texture2D texture = spriteBatch[i].texture;
-				int depth = -(spriteBatch.Count-spriteBatch[i].depth);
 
 				if (batchLeft == 0)
 				{
 					for (int j = i; j < spriteBatch.Count; j++)
 					{
-						if (spriteBatch[j].texture == texture)
-							batchLeft++;
-						else
+						if (spriteBatch[j].texture != texture)
 							break;
+
+						batchLeft++;
 					}
+
+					batchLeft = Math.Min(batchLeft, ushort.MaxValue/4);
 
 					vertexBuffer = new TransientVertexBuffer(batchLeft*4, VertexTextureColor.vertexLayout);
 					indexBuffer = new TransientIndexBuffer(batchLeft*6);
@@ -205,7 +204,6 @@ namespace Pulsus.Graphics
 
 					vertices[j].x += spriteBatch[i].position.x - (int)spriteBatch[i].originX;
 					vertices[j].y += spriteBatch[i].position.y - (int)spriteBatch[i].originY;
-					//vertices[j].z = depth;
 					vertices[j].color = spriteBatch[i].color;
 				}
 

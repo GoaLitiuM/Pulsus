@@ -87,9 +87,6 @@ namespace Pulsus.Graphics
 				Path.Combine(shaderPath, "default_fs.bin"));
 
 			textureColor = new Uniform("s_texColor", UniformType.Int1);
-
-			//for (int i=0; i<256; i++)
-			//	Bgfx.SetViewSequential((byte)i, true);
 		}
 
 		public void Dispose()
@@ -260,9 +257,9 @@ namespace Pulsus.Graphics
 		{
 			unsafe
 			{
-				IntPtr ptr = System.Runtime.InteropServices.Marshal.AllocHGlobal(sizeof(Matrix4));
+				IntPtr ptr = Marshal.AllocHGlobal(sizeof(Matrix4));
 				Bgfx.SetUniform(uniform, ptr);
-				System.Runtime.InteropServices.Marshal.FreeHGlobal(ptr);
+				Marshal.FreeHGlobal(ptr);
 			}
 		}
 
