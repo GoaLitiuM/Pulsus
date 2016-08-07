@@ -74,12 +74,13 @@ namespace Pulsus.Gameplay
 		Texture2D textureLaneBG1;
 		Texture2D textureLaneBG2;
 		Texture2D textureLaneBG3;
-		Texture2D textureNote1;
-		Texture2D textureNote2;
-		Texture2D textureNote3;
-		Texture2D textureNote1LN;
-		Texture2D textureNote2LN;
-		Texture2D textureNote3LN;
+		Texture2D textureNotes;
+		SubTexture textureNote1;
+		SubTexture textureNote2;
+		SubTexture textureNote3;
+		SubTexture textureNote1LN;
+		SubTexture textureNote2LN;
+		SubTexture textureNote3LN;
 		Texture2D textureKeyW;
 		Texture2D textureKeyB;
 		Texture2D textureKeyNormal;
@@ -182,12 +183,13 @@ namespace Pulsus.Gameplay
 			string gfxPath = Path.Combine(skinPath, "gfx" + Path.DirectorySeparatorChar);
 			string fontPath = Path.Combine(skinPath, "fonts");
 
-			textureNote1 = new Texture2D(gfxPath + "Note1.png");
-			textureNote2 = new Texture2D(gfxPath + "Note2.png");
-			textureNote3 = new Texture2D(gfxPath + "Note3.png");
-			textureNote1LN = new Texture2D(gfxPath + "Note1LN.png");
-			textureNote2LN = new Texture2D(gfxPath + "Note2LN.png");
-			textureNote3LN = new Texture2D(gfxPath + "Note3LN.png");
+			textureNotes = new Texture2D(gfxPath + "Notes.png");
+			textureNote1 = new SubTexture(textureNotes, new Rectangle(0, 0, 34, 8));
+			textureNote2 = new SubTexture(textureNotes, new Rectangle(34, 0, 30, 8));
+			textureNote3 = new SubTexture(textureNotes, new Rectangle(0, 16, 54, 8));
+			textureNote1LN = new SubTexture(textureNotes, new Rectangle(0, 8, 34, 8));
+			textureNote2LN = new SubTexture(textureNotes, new Rectangle(34, 8, 30, 8));
+			textureNote3LN = new SubTexture(textureNotes, new Rectangle(0, 24, 54, 8));
 			textureLaneBG1 = new Texture2D(gfxPath + "LaneBG1.png");
 			textureLaneBG2 = new Texture2D(gfxPath + "LaneBG2.png");
 			textureLaneBG3 = new Texture2D(gfxPath + "LaneBG3.png");
@@ -254,12 +256,7 @@ namespace Pulsus.Gameplay
 			textureLaneBG1.Dispose();
 			textureLaneBG2.Dispose();
 			textureLaneBG3.Dispose();
-			textureNote1.Dispose();
-			textureNote2.Dispose();
-			textureNote3.Dispose();
-			textureNote1LN.Dispose();
-			textureNote2LN.Dispose();
-			textureNote3LN.Dispose();
+			textureNotes.Dispose();
 			textureKeyW.Dispose();
 			textureKeyB.Dispose();
 			textureKeyNormal.Dispose();
@@ -952,8 +949,8 @@ namespace Pulsus.Gameplay
 					if (hideMissedNotes && laneObject.positionEnd < 0.0)
 						continue;
 
-					Texture2D texture = textureNote1;
-					Texture2D textureActive = textureNote1LN;
+					SubTexture texture = textureNote1;
+					SubTexture textureActive = textureNote1LN;
 					int lane = note.lane;
 					int noteWidth = laneWidths[lane];
 
