@@ -187,7 +187,8 @@ public class BMSChart : Chart
 			measureLength = measure.measureLength;
 
 			// mark measure position
-			measurePositions.Add(new Tuple<int, int, long>(measure.index, eventList.Count, pulse));
+			measureCount++;
+			measurePositions.Add(new Tuple<int, long>(measure.index, pulse));
 			MeasureMarkerEvent measureMarker = new MeasureMarkerEvent(pulse);
 			eventList.Add(measureMarker);
 

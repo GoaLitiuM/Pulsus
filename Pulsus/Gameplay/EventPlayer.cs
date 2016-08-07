@@ -41,8 +41,6 @@ namespace Pulsus.Gameplay
 			eventList = chart.eventList;
 			resolution = chart.resolution;
 
-			currentMeasure = 0;
-
 			bpm = chart.bpm;
 		}
 
@@ -157,15 +155,6 @@ namespace Pulsus.Gameplay
 			{
 				if (pulse >= eventList[i].pulse)
 				{
-					if (i != lastEventIndex)
-					{
-						foreach (var pos in chart.measurePositions)
-						{
-							if (i >= pos.Item2)
-								currentMeasure = pos.Item1;
-						}
-					}
-
 					if (!realtime)
 						currentTime = eventList[i].timestamp;
 
@@ -225,6 +214,8 @@ namespace Pulsus.Gameplay
 				OnBGAObject(bgaEvent);
 				OnBGA(bgaEvent);
 			}
+			else if (currentEvent is MeasureMarkerEvent)
+				OnMeasureChange(currentEvent as MeasureMarkerEvent);
 		}
 
 		public virtual void OnPlayerStart()
@@ -306,6 +297,11 @@ namespace Pulsus.Gameplay
 		public virtual void OnBGA(BGAEvent bgaEvent)
 		{
 
+		}
+
+		private void OnMeasureChange(MeasureMarkerEvent measureMarkerEvent)
+		{
+			currentMeasure++;
 		}
 	}
 }

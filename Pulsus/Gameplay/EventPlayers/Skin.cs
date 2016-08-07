@@ -772,12 +772,12 @@ namespace Pulsus.Gameplay
 			SpriteRenderer spriteRenderer = renderer.spriteRenderer;
 
 			double glowAlpha = 1.0;
-			if (chart != null && currentMeasure + 1 < chart.measurePositions.Count)
+			if (chart != null && currentMeasure + 1 < chart.measureCount)
 			{
-				double positionAtMeasure = pulse - chart.measurePositions[currentMeasure].Item3;
+				long positionAtMeasure = pulse - chart.measurePositions[currentMeasure].Item2;
 
 				// snap to measure quarters
-				glowAlpha = positionAtMeasure / (resolution);
+				glowAlpha = (double)positionAtMeasure / chart.resolution;
 				glowAlpha -= (int)(glowAlpha);
 				glowAlpha = 1.0 - glowAlpha;
 			}

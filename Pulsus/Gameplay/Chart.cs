@@ -27,12 +27,13 @@ namespace Pulsus.Gameplay
 		public int noteCount = 0;
 		public int longNoteCount = 0;
 		public int landmineCount = 0;
+		public int measureCount = 0;
 		public double songLength = 0.0;
 
 		public List<Event> eventList;
 		public List<Event> timeEventList = new List<Event>();
 		public List<BMSMeasure> measureList = new List<BMSMeasure>();
-		public List<Tuple<int, int, long>> measurePositions = new List<Tuple<int, int, long>>();
+		public List<Tuple<int, long>> measurePositions = new List<Tuple<int, long>>();
 
 		public Dictionary<int, SoundObject> soundObjects = new Dictionary<int, SoundObject>();
 		public Dictionary<int, BGAObject> bgaObjects = new Dictionary<int, BGAObject>();

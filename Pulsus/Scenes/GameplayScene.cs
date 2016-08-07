@@ -59,7 +59,7 @@ namespace Pulsus
 			double adjustTimeline = 0.0;
 			long startPulse = 0;
 			if (settings.startMeasure > 0)
-				startPulse = chart.measurePositions[settings.startMeasure].Item3;
+				startPulse = chart.measurePositions[settings.startMeasure].Item2;
 			else if (chart != null && chart.firstPlayerEvent != -1)
 			{
 				double noteTimestamp = chart.eventList[chart.firstPlayerEvent].timestamp;
