@@ -928,83 +928,87 @@ namespace Pulsus.Gameplay
 			int noteHeight = textureNote1.height;
 			int laneHeight = textureLaneBG1.height;
 
+			// render measure markers first
+			foreach (LaneObject laneObject in laneObjects)
+			{
+				if (!(laneObject.laneEvent is MeasureMarkerEvent))
+					continue;
+				
+				int y = (int)((1.0 - laneObject.position) * laneHeight);
+				int lineThickness = noteHeight / 2;
+				float lineOffset = (noteHeight - lineThickness) / 2.0f;
+
+				Rectangle measureLineRect = new Rectangle(laneStartPos.x,
+					laneStartPos.y + (int)Math.Round(y + lineOffset),
+					laneTotalWidth, lineThickness);
+				spriteRenderer.DrawColor(measureLineRect, new Color(Color.White, 0.2f));
+			}
+
+			// render notes
 			foreach (LaneObject laneObject in laneObjects)
 			{
 				NoteEvent note = laneObject.laneEvent as NoteEvent;
-				MeasureMarkerEvent measureMarker = laneObject.laneEvent as MeasureMarkerEvent;
+				if (note == null)
+					continue;
 
-				if (measureMarker != null)
+				if (hideMissedNotes && laneObject.positionEnd < 0.0)
+					continue;
+
+				SubTexture texture = textureNote1;
+				SubTexture textureActive = textureNote1LN;
+				int lane = note.lane;
+				int noteWidth = laneWidths[lane];
+
+				// note color in different lanes
+				if ((keyCount == 6 || keyCount == 8))
 				{
-					int y = (int)((1.0 - laneObject.position) * laneHeight);
-
-					int lineThickness = noteHeight / 2;
-					float lineOffset = (noteHeight - lineThickness) / 2.0f;
-					Rectangle measureLineRect = new Rectangle(laneStartPos.x,
-						laneStartPos.y + (int)Math.Round(y + lineOffset),
-						laneTotalWidth, lineThickness);
-					spriteRenderer.DrawColor(measureLineRect, new Color(Color.White, 0.2f));
-				}
-				else if (note != null)
-				{
-					if (hideMissedNotes && laneObject.positionEnd < 0.0)
-						continue;
-
-					SubTexture texture = textureNote1;
-					SubTexture textureActive = textureNote1LN;
-					int lane = note.lane;
-					int noteWidth = laneWidths[lane];
-
-					// note color in different lanes
-					if ((keyCount == 6 || keyCount == 8))
+					if (lane == 0)
 					{
-						if (lane == 0)
-						{
-							texture = textureNote3;
-							textureActive = textureNote3LN;
-						}
-						else if (lane % 2 == 0)
-						{
-							texture = textureNote2;
-							textureActive = textureNote2LN;
-						}
+						texture = textureNote3;
+						textureActive = textureNote3LN;
 					}
-					else if (lane % 2 == 1)
+					else if (lane % 2 == 0)
 					{
 						texture = textureNote2;
 						textureActive = textureNote2LN;
 					}
+				}
+				else if (lane % 2 == 1)
+				{
+					texture = textureNote2;
+					textureActive = textureNote2LN;
+				}
 
-					int laneOffsetX = 1;
-					for (int i = 0; i < lane; i++)
-						laneOffsetX += laneWidths[i] + 2;
+				int laneOffsetX = 1;
+				for (int i = 0; i < lane; i++)
+					laneOffsetX += laneWidths[i] + 2;
 
-					int y = (int)Math.Round((1.0 - Math.Max(laneObject.position, 0.0)) * laneHeight);
+				int y = (int)Math.Round((1.0 - Math.Max(laneObject.position, 0.0)) * laneHeight);
 
-					LongNoteEvent longNote = note as LongNoteEvent;
-					if (longNote != null) 
-					{
-						Color color = Color.White;
+				LongNoteEvent longNote = note as LongNoteEvent;
+				if (longNote != null) 
+				{
+					Color color = Color.White;
 
-						int yEnd = (int)Math.Round((1.0 - laneObject.positionEnd) * laneHeight);
-						int height = noteHeight + y - yEnd;
+					int yEnd = (int)Math.Round((1.0 - laneObject.positionEnd) * laneHeight);
+					int height = noteHeight + y - yEnd;
 
-						// long note activation effect
-						if (laneActive[lane] != 0 && laneObject.position <= 0)
-							texture = textureActive;
+					// long note activation effect
+					if (laneActive[lane] != 0 && laneObject.position <= 0)
+						texture = textureActive;
 
-						// dimm missed long notes
-						if (judge.HasJudged(longNote.endNote))
-							color *= 0.55f;
+					// dimm missed long notes
+					if (judge.HasJudged(longNote.endNote))
+						color *= 0.55f;
 
-						Int2 notePos = laneStartPos + new Int2(laneOffsetX, yEnd);
-						spriteRenderer.Draw(texture, new Rectangle(
-							notePos.x, notePos.y, noteWidth, height), color);
-					}
-					else // regular note
-					{
-						Int2 notePos = laneStartPos + new Int2(laneOffsetX, y);
-						spriteRenderer.Draw(texture, notePos, Color.White);
-					}
+					Int2 notePos = laneStartPos + new Int2(laneOffsetX, yEnd);
+					spriteRenderer.Draw(texture, new Rectangle(
+						notePos.x, notePos.y, noteWidth, height), color);
+				}
+				else // regular note
+				{
+					Int2 notePos = laneStartPos + new Int2(laneOffsetX, y);
+					spriteRenderer.Draw(texture, notePos, Color.White);
 				}
 			}
 		}
