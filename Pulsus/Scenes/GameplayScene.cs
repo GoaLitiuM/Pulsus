@@ -57,9 +57,9 @@ namespace Pulsus
 				autoplay.startOffset += judgeOffset;
 
 			double adjustTimeline = 0.0;
-			long startPulse = 0;
+			double startTime = 0;
 			if (settings.startMeasure > 0)
-				startPulse = chart.measurePositions[settings.startMeasure].Item2;
+				startTime = chart.GetTimeFromPulse(chart.measurePositions[settings.startMeasure].Item2);
 			else if (chart != null && chart.firstPlayerEvent != -1)
 			{
 				double noteTimestamp = chart.eventList[chart.firstPlayerEvent].timestamp;
@@ -67,7 +67,7 @@ namespace Pulsus
 					adjustTimeline += skin.baseScrollTime;
 			}
 
-			playerGraph.SetStartPosition(startPulse);
+			playerGraph.SetStartPosition(startTime);
 			playerGraph.AdjustTimeline(-adjustTimeline);
 
 			// load sound and bga objects

@@ -109,7 +109,7 @@ namespace Pulsus.Gameplay
 			base.StartPlayer();
 
 			Seek(0.0);
-			Seek(eventList[eventList.Count-1]);
+			SeekEnd();
 
 			loadTimer = System.Diagnostics.Stopwatch.StartNew();
 			loadThread.Start();
@@ -129,7 +129,10 @@ namespace Pulsus.Gameplay
 				// do not stop the thread until queue is empty
 				lock (soundQueue)
 				{
-					loadThread.Abort();
+					lock (bgaQueue)
+					{
+						loadThread.Abort();
+					}
 				}
 			}
 		}

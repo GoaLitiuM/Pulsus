@@ -15,12 +15,12 @@ namespace Pulsus.Gameplay
 
 		public bool playing = false;
 		public bool stopping = false;
+		public double startTime = 0.0;
 
 		public int currentMeasure = 0;
 		public double currentTime = 0.0;
 		public long pulse = 0;
 		public long stopPulse = 0;
-		public long startPulse = 0;
 		public double stopLeft = 0.0;
 		public long resolution = 0;
 
@@ -50,11 +50,11 @@ namespace Pulsus.Gameplay
 
 		public virtual void StartPlayer()
 		{
-			pulse = startPulse;
+			currentTime = startTime + startOffset;
+			pulse = chart.GetPulseFromTime(currentTime);
+
 			if (pulse != 0)
 			{
-				currentTime = chart.GetTimeFromPulse(pulse);
-			
 				for (int i = lastEventIndex; i < eventList.Count; i++)
 				{
 					if (eventList[i].pulse < pulse)
@@ -64,7 +64,7 @@ namespace Pulsus.Gameplay
 					break;
 				}
 			}
-			currentTime += startOffset;
+
 			playing = true;
 		}
 
@@ -96,7 +96,7 @@ namespace Pulsus.Gameplay
 				nextBpm = 0.0;
 			}
 
-			AdvanceTime(deltaTime);	
+			AdvanceTime(deltaTime);
 
 			if (playing && eventList != null)
 				UpdateSong();
@@ -137,15 +137,31 @@ namespace Pulsus.Gameplay
 
 			currentTime = time;
 			pulse = chart.GetPulseFromTime(time);
+
+			if (!playing)
+				startTime = currentTime;
 		}
 
-		public virtual void Seek(Event @event)
+		public virtual void Seek(Event seekEvent)
 		{
-			if (@event.timestamp < currentTime)
+			if (seekEvent.timestamp < currentTime)
 				lastEventIndex = 0;
 
-			currentTime = @event.timestamp;
-			pulse = @event.pulse;
+			currentTime = seekEvent.timestamp;
+			pulse = seekEvent.pulse;
+
+			if (!playing)
+				startTime = currentTime;
+		}
+
+		public virtual void SeekEnd()
+		{
+			Event lastEvent = eventList[eventList.Count - 1];
+			pulse = lastEvent.pulse + 1;
+			currentTime = chart.GetTimeFromPulse(pulse);
+
+			if (!playing)
+				startTime = currentTime;
 		}
 
 		public virtual void UpdateSong()
