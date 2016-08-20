@@ -9,20 +9,15 @@ namespace Pulsus.Gameplay
 		public double timeMultiplier = 1.0;
 		public bool realtime = true;
 
-		public Song song;
 		public Chart chart;
 		protected List<Event> eventList;
 
 		public bool playing = false;
-		public bool stopping = false;
 		public double startTime = 0.0;
 
 		public int currentMeasure = 0;
 		public double currentTime = 0.0;
 		public long pulse = 0;
-		public long stopPulse = 0;
-		public double stopLeft = 0.0;
-		public long resolution = 0;
 
 		protected int lastEventIndex = 0;
 		public double bpm = 0.0;
@@ -34,12 +29,10 @@ namespace Pulsus.Gameplay
 		public EventPlayer(Song song)
 		{
 			if (song == null || song.chart == null)
-				return;
+				throw new ArgumentNullException("Invalid chart");
 
-			this.song = song;
 			chart = song.chart;
 			eventList = chart.eventList;
-			resolution = chart.resolution;
 
 			bpm = chart.bpm;
 		}
@@ -70,24 +63,16 @@ namespace Pulsus.Gameplay
 
 		public void StopPlayer()
 		{
-			StopPlayer(true);
-		}
-
-		protected void StopPlayer(bool forced)
-		{
 			if (!playing)
 				return;
 
-			OnPlayerStop(forced);
+			OnPlayerStop();
 		}
 
 		public virtual void Update(double deltaTime)
 		{
-			if (!playing && !stopping)
+			if (!playing)
 				return;
-
-			if (stopping)
-				OnPlayerStop(false);
 
 			// apply bpm changes starting from next beat
 			if (nextBpm != 0.0)
@@ -116,18 +101,9 @@ namespace Pulsus.Gameplay
 
 				if (timeMultiplier < 0)
 					pulse = lastPulse;
-
-				if (stopPulse != 0 && lastPulse == pulse)
-					stopLeft -= deltaTime * timeMultiplier;
-				else if (lastPulse != pulse)
-				{
-					if (stopLeft != 0.0)
-						stopLeft = 0.0;
-					stopPulse = 0;
-				}
 			}
 			else
-				pulse = eventList[eventList.Count-1].pulse;
+				pulse = eventList[eventList.Count - 1].pulse;
 		}
 
 		public virtual void Seek(double time)
@@ -181,7 +157,7 @@ namespace Pulsus.Gameplay
 			}
 			lastEventIndex = i;
 
-			if (pulse >= eventList[eventList.Count-1].pulse)
+			if (pulse >= eventList[eventList.Count - 1].pulse)
 				OnSongEnd();
 		}
 
@@ -220,7 +196,7 @@ namespace Pulsus.Gameplay
 				}
 				else
 					OnBGM(soundEvent);
-			}		
+			}
 			else if (currentEvent is StopEvent)
 				OnStop(currentEvent as StopEvent);
 			else if (currentEvent is BGAEvent)
@@ -239,17 +215,14 @@ namespace Pulsus.Gameplay
 
 		}
 
-		public virtual void OnPlayerStop(bool forced)
+		public virtual void OnPlayerStop()
 		{
 			playing = false;
 		}
 
 		public virtual void OnSongEnd()
 		{
-			if (song.repeat)
-				throw new NotImplementedException("OnSongEnd repeat not implemented");
-			else
-				StopPlayer(false);
+			StopPlayer();
 		}
 
 		public virtual void OnSoundObject(SoundEvent soundEvent)
@@ -286,17 +259,17 @@ namespace Pulsus.Gameplay
 
 		public virtual void OnPlayerKeyLong(LongNoteEvent noteEvent)
 		{
-			
+
 		}
 
 		public virtual void OnPlayerKeyLongEnd(LongNoteEndEvent noteEndEvent)
 		{
-			
+
 		}
 
 		public virtual void OnLandmine(NoteEvent noteEvent)
 		{
-			
+
 		}
 
 		public virtual void OnPlayerKeyChange(KeySoundChangeEvent keySoundChangeEvent)
@@ -306,8 +279,7 @@ namespace Pulsus.Gameplay
 
 		public virtual void OnStop(StopEvent stopEvent)
 		{
-			stopPulse = stopEvent.stopTime;
-			stopLeft = (double)stopEvent.stopTime / resolution * 60.0 / bpm;
+
 		}
 
 		public virtual void OnBGA(BGAEvent bgaEvent)

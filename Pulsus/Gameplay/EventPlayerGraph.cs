@@ -8,8 +8,6 @@ namespace Pulsus.Gameplay
 	{
 		List<EventPlayer> players = new List<EventPlayer>();
 
-		bool pendingStop;
-
 		public void Add(EventPlayer player)
 		{
 			players.Add(player);
@@ -42,31 +40,12 @@ namespace Pulsus.Gameplay
 		{
 			foreach (EventPlayer player in players)
 				player.Update(deltaTime);
-
-			if (pendingStop)
-				TryStop();
 		}
 
 		public void Stop()
 		{
-			pendingStop = true;
-			TryStop();
-		}
-
-		public void TryStop()
-		{
-			bool allStopped = true;
 			foreach (EventPlayer player in players)
-			{
 				player.StopPlayer();
-				if (!player.stopping)
-					allStopped = false;
-			}
-
-			if (allStopped)
-			{
-				pendingStop = false;
-			}
 		}
 
 		public IEnumerator<EventPlayer> GetEnumerator()

@@ -9,11 +9,9 @@ namespace Pulsus.Gameplay
 	{
 		// currently selected data for playback
 		public Chart chart;
-		
+
 		// path to song folder/package
 		public string path { get; private set; }
-
-		public bool repeat = false;
 
 		static Dictionary<string, Type> parsers = new Dictionary<string, Type>
 		{
@@ -21,7 +19,7 @@ namespace Pulsus.Gameplay
 			{ ".bme", typeof(BMSParser) },
 			{ ".bml", typeof(BMSParser) },
 			{ ".pms", typeof(BMSParser) },
-		}; 
+		};
 
 		public static readonly string[] supportedFileFormats = parsers.Keys.ToArray();
 
@@ -66,21 +64,17 @@ namespace Pulsus.Gameplay
 				throw new ApplicationException("Parser for extension " + extension + " could not be found");
 
 			if (!parserType.IsSubclassOf(typeof(ChartParser)))
-				throw new ApplicationException("Parser for extension " + extension + " is not a subclass of " + nameof(ChartParser));
+				throw new ApplicationException("Parser " + parserType.Name + " is not a subclass of " + nameof(ChartParser));
 
 			ChartParser parser = Activator.CreateInstance(parserType) as ChartParser;
-			
-			Chart data;
-			if (metaOnly)
-				data = parser.LoadHeaders(path);
-			else
-				data = parser.Load(path);
 
-			if (data == null)
-				throw new ApplicationException("Failed to load song data from: " + path);
+			if (metaOnly)
+				chart = parser.LoadHeaders(path);
+			else
+				chart = parser.Load(path);
 
 			if (chart == null)
-				chart = data;
+				throw new ApplicationException("Failed to load chart data from: " + path);
 		}
 
 		public void GenerateEvents()
