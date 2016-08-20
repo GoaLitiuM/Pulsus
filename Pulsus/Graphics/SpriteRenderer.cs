@@ -236,12 +236,30 @@ namespace Pulsus.Graphics
 				}
 
 				// texture coordinates
-				if (texture != null && sprite.sourceRect.width * sprite.sourceRect.height != 0)
+				if (texture != null)
 				{
-					vertices[0].u = vertices[3].u = (float)sprite.sourceRect.x / texture.width;
-					vertices[0].v = vertices[1].v = (float)sprite.sourceRect.y / texture.height;
-					vertices[2].u = vertices[1].u = (float)(sprite.sourceRect.x + sprite.sourceRect.width) / texture.width;
-					vertices[2].v = vertices[3].v = (float)(sprite.sourceRect.y + sprite.sourceRect.height) / texture.height;
+					float left = sprite.sourceRect.x;
+					float top = sprite.sourceRect.y;
+					float right = sprite.sourceRect.x + sprite.sourceRect.width;
+					float bottom = sprite.sourceRect.y + sprite.sourceRect.height;
+
+					if (sprite.size == sprite.sourceRect.size)
+					{
+						vertices[0].u = vertices[3].u = left / texture.width;
+						vertices[0].v = vertices[1].v = top / texture.height;
+						vertices[2].u = vertices[1].u = right / texture.width;
+						vertices[2].v = vertices[3].v = bottom / texture.height;
+					}
+					else
+					{
+						// when stretching textures, texture sampling points needs to be adjusted
+						// by half pixel in order to prevent neighbouring subtextures bleeding
+						// around the edges.
+						vertices[0].u = vertices[3].u = (left + 0.5f) / texture.width;
+						vertices[0].v = vertices[1].v = (top + 0.5f) / texture.height;
+						vertices[2].u = vertices[1].u = (right - 0.5f) / texture.width;
+						vertices[2].v = vertices[3].v = (bottom - 0.5f) / texture.height;
+					}
 				}
 
 				// copy data to buffers
