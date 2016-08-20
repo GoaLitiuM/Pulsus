@@ -53,18 +53,7 @@ namespace Pulsus.Gameplay
 		{
 			currentTime = startTime + startOffset;
 			AdvanceTime(0.0);
-
-			if (pulse != 0)
-			{
-				for (int i = lastEventIndex; i < eventList.Count; i++)
-				{
-					if (eventList[i].pulse < pulse)
-						continue;
-
-					lastEventIndex = i;
-					break;
-				}
-			}
+			UpdateSong();
 
 			playing = true;
 		}
