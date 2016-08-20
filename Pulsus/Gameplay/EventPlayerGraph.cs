@@ -23,11 +23,11 @@ namespace Pulsus.Gameplay
 		{
 			double globalAdjust = 0.0;
 			foreach (EventPlayer player in players)
-				globalAdjust = Math.Max(player.startOffset, globalAdjust);
+				globalAdjust = Math.Max(player.startTime, globalAdjust);
 
 			globalAdjust = -globalAdjust + offset;
 			foreach (EventPlayer player in players)
-				player.startOffset += globalAdjust;
+				player.startTime += globalAdjust;
 		}
 
 		public void Start()

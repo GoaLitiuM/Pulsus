@@ -5,7 +5,6 @@ namespace Pulsus.Gameplay
 {
 	public class EventPlayer : IDisposable
 	{
-		public double startOffset = 0;   // how early sound scheduling is done in timeline
 		public double timeMultiplier = 1.0;
 		public bool realtime = true;
 
@@ -51,7 +50,7 @@ namespace Pulsus.Gameplay
 
 		public virtual void StartPlayer()
 		{
-			currentTime = startTime + startOffset;
+			currentTime = startTime;
 			AdvanceTime(0.0);
 			UpdateSong();
 

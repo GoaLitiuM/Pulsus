@@ -8,7 +8,7 @@ namespace Pulsus.Gameplay
 		protected List<NoteScore> noteScores;
 		protected List<NoteScore> pendingNoteScores;
 
-		protected double processAheadTime = 0.0;
+		protected double processAheadTime;
 		protected double missWindow;
 
 		protected Dictionary<int, int> lastNote = new Dictionary<int, int>();
@@ -27,7 +27,7 @@ namespace Pulsus.Gameplay
 
 		public override void StartPlayer()
 		{
-			startOffset += processAheadTime;
+			startTime += processAheadTime;
 			base.StartPlayer();
 		}
 
