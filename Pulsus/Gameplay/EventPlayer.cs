@@ -165,8 +165,8 @@ namespace Pulsus.Gameplay
 		{
 			Event currentEvent = eventList[index];
 
-			if (currentEvent is MeasureLengthEvent)
-				OnMeasureLength(currentEvent as MeasureLengthEvent);
+			if (currentEvent is MeterEvent)
+				OnMeter(currentEvent as MeterEvent);
 			else if (currentEvent is BPMEvent)
 				OnBPM(currentEvent as BPMEvent);
 			else if (currentEvent is SoundEvent)
@@ -237,9 +237,8 @@ namespace Pulsus.Gameplay
 				return;
 		}
 
-		public virtual void OnMeasureLength(MeasureLengthEvent measureLengthEvent)
+		public virtual void OnMeter(MeterEvent meterEvent)
 		{
-
 		}
 
 		public virtual void OnBPM(BPMEvent bpmEvent)

@@ -39,7 +39,6 @@ namespace Pulsus.Gameplay
 		public Dictionary<int, BGAObject> bgaObjects = new Dictionary<int, BGAObject>();
 		public Dictionary<int, double> bpmObjects = new Dictionary<int, double>();
 		public Dictionary<int, double> stopObjects = new Dictionary<int, double>();
-		public Dictionary<int, double> measureLengthObjects = new Dictionary<int, double>();
 		public HashSet<int> lnObjects = new HashSet<int>();
 
 		public bool hasTurntable { get { return playerChannels == 6 || playerChannels == 8; } }
@@ -58,7 +57,7 @@ namespace Pulsus.Gameplay
 		{
 			double timestamp = 0.0;
 			double currentBpm = bpm;
-			double currentMeasureLength = 1.0;
+			double currentMeter = 1.0;
 			long lastPulse = 0;
 			foreach (Event timeEvent in timeEventList)
 			{
@@ -80,11 +79,11 @@ namespace Pulsus.Gameplay
 					double stopTime = stopPulses / resolution * 60.0 / currentBpm;
 					timestamp += stopTime;*/
 				}
-				else if (timeEvent is MeasureLengthEvent)
-					currentMeasureLength = (timeEvent as MeasureLengthEvent).measureLength;
+				else if (timeEvent is MeterEvent)
+					currentMeter = (timeEvent as MeterEvent).meter;
 			}
 
-			timestamp += (double)(pulse-lastPulse) / resolution * 60.0 / (currentBpm / currentMeasureLength);
+			timestamp += (double)(pulse-lastPulse) / resolution * 60.0 / (currentBpm / currentMeter);
 			return timestamp;
 		}
 
@@ -92,14 +91,14 @@ namespace Pulsus.Gameplay
 		{
 			double timestamp = 0.0;
 			double currentBpm = bpm;
-			double currentMeasureLength = 1.0;
+			double currentMeter = 1.0;
 			long lastPulse = 0;
 			foreach (Event timeEvent in timeEventList)
 			{
 				if (timeEvent.pulse >= chartEvent.pulse)
 					break;
 
-				double increment = (double)(timeEvent.pulse-lastPulse) / resolution * 60.0 / (currentBpm / currentMeasureLength);
+				double increment = (double)(timeEvent.pulse-lastPulse) / resolution * 60.0 / (currentBpm / currentMeter);
 
 				timestamp += increment;
 				lastPulse = timeEvent.pulse;
@@ -116,23 +115,23 @@ namespace Pulsus.Gameplay
 					double stopTime = stopPulses / resolution * 60.0 / currentBpm;
 					timestamp += stopTime;
 				}
-				else if (timeEvent is MeasureLengthEvent)
-					currentMeasureLength = (timeEvent as MeasureLengthEvent).measureLength;
+				else if (timeEvent is MeterEvent)
+					currentMeter = (timeEvent as MeterEvent).meter;
 			}
 
-			timestamp += (double)(chartEvent.pulse-lastPulse) / resolution * 60.0 / (currentBpm / currentMeasureLength);
+			timestamp += (double)(chartEvent.pulse-lastPulse) / resolution * 60.0 / (currentBpm / currentMeter);
 			return timestamp;
 		}
 
-		internal long GetPulseFromTime(double currentTime)
+		public long GetPulseFromTime(double time)
 		{
 			double timestamp = 0.0;
 			double currentBpm = bpm;
-			double currentMeasureLength = 1.0;
+			double currentMeter = 1.0;
 			long lastPulse = 0;
 			foreach (Event timeEvent in timeEventList)
 			{
-				if (timeEvent.timestamp >= currentTime)
+				if (timeEvent.timestamp >= time)
 					break;
 
 				timestamp = timeEvent.timestamp;
@@ -148,14 +147,14 @@ namespace Pulsus.Gameplay
 				{
 					double stopPulses = (timeEvent as StopEvent).stopTime;
 					double stopTime = stopPulses / resolution * 60.0 / currentBpm;
-					timestamp = Math.Min(timestamp + stopTime, currentTime);
+					timestamp = Math.Min(timestamp + stopTime, time);
 				}
-				else if (timeEvent is MeasureLengthEvent)
-					currentMeasureLength = (timeEvent as MeasureLengthEvent).measureLength;
+				else if (timeEvent is MeterEvent)
+					currentMeter = (timeEvent as MeterEvent).meter;
 			}
-			double remaining = currentTime - timestamp;
-			double increment2 = (remaining * (currentBpm / currentMeasureLength) / 60.0 * resolution);
-			lastPulse += (long)increment2;
+			double remaining = time - timestamp;
+			double increment = (remaining * (currentBpm / currentMeter) / 60.0 * resolution);
+			lastPulse += (long)increment;
 			return lastPulse;
 		}
 	}

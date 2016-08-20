@@ -1,19 +1,17 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Collections.Generic;
 
 public class BMSMeasure
 {
 	public int index;
 	public int maxLength;
-	public double measureLength = 1.0;
+	public double meter = 1.0;
 
 	public List<BMSChannel> channelList = new List<BMSChannel>();
 
-	public BMSMeasure(int index, double measureLength = 1.0)
+	public BMSMeasure(int index, double meter = 1.0)
 	{
 		this.index = index;
-		this.measureLength = measureLength;
+		this.meter = meter;
 	}
 
 	public void Add(int channelIndex, int value)

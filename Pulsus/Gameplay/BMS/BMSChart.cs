@@ -45,8 +45,6 @@ public class BMSChart : Chart
 	};
 
 	public int eventCount = 0;
-	
-	public string filePath;
 
 	public T GetHeader<T>(string header)
 	{
@@ -124,14 +122,13 @@ public class BMSChart : Chart
 
 		long pulse = 0;
 		double currentBpm = bpmObjects[0];
-
-		double measureLength = 1.0;
+		double meter = 1.0;
 
 		if (longNoteType == 2)
 		{
 			int measureIndex = 0;
 			if (measureList.Count > 0)
-				measureIndex = measureList[measureList.Count-1].index + 1;
+				measureIndex = measureList[measureList.Count - 1].index + 1;
 
 			BMSMeasure measure = new BMSMeasure(measureIndex);
 			measureList.Add(measure);
@@ -177,14 +174,14 @@ public class BMSChart : Chart
 				}
 			}
 
-			// reset measure length back to 1.0
-			if (measureLength != 1.0 && measure.measureLength == 1.0)
+			// reset meter back to 1.0
+			if (meter != measure.meter)
 			{
-				MeasureLengthEvent measureEvent = new MeasureLengthEvent(pulse, measure.measureLength);
+				MeterEvent measureEvent = new MeterEvent(pulse, measure.meter);
 				eventList.Add(measureEvent);
 				timeEventList.Add(measureEvent);
 			}
-			measureLength = measure.measureLength;
+			meter = measure.meter;
 
 			// mark measure position
 			measureCount++;
@@ -193,7 +190,7 @@ public class BMSChart : Chart
 			eventList.Add(measureMarker);
 
 			double nextBpm = 0.0;
-	
+
 			Dictionary<long, double> bpmExValues = new Dictionary<long, double>();
 			foreach (BMSChannel channel in measure.channelList)
 			{
@@ -346,8 +343,6 @@ public class BMSChart : Chart
 							bmsEvent = noteEvent;
 						}
 					}
-					else if (channel.index == (int)BMSChannel.Type.MeasureLength)
-						bmsEvent = new MeasureLengthEvent(channelPulse, measureLengthObjects[value]);
 					else if (channel.index == (int)BMSChannel.Type.BPM)
 					{
 						bmsEvent = new BPMEvent(channelPulse, value);
@@ -388,7 +383,7 @@ public class BMSChart : Chart
 					}
 					else
 						Log.Warning("Unsupported BMS channel: " + channel.index.ToString("X2"));
-					
+
 					if (bmsEvent == null)
 						continue;
 
@@ -400,8 +395,8 @@ public class BMSChart : Chart
 
 			measureEvents.Sort(new Comparison<Event>((e1, e2) =>
 			{
-				return e1.pulse > e2.pulse ? 1 : (e1.pulse < e2.pulse ? -1 : 
-					e1 is StopEvent ? 1 : (e2 is StopEvent ? -1 : 
+				return e1.pulse > e2.pulse ? 1 : (e1.pulse < e2.pulse ? -1 :
+					e1 is StopEvent ? 1 : (e2 is StopEvent ? -1 :
 					e1 is BPMEvent ? 1 : (e2 is BPMEvent ? -1 : 0)));
 			}));
 
@@ -436,7 +431,7 @@ public class BMSChart : Chart
 
 					timeEventList.Add(bmsEvent);
 				}
-				else if (bmsEvent is StopEvent || bmsEvent is MeasureLengthEvent)
+				else if (bmsEvent is StopEvent)
 					timeEventList.Add(bmsEvent);
 
 				eventList.Add(bmsEvent);
@@ -466,9 +461,9 @@ public class BMSChart : Chart
 					Log.Warning("Invalid longnote length");
 			}
 		}
-		
+
 		if (eventList.Count > 0)
-			songLength = eventList[eventList.Count-1].timestamp;
+			songLength = eventList[eventList.Count - 1].timestamp;
 
 		return eventList;
 	}

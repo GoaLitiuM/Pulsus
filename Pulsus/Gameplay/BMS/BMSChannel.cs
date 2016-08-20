@@ -15,7 +15,7 @@ public class BMSChannel
 	public enum Type : int
 	{
 		BGM = 1,
-		MeasureLength = 2,
+		Meter = 2,
 		BPM = 3,
 		BGA = 4,
 		Extended = 5,

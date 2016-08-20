@@ -3,14 +3,14 @@
 namespace Pulsus.Gameplay
 {
 	[DebuggerDisplay("{ToString()}")]
-	public class MeasureLengthEvent : Event
+	public class MeterEvent : Event
 	{
-		public double measureLength;
+		public double meter;
 
-		public MeasureLengthEvent(long pulse, double measureLength = 1.0)
+		public MeterEvent(long pulse, double meter = 1.0)
 			: base(pulse)
 		{
-			this.measureLength = measureLength;
+			this.meter = meter;
 		}
 	}
 }

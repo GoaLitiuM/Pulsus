@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -13,7 +12,7 @@ public class BMSParser : ChartParser
 
 	// song starts from first defined measure, skipping undefined measure 0
 	const bool skipToFirstMeasure = false;
-	
+
 	public override Chart LoadHeaders(string path)
 	{
 		BMSChart data = new BMSChart();
@@ -67,16 +66,11 @@ public class BMSParser : ChartParser
 		return data;
 	}
 
-	Dictionary<double, int> measureLengthKeys = new Dictionary<double, int>();
 	Dictionary<int, int> channelRefs = new Dictionary<int, int>();
 
 	public override Chart Load(string path)
 	{
 		BMSChart data = new BMSChart();
-		data.filePath = path;
-
-		data.measureLengthObjects.Add(0, 1.0);
-
 		BMSMeasure lastMeasure = null;
 
 		using (FileStream fileStream = new FileStream(path, FileMode.Open,
@@ -118,7 +112,7 @@ public class BMSParser : ChartParser
 					else if (line[1] >= '0' && line[1] <= '9')
 						OnChannel(data, line, ref lastMeasure);
 					else if (line.FastStartsWith("#PLAYER"))
-						continue;	// not supported, determine from channel data
+						continue;   // not supported, determine from channel data
 					else
 						OnHeader(data, line);
 				}
@@ -141,7 +135,7 @@ public class BMSParser : ChartParser
 				skipped = data.measureList[i].index;
 				continue;
 			}
-		
+
 			BMSMeasure measure = new BMSMeasure(i + skipped);
 			BMSChannel channel = new BMSChannel(1);
 
@@ -198,7 +192,7 @@ public class BMSParser : ChartParser
 				}
 			}
 		}
-		
+
 		if (longNoteType != 1)
 			Log.Warning("#LNTYPE " + longNoteType.ToString());
 
@@ -229,7 +223,7 @@ public class BMSParser : ChartParser
 			else if (BMSChannel.IsP2Key(channel.Key))
 				p2KeyCount++;
 		}
-		
+
 		data.playerChannels = Math.Max(p1KeyCount, p2KeyCount);
 		if (data.playerChannels != 6 && data.playerChannels != 8 && data.playerChannels != 9)
 		{
@@ -294,7 +288,7 @@ public class BMSParser : ChartParser
 				Log.Warning("Required object resolution is too high for accurate playback");
 			}
 		}
-		
+
 		data.resolution = resolution;
 
 		return data;
@@ -331,7 +325,7 @@ public class BMSParser : ChartParser
 			channelRefs[channelIndex]++;
 		else
 			channelRefs.Add(channelIndex, 1);
-		
+
 		if (!BMSChannel.IsSupported(channelIndex))
 			Log.Warning("Unsupported channel type " + line.Substring(4, 2));
 
@@ -353,35 +347,20 @@ public class BMSParser : ChartParser
 		lastMeasure = measure;
 
 		int channelLength = 1;
-		if (channelIndex == (int)BMSChannel.Type.MeasureLength)
+		if (channelIndex == (int)BMSChannel.Type.Meter)
 		{
-			double measureLength = 1.0;
+			double meter = 1.0;
 			if (!double.TryParse(channelValue,
-				NumberStyles.Float, CultureInfo.InvariantCulture, out measureLength))
+				NumberStyles.Float, CultureInfo.InvariantCulture, out meter))
 			{
 				channelValue = channelValue.Replace(",", ".");
 				if (!double.TryParse(channelValue,
-				NumberStyles.Float, CultureInfo.InvariantCulture, out measureLength))
+				NumberStyles.Float, CultureInfo.InvariantCulture, out meter))
 				{
-					Log.Error("Unable to parse measure length value: " + channelValue.ToString());
+					Log.Error("Unable to parse meter value: " + channelValue.ToString());
 				}
 			}
-
-			int measureLengthIndex = 0;
-			if (measureLength != 1.0)
-			{
-				if (!data.measureLengthObjects.ContainsValue(measureLength))
-				{
-					measureLengthIndex = data.measureLengthObjects.Count;
-					data.measureLengthObjects.Add(measureLengthIndex, measureLength);
-					measureLengthKeys.Add(measureLength, measureLengthIndex);
-				}
-				else
-					measureLengthIndex = measureLengthKeys[measureLength];
-			}
-
-			measure.measureLength = measureLength;
-			measure.Add(channelIndex, measureLengthIndex);
+			measure.meter = meter;
 		}
 		else
 		{
@@ -445,8 +424,8 @@ public class BMSParser : ChartParser
 	private static void OnWAV(BMSChart data, string line)
 	{
 		int pathPos = line.IndexOf(" ", 5);
-		string base36 = line.Substring(4, pathPos-4).Trim();
-		string filepath = line.Substring(pathPos+1);
+		string base36 = line.Substring(4, pathPos - 4).Trim();
+		string filepath = line.Substring(pathPos + 1);
 		int index = Utility.FromBase36(base36);
 
 		data.soundObjects[index] = new SoundObject(filepath, base36);
@@ -455,8 +434,8 @@ public class BMSParser : ChartParser
 	private static void OnBMP(BMSChart data, string line)
 	{
 		int pathPos = line.IndexOf(" ", 5);
-		string base36 = line.Substring(4, pathPos-4).Trim();
-		string filepath = line.Substring(pathPos+1);
+		string base36 = line.Substring(4, pathPos - 4).Trim();
+		string filepath = line.Substring(pathPos + 1);
 		int index = Utility.FromBase36(base36);
 
 		data.bgaObjects[index] = new BGAObject(filepath, base36);
@@ -478,7 +457,7 @@ public class BMSParser : ChartParser
 			if (!double.TryParse(valueStr,
 			NumberStyles.Number | NumberStyles.AllowExponent, CultureInfo.InvariantCulture, out value))
 			{
-				Log.Error("Unable to parse measure length value: " + valueStr.ToString());
+				Log.Error("Unable to parse BPM value: " + valueStr.ToString());
 			}
 		}
 
