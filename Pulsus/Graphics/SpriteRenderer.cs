@@ -8,18 +8,40 @@ namespace Pulsus.Graphics
 {
 	public class SpriteRenderer : IDisposable
 	{
-		[System.Diagnostics.DebuggerDisplay("{(texture != null ? texture.path : color.ToString())} {depth}")]
-		class Sprite : IComparable<Sprite>
+		[System.Diagnostics.DebuggerDisplay("{(texture != null ? texture.path : color.ToString())}")]
+		private class Sprite : IComparable<Sprite>
 		{
-			public Texture2D texture;
-			public Int2 position;
-			public Int2 size;
-			public float rotation;
-			public float originX;
-			public float originY;
-			public Rectangle sourceRect;
-			public Color color;
-			public int depth;
+			public readonly Texture2D texture;
+			public readonly Int2 position;
+			public readonly Int2 size;
+			public readonly float rotation;
+			public readonly float originX;
+			public readonly float originY;
+			public readonly Rectangle sourceRect;
+			public readonly Color color;
+
+			public Sprite(Texture2D texture, Int2 position, Color color)
+				: this(texture, position, new Int2(texture.width, texture.height),
+					default(float), default(float), default(float), new Rectangle(0, 0, texture.width, texture.height), color)
+			{
+			}
+
+			public Sprite(Texture2D texture, Int2 position, Int2 size, Rectangle sourceRect, Color color)
+				: this(texture, position, size, default(float), default(float), default(float), sourceRect, color)
+			{
+			}
+
+			public Sprite(Texture2D texture, Int2 position, Int2 size, float rotation, float originX, float originY, Rectangle sourceRect, Color color)
+			{
+				this.texture = texture;
+				this.position = position;
+				this.size = size;
+				this.rotation = rotation;
+				this.originX = originX;
+				this.originY = originY;
+				this.sourceRect = sourceRect;
+				this.color = color.AsARGBPremultiplied();
+			}
 
 			public int CompareTo(Sprite other)
 			{
@@ -32,8 +54,8 @@ namespace Pulsus.Graphics
 		Renderer renderer;
 		Texture2D pixel;
 
-		const int maxStreamVertices = (16*1024);
-		const int maxStreamIndices = maxStreamVertices*6;
+		const int maxStreamVertices = (16 * 1024);
+		const int maxStreamIndices = maxStreamVertices * 6;
 
 		ShaderProgram currentProgram = null;
 		TextureFlags textureFlags = TextureFlags.None;
@@ -154,7 +176,8 @@ namespace Pulsus.Graphics
 
 			for (int i = 0, batchLeft = 0, batchSize = 0; i < spriteBatch.Count; i++)
 			{
-				Texture2D texture = spriteBatch[i].texture;
+				Sprite sprite = spriteBatch[i];
+				Texture2D texture = sprite.texture;
 
 				if (batchLeft == 0)
 				{
@@ -166,54 +189,59 @@ namespace Pulsus.Graphics
 						batchLeft++;
 					}
 
-					batchLeft = Math.Min(batchLeft, ushort.MaxValue/4);
+					batchLeft = Math.Min(batchLeft, ushort.MaxValue / 4);
 
-					vertexBuffer = new TransientVertexBuffer(batchLeft*4, VertexTextureColor.vertexLayout);
-					indexBuffer = new TransientIndexBuffer(batchLeft*6);
+					vertexBuffer = new TransientVertexBuffer(batchLeft * 4, VertexTextureColor.vertexLayout);
+					indexBuffer = new TransientIndexBuffer(batchLeft * 6);
 				}
 
 				vertices[0].x = vertices[0].u = 0.0f;
 				vertices[0].y = vertices[0].v = 0.0f;
-				vertices[1].x = vertices[1].u = 1.0f;
+				vertices[1].u = 1.0f;
 				vertices[1].y = vertices[1].v = 0.0f;
-				vertices[2].x = vertices[2].u = 1.0f;
-				vertices[2].y = vertices[2].v = 1.0f;
+				vertices[2].u = 1.0f;
+				vertices[2].v = 1.0f;
 				vertices[3].x = vertices[3].u = 0.0f;
-				vertices[3].y = vertices[3].v = 1.0f;
+				vertices[3].v = 1.0f;
+
+				vertices[1].x = vertices[2].x = sprite.size.x;
+				vertices[2].y = vertices[3].y = sprite.size.y;
 
 				// translation and rotation
-				for (int j = 0; j < 4; ++j)
+				if (sprite.rotation == 0.0f)
 				{
-					vertices[j].x *= spriteBatch[i].size.x;
-					vertices[j].y *= spriteBatch[i].size.y;
-
-					if (spriteBatch[i].rotation != 0.0f)
+					for (int j = 0; j < 4; ++j)
 					{
-						vertices[j].x -= spriteBatch[i].originX;
-						vertices[j].y -= spriteBatch[i].originY;
-
-						double rotX = spriteBatch[i].originX + vertices[j].x * Math.Cos(spriteBatch[i].rotation)
-							- vertices[j].y * Math.Sin(spriteBatch[i].rotation);
-						double rotY = spriteBatch[i].originY + vertices[j].x * Math.Sin(spriteBatch[i].rotation)
-							+ vertices[j].y * Math.Cos(spriteBatch[i].rotation);
-						
-						vertices[j].x = (float)rotX;
-						vertices[j].y = (float)rotY;
-						
+						vertices[j].x += sprite.position.x;
+						vertices[j].y += sprite.position.y;
+						vertices[j].color = sprite.color;
 					}
+				}
+				else
+				{
+					for (int j = 0; j < 4; ++j)
+					{
+						double cosRot = Math.Cos(sprite.rotation);
+						double sinRot = Math.Sin(sprite.rotation);
 
-					vertices[j].x += spriteBatch[i].position.x - (int)spriteBatch[i].originX;
-					vertices[j].y += spriteBatch[i].position.y - (int)spriteBatch[i].originY;
-					vertices[j].color = spriteBatch[i].color;
+						double rotX = sprite.originX + (vertices[j].x - sprite.originX) * cosRot
+							- (vertices[j].y - sprite.originY) * sinRot;
+						double rotY = sprite.originY + (vertices[j].x - sprite.originX) * sinRot
+							+ (vertices[j].y - sprite.originY) * cosRot;
+
+						vertices[j].x = (float)(rotX + sprite.position.x - (int)sprite.originX);
+						vertices[j].y = (float)(rotY + sprite.position.y - (int)sprite.originY);
+						vertices[j].color = sprite.color;
+					}
 				}
 
 				// texture coordinates
-				if (texture != null && spriteBatch[i].sourceRect.width * spriteBatch[i].sourceRect.height != 0)
+				if (texture != null && sprite.sourceRect.width * sprite.sourceRect.height != 0)
 				{
-					vertices[0].u = vertices[3].u = (float)spriteBatch[i].sourceRect.x / texture.width;
-					vertices[0].v = vertices[1].v = (float)spriteBatch[i].sourceRect.y / texture.height;
-					vertices[2].u = vertices[1].u = (float)(spriteBatch[i].sourceRect.x + spriteBatch[i].sourceRect.width) / texture.width;
-					vertices[2].v = vertices[3].v = (float)(spriteBatch[i].sourceRect.y + spriteBatch[i].sourceRect.height) / texture.height;
+					vertices[0].u = vertices[3].u = (float)sprite.sourceRect.x / texture.width;
+					vertices[0].v = vertices[1].v = (float)sprite.sourceRect.y / texture.height;
+					vertices[2].u = vertices[1].u = (float)(sprite.sourceRect.x + sprite.sourceRect.width) / texture.width;
+					vertices[2].v = vertices[3].v = (float)(sprite.sourceRect.y + sprite.sourceRect.height) / texture.height;
 				}
 
 				// copy data to buffers
@@ -236,7 +264,7 @@ namespace Pulsus.Graphics
 						ibData++;
 					}
 				}
-						
+
 				batchSize++;
 				batchLeft--;
 				if (batchLeft == 0)
@@ -244,8 +272,8 @@ namespace Pulsus.Graphics
 					// draw current batch
 
 					renderer.SetRenderState(Renderer.AlphaBlendNoDepth);
-					renderer.SetVertexBuffer(vertexBuffer, 0, batchSize*4);
-					renderer.SetIndexBuffer(indexBuffer, 0, batchSize*6);
+					renderer.SetVertexBuffer(vertexBuffer, 0, batchSize * 4);
+					renderer.SetIndexBuffer(indexBuffer, 0, batchSize * 6);
 
 					if (texture != null)
 						renderer.SetTexture(0, texture, textureFlags);
@@ -280,78 +308,55 @@ namespace Pulsus.Graphics
 
 		public void Draw(Texture2D texture, Int2 pos, Color color)
 		{
-			AddSprite(texture, pos, new Int2(texture.width, texture.height),
-				0, 0, 0, new Rectangle(0, 0, 0, 0), color);
+			spriteBatch.Add(new Sprite(texture, pos, color));
 		}
 
 		public void Draw(Texture2D texture, Int2 pos, float rotation, Color color)
 		{
-			AddSprite(texture, pos, new Int2(texture.width, texture.height),
-				rotation, texture.width/2.0f, texture.height/2.0f, new Rectangle(0, 0, 0, 0), color);
+			spriteBatch.Add(new Sprite(texture, pos, new Int2(texture.width, texture.height),
+				rotation, texture.width / 2.0f, texture.height / 2.0f, new Rectangle(0, 0, texture.width, texture.height), color));
 		}
 
 		public void Draw(Texture2D texture, Rectangle rect, Color color)
 		{
-			AddSprite(texture, new Int2(rect.x, rect.y), new Int2(rect.width, rect.height),
-				0, 0, 0, new Rectangle(0, 0, 0, 0), color);
+			spriteBatch.Add(new Sprite(texture, new Int2(rect.x, rect.y), new Int2(rect.width, rect.height),
+				new Rectangle(0, 0, texture.width, texture.height), color));
 		}
 
 		public void Draw(Texture2D texture, Rectangle rect, float rotation, Color color)
 		{
-			AddSprite(texture, new Int2(rect.x, rect.y), new Int2(rect.width, rect.height),
-				rotation, rect.width/2.0f, rect.height/2.0f, new Rectangle(0, 0, 0, 0), color);
+			spriteBatch.Add(new Sprite(texture, new Int2(rect.x, rect.y), new Int2(rect.width, rect.height),
+				rotation, rect.width / 2.0f, rect.height / 2.0f, new Rectangle(0, 0, texture.width, texture.height), color));
 		}
 
 		public void Draw(SubTexture subTexture, Int2 pos, Color color)
 		{
-			AddSprite(subTexture.texture, pos, new Int2(subTexture.sourceRect.width, subTexture.sourceRect.height),
-				0, 0, 0, subTexture.sourceRect, color);
+			spriteBatch.Add(new Sprite(subTexture.texture, pos, new Int2(subTexture.sourceRect.width, subTexture.sourceRect.height),
+				subTexture.sourceRect, color));
 		}
 
 		public void Draw(SubTexture subTexture, Int2 pos, float rotation, Color color)
 		{
-			AddSprite(subTexture.texture, pos, new Int2(subTexture.sourceRect.width, subTexture.sourceRect.height),
-				rotation, subTexture.texture.width/2.0f, subTexture.texture.height/2.0f, subTexture.sourceRect, color);
+			spriteBatch.Add(new Sprite(subTexture.texture, pos, new Int2(subTexture.sourceRect.width, subTexture.sourceRect.height),
+				rotation, subTexture.texture.width / 2.0f, subTexture.texture.height / 2.0f, subTexture.sourceRect, color));
 		}
 
 		public void Draw(SubTexture subTexture, Rectangle rect, Color color)
 		{
-			AddSprite(subTexture.texture, new Int2(rect.x, rect.y), new Int2(rect.width, rect.height),
-				0, 0, 0, subTexture.sourceRect, color);
+			spriteBatch.Add(new Sprite(subTexture.texture, new Int2(rect.x, rect.y), new Int2(rect.width, rect.height),
+				subTexture.sourceRect, color));
 		}
 
 		public void Draw(SubTexture subTexture, Rectangle rect, float rotation, Color color)
 		{
-			AddSprite(subTexture.texture, new Int2(rect.x, rect.y), new Int2(rect.width, rect.height),
-				rotation, rect.width/2.0f, rect.height/2.0f, subTexture.sourceRect, color);
-		}
-
-		public void DrawColor(Int2 pos, Int2 size, Color color)
-		{
-			AddSprite(pixel, pos, new Int2(size.x, size.y),
-				0, 0, 0, new Rectangle(0, 0, 0, 0), color);
+			spriteBatch.Add(new Sprite(subTexture.texture, new Int2(rect.x, rect.y), new Int2(rect.width, rect.height),
+				rotation, rect.width / 2.0f, rect.height / 2.0f, subTexture.sourceRect, color));
 		}
 
 		public void DrawColor(Rectangle rect, Color color)
 		{
-			AddSprite(pixel, new Int2(rect.x, rect.y), new Int2(rect.width, rect.height),
-				0, 0, 0, new Rectangle(0, 0, 0, 0), color);
-		}
-
-		public void DrawPart(Texture2D texture, Int2 pos, Rectangle sourceRect, Color color)
-		{
-			Int2 size;
-			if (sourceRect.width * sourceRect.height != 0)
-				size = new Int2(sourceRect.width, sourceRect.height);
-			else
-				size = new Int2(texture.width, texture.height);
-
-			AddSprite(texture, pos, size, 0, 0, 0, sourceRect, color);
-		}
-
-		public void DrawPart(Texture2D texture, Int2 pos, Int2 size, Rectangle sourceRect, Color color)
-		{
-			AddSprite(texture, pos, size, 0, 0, 0, sourceRect, color);
+			spriteBatch.Add(new Sprite(pixel, rect.position, rect.size,
+				new Rectangle(0, 0, pixel.width, pixel.height), color));
 		}
 
 		public void DrawText(Font font, string text, Int2 pos, Color color)
@@ -390,7 +395,7 @@ namespace Pulsus.Graphics
 						width, height);
 
 					Int2 glyphPos = penPos + new Int2(font.glyphs[chr].minX, ascent - height - font.glyphs[chr].minY);
-					AddSprite(texture, glyphPos, new Int2(width, height), 0, 0, 0, sourceRect, color);
+					spriteBatch.Add(new Sprite(texture, glyphPos, new Int2(width, height), sourceRect, color));
 				}
 
 				penPos.x += font.glyphs[chr].advance;
@@ -409,27 +414,6 @@ namespace Pulsus.Graphics
 			DrawText(font, text, pos + new Int2(outlineSize, -outlineSize), color);
 			DrawText(font, text, pos + new Int2(outlineSize, 0), color);
 			DrawText(font, text, pos + new Int2(outlineSize, outlineSize), color);
-		}
-
-		private void AddSprite(Texture2D texture, Int2 pos, Int2 size, float rotation, float originX, float originY, Rectangle sourceRect, Color color)
-		{
-			if (currentProgram == null)
-				throw new ApplicationException("Unexpected draw call, start a new batch with Begin()");
-
-			Sprite sprite = new Sprite();
-			sprite.texture = texture;
-			sprite.position = pos;
-			sprite.size = size;
-			sprite.rotation = rotation;
-			sprite.originX = originX;
-			sprite.originY = originY;
-			sprite.sourceRect = sourceRect;
-			sprite.depth = spriteBatch.Count;
-				
-			// premultiply alpha
-			sprite.color = new Color(color * (color.alpha / 255.0f), color.alpha).AsARGB();
-
-			spriteBatch.Add(sprite);
 		}
 	}
 }

@@ -37,12 +37,31 @@ namespace Pulsus.Graphics
 
 		public Color AsARGB()
 		{
-			return new Color(((uint)alpha << 24) + ((uint)b << 16) + ((uint)g << 8) + (uint)r);
+			return new Color(
+				((value & 0x000000FF) << 24) +
+				((value & 0x0000FF00) << 8) +
+				((value & 0x00FF0000) >> 8) +
+				((value & 0xFF000000) >> 24));
 		}
 
 		public Float4 AsFloat4()
 		{
-			return new Float4(r/255.0f, g/255.0f, b/255.0f, alpha/255.0f);
+			return new Float4(r / 255.0f, g / 255.0f, b / 255.0f, alpha / 255.0f);
+		}
+
+		public Color AsARGBPremultiplied()
+		{
+			if (this == White || this == Transparent)
+				return this;
+
+			uint a = alpha;
+			float f = a / 255.0f;
+
+			uint r = ((uint)Math.Round(this.r * f));
+			uint g = ((uint)Math.Round(this.g * f));
+			uint b = ((uint)Math.Round(this.b * f));
+
+			return new Color((a << 24) + (b << 16) + (g << 8) + r);
 		}
 
 		public Color(float r, float g, float b, float alpha = 1.0f)
@@ -59,15 +78,15 @@ namespace Pulsus.Graphics
 			return value;
 		}
 
-		public static Color operator*(Color color, float f)
+		public static Color operator *(Color color, float f)
 		{
 			if (f < 0.0f)
 				f = 0.0f;
 
-			uint r = Math.Min((uint)Math.Round(color.r*f), 255);
-			uint g = Math.Min((uint)Math.Round(color.g*f), 255);
-			uint b = Math.Min((uint)Math.Round(color.b*f), 255);
-			uint alpha = Math.Min((uint)Math.Round(color.alpha*f), 255);
+			uint r = Math.Min((uint)Math.Round(color.r * f), 255);
+			uint g = Math.Min((uint)Math.Round(color.g * f), 255);
+			uint b = Math.Min((uint)Math.Round(color.b * f), 255);
+			uint alpha = Math.Min((uint)Math.Round(color.alpha * f), 255);
 
 			color.value = (r << 24) + (g << 16) + (b << 8) + (alpha);
 			return color;
@@ -76,6 +95,35 @@ namespace Pulsus.Graphics
 		public static implicit operator Color(uint color)
 		{
 			return new Color(color);
+		}
+
+		public static bool operator ==(Color a, Color b)
+		{
+			return a.value == b.value;
+		}
+
+		public static bool operator !=(Color a, Color b)
+		{
+			return a.value != b.value;
+		}
+
+		public override bool Equals(object other)
+		{
+			if (other == null)
+				return false;
+			if (other is Color)
+				return this == (Color)other;
+			return false;
+		}
+
+		public bool Equals(Color other)
+		{
+			return this == other;
+		}
+
+		public override int GetHashCode()
+		{
+			return value.GetHashCode();
 		}
 
 		public static readonly Color White = new Color(uint.MaxValue);
