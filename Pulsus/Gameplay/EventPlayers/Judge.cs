@@ -13,7 +13,7 @@ namespace Pulsus.Gameplay
 
 		protected Dictionary<int, int> lastNote = new Dictionary<int, int>();
 
-		protected double judgeTime { get { return currentTime - processAheadTime; } }
+		protected double judgeTime;
 
 		public Judge(Song song)
 			: base(song)
@@ -31,6 +31,12 @@ namespace Pulsus.Gameplay
 			base.StartPlayer();
 		}
 
+		public override void AdvanceTime(double deltaTime)
+		{
+			base.AdvanceTime(deltaTime);
+			judgeTime = currentTime - processAheadTime;
+		}
+
 		public override void UpdateSong()
 		{
 			base.UpdateSong();
@@ -41,6 +47,8 @@ namespace Pulsus.Gameplay
 
 				if (judgeTime > noteScore.timestamp + missWindow)
 					JudgeNote(judgeTime, noteScore);
+				else
+					break;
 			}
 		}
 
