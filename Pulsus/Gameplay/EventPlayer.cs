@@ -24,6 +24,12 @@ namespace Pulsus.Gameplay
 		protected double nextStopTime = 0.0;
 		protected double nextBpm = 0.0;
 
+		protected int lastTimeEventIndex = 0;
+		double lastTimeEventTime = 0.0;
+		long lastTimeEventPulse = 0;
+		double lastTimeEventBpm;
+		double lastTimeEventMeter;
+
 		public double progress { get { return chart != null ? (currentTime / chart.songLength) : 0.0; } }
 
 		public EventPlayer(Song song)
@@ -35,6 +41,8 @@ namespace Pulsus.Gameplay
 			eventList = chart.eventList;
 
 			bpm = chart.bpm;
+			lastTimeEventBpm = bpm;
+			lastTimeEventMeter = 1.0;
 		}
 
 		public virtual void Dispose()
@@ -44,7 +52,7 @@ namespace Pulsus.Gameplay
 		public virtual void StartPlayer()
 		{
 			currentTime = startTime + startOffset;
-			pulse = chart.GetPulseFromTime(currentTime);
+			AdvanceTime(0.0);
 
 			if (pulse != 0)
 			{
@@ -96,8 +104,36 @@ namespace Pulsus.Gameplay
 
 				currentTime += deltaTime * timeMultiplier;
 
+				// calculate current pulse from time events
+				for (; lastTimeEventIndex<chart.timeEventList.Count; lastTimeEventIndex++)
+				{
+					Event timeEvent = chart.timeEventList[lastTimeEventIndex];
+					if (timeEvent.timestamp >= currentTime)
+						break;
+
+					lastTimeEventTime = timeEvent.timestamp;
+					lastTimeEventPulse = timeEvent.pulse;
+
+					if (timeEvent is BPMEvent)
+					{
+						lastTimeEventBpm = (timeEvent as BPMEvent).bpm;
+						if (lastTimeEventBpm < 0.0)
+							lastTimeEventBpm = -lastTimeEventBpm;
+					}
+					else if (timeEvent is StopEvent)
+					{
+						double stopPulses = (timeEvent as StopEvent).stopTime;
+						double stopTime = stopPulses / chart.resolution * 60.0 / lastTimeEventBpm;
+						lastTimeEventTime = Math.Min(lastTimeEventTime + stopTime, currentTime);
+					}
+					else if (timeEvent is MeterEvent)
+						lastTimeEventMeter = (timeEvent as MeterEvent).meter;
+				}
+				double remainderTime = currentTime - lastTimeEventTime;
+				double elapsedPulses = (remainderTime * (lastTimeEventBpm / lastTimeEventMeter) / 60.0 * chart.resolution);
+				
 				long lastPulse = pulse;
-				pulse = chart.GetPulseFromTime(currentTime);
+				pulse = lastTimeEventPulse + (long)elapsedPulses;
 
 				if (timeMultiplier < 0)
 					pulse = lastPulse;
@@ -109,7 +145,15 @@ namespace Pulsus.Gameplay
 		public virtual void Seek(double time)
 		{
 			if (time < currentTime)
+			{
+				// reset all cached values when seeking backwards
 				lastEventIndex = 0;
+				lastTimeEventIndex = 0;
+				lastTimeEventTime = 0.0;
+				lastTimeEventPulse = 0;
+				lastTimeEventBpm = chart.bpm;
+				lastTimeEventMeter = 1.0;
+			}
 
 			currentTime = time;
 			pulse = chart.GetPulseFromTime(time);
