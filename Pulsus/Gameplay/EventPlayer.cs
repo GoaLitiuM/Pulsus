@@ -162,18 +162,6 @@ namespace Pulsus.Gameplay
 				startTime = currentTime;
 		}
 
-		public virtual void Seek(Event seekEvent)
-		{
-			if (seekEvent.timestamp < currentTime)
-				lastEventIndex = 0;
-
-			currentTime = seekEvent.timestamp;
-			pulse = seekEvent.pulse;
-
-			if (!playing)
-				startTime = currentTime;
-		}
-
 		public virtual void SeekEnd()
 		{
 			Event lastEvent = eventList[eventList.Count - 1];

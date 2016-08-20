@@ -58,7 +58,7 @@ namespace Pulsus.Gameplay
 
 			Seek(0.0);
 			Seek(preloadAheadTime);
-			
+
 			StartPreload();
 		}
 
@@ -75,7 +75,7 @@ namespace Pulsus.Gameplay
 				Log.Info("Preloading all BGA objects");
 
 			Seek(0.0);
-			Seek(eventList[eventList.Count-1]);
+			SeekEnd();
 
 			StartPreload();
 		}
