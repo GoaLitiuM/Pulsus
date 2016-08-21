@@ -438,13 +438,48 @@ public class BMSChart : Chart
 			}
 		}
 
+		double lastTimeEventTime = 0.0;
+		double lastBpm = bpm;
+		double lastMeter = 1.0;
+		long lastPulse = 0;
+		int lastTimeEventIndex = 0;
+
 		for (int i = 0; i < eventList.Count; i++)
 		{
 			Event bmsEvent = eventList[i];
 
 			// generate event timestamps
-			bmsEvent.timestamp = GetEventTimestamp(bmsEvent);
 
+			for (; lastTimeEventIndex < timeEventList.Count; lastTimeEventIndex++)
+			{
+				Event timeEvent = timeEventList[lastTimeEventIndex];
+				if (timeEvent.pulse >= bmsEvent.pulse)
+					break;
+
+				double increment = (double)(timeEvent.pulse-lastPulse) / resolution * 60.0 / (lastBpm / lastMeter);
+
+				lastTimeEventTime += increment;
+				lastPulse = timeEvent.pulse;
+
+				if (timeEvent is BPMEvent)
+				{
+					lastBpm = (timeEvent as BPMEvent).bpm;
+					if (lastBpm < 0.0)
+						lastBpm = -lastBpm;
+				}
+				else if (timeEvent is StopEvent)
+				{
+					double stopPulses = (timeEvent as StopEvent).stopTime;
+					double stopTime = stopPulses / resolution * 60.0 / lastBpm;
+					lastTimeEventTime += stopTime;
+				}
+				else if (timeEvent is MeterEvent)
+					lastMeter = (timeEvent as MeterEvent).meter;
+			}
+
+			bmsEvent.timestamp = lastTimeEventTime + (double)(bmsEvent.pulse-lastPulse) / resolution * 60.0 / (lastBpm / lastMeter);
+
+			// sanity check for long notes
 			LongNoteEvent longNoteEvent = bmsEvent as LongNoteEvent;
 			if (longNoteEvent != null)
 			{

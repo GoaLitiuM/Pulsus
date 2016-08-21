@@ -87,42 +87,6 @@ namespace Pulsus.Gameplay
 			return timestamp;
 		}
 
-		public double GetEventTimestamp(Event chartEvent)
-		{
-			double timestamp = 0.0;
-			double currentBpm = bpm;
-			double currentMeter = 1.0;
-			long lastPulse = 0;
-			foreach (Event timeEvent in timeEventList)
-			{
-				if (timeEvent.pulse >= chartEvent.pulse)
-					break;
-
-				double increment = (double)(timeEvent.pulse-lastPulse) / resolution * 60.0 / (currentBpm / currentMeter);
-
-				timestamp += increment;
-				lastPulse = timeEvent.pulse;
-
-				if (timeEvent is BPMEvent)
-				{
-					currentBpm = (timeEvent as BPMEvent).bpm;
-					if (currentBpm < 0.0)
-						currentBpm = -currentBpm;
-				}
-				else if (timeEvent is StopEvent)
-				{
-					double stopPulses = (timeEvent as StopEvent).stopTime;
-					double stopTime = stopPulses / resolution * 60.0 / currentBpm;
-					timestamp += stopTime;
-				}
-				else if (timeEvent is MeterEvent)
-					currentMeter = (timeEvent as MeterEvent).meter;
-			}
-
-			timestamp += (double)(chartEvent.pulse-lastPulse) / resolution * 60.0 / (currentBpm / currentMeter);
-			return timestamp;
-		}
-
 		public long GetPulseFromTime(double time)
 		{
 			double timestamp = 0.0;
