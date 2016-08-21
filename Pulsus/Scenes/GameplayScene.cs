@@ -11,25 +11,23 @@ namespace Pulsus
 		Song song;
 		EventPlayerGraph playerGraph;
 		Skin skin;
-		BGM songPlayer;
+		BGM bgmPlayer;
 		BMSJudge judge;
-		Player autoplay;
+		Player player;
 		Loader loader;
 
 		public GameplayScene(Game game, Song song) : base(game)
 		{
-			Log.Info("Loading song: " + song.path);
-
 			this.song = song;
+			Chart chart = song.chart;
+			Settings settings = SettingsManager.instance;
+			double judgeOffset = settings.gameplay.judgeOffset / 1000.0;
+
+			Log.Info("Loading song: " + song.path);
 			song.Load();
 
 			Log.Info("Generating events...");
-			Chart chart = song.chart;
 			song.GenerateEvents();
-	
-			Settings settings = SettingsManager.instance;
-			bool useAutoplay = settings.gameplay.autoplay;
-			double judgeOffset = settings.gameplay.judgeOffset / 1000.0;
 
 			Log.Info("Initializing players...");
 
@@ -37,20 +35,18 @@ namespace Pulsus
 			skin = new Skin(song, renderer, judge);
 			judge.OnNoteJudged += skin.OnNoteJudged;
 
-			songPlayer = new BGM(audio, song);
-			autoplay = new Player(audio, song, judge, skin);
+			bgmPlayer = new BGM(audio, song);
+			player = new Player(audio, song, judge, skin);
 			loader = new Loader(song);
-
-			autoplay.autoplay = useAutoplay;
 
 			// add players to graph
 			playerGraph = new EventPlayerGraph();
 			playerGraph.Add(judge);
-			playerGraph.Add(autoplay);
-			playerGraph.Add(songPlayer);
+			playerGraph.Add(player);
+			playerGraph.Add(bgmPlayer);
 			playerGraph.Add(skin);
 			playerGraph.Add(loader);
-			
+
 			// adjust offsets
 
 			double adjustTimeline = 0.0;
@@ -67,7 +63,8 @@ namespace Pulsus
 			playerGraph.SetStartPosition(startTime);
 			playerGraph.AdjustTimeline(-adjustTimeline);
 
-			if (!useAutoplay)
+			player.autoplay = settings.gameplay.autoplay;
+			if (!player.autoplay)
 				judge.startTime += judgeOffset;
 
 			// load sound and bga objects
@@ -129,12 +126,12 @@ namespace Pulsus
 
 			if (skin != null)
 				skin.Dispose();
-			if (songPlayer != null)
-				songPlayer.Dispose();
+			if (bgmPlayer != null)
+				bgmPlayer.Dispose();
 			if (judge != null)
 				judge.Dispose();
-			if (autoplay != null)
-				autoplay.Dispose();
+			if (player != null)
+				player.Dispose();
 			if (loader != null)
 				loader.Dispose();
 			if (song != null)
@@ -149,7 +146,7 @@ namespace Pulsus
 			{
 				Close();
 			}));
-			
+
 			const double scrollStep = 0.001;
 
 			BindKey(layout.GetInputs("scrollSpeedInc"), InputAction.OnDown(() =>
@@ -169,7 +166,7 @@ namespace Pulsus
 
 				settings.gameplay.scrollTime = skin.baseScrollTime;
 			}));
-			
+
 			if (!settings.gameplay.autoplay)
 			{
 				int laneOffset;
@@ -183,7 +180,7 @@ namespace Pulsus
 
 				int keyCount = 9;
 				for (int key = 1; key <= keyCount; key++)
-					BindLaneKey(layout.GetKeyInputs(key), key+laneOffset);
+					BindLaneKey(layout.GetKeyInputs(key), key + laneOffset);
 			}
 		}
 
@@ -216,16 +213,16 @@ namespace Pulsus
 		private void BindLaneKey(JoyInput button, int lane)
 		{
 			inputMapper.MapInput(button, InputAction.OnPressedReleased(
-				() => autoplay.PlayerPressKey(lane),
-				() => autoplay.PlayerReleaseKey(lane)
+				() => player.PlayerPressKey(lane),
+				() => player.PlayerReleaseKey(lane)
 			));
 		}
 
 		private void BindLaneKey(SDL.SDL_Scancode scancode, int lane)
 		{
 			inputMapper.MapInput(scancode, InputAction.OnPressedReleased(
-				() => autoplay.PlayerPressKey(lane),
-				() => autoplay.PlayerReleaseKey(lane)
+				() => player.PlayerPressKey(lane),
+				() => player.PlayerReleaseKey(lane)
 			));
 		}
 
