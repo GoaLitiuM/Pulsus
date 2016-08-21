@@ -19,12 +19,12 @@ namespace Pulsus
 		public GameplayScene(Game game, Song song) : base(game)
 		{
 			this.song = song;
-			Chart chart = song.chart;
 			Settings settings = SettingsManager.instance;
 			double judgeOffset = settings.gameplay.judgeOffset / 1000.0;
 
-			Log.Info("Loading song: " + song.path);
+			Log.Info("Loading chart: " + song.path);
 			song.Load();
+			Chart chart = song.chart;
 
 			Log.Info("Generating events...");
 			song.GenerateEvents();
