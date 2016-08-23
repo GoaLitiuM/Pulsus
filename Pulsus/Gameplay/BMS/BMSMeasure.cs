@@ -1,55 +1,58 @@
 ﻿using System.Collections.Generic;
 
-public class BMSMeasure
+namespace Pulsus.Gameplay
 {
-	public int index;
-	public int maxLength;
-	public double meter = 1.0;
-
-	public List<BMSChannel> channelList = new List<BMSChannel>();
-
-	public BMSMeasure(int index, double meter = 1.0)
+	public class BMSMeasure
 	{
-		this.index = index;
-		this.meter = meter;
-	}
+		public int index;
+		public int maxLength;
+		public double meter = 1.0;
 
-	public void Add(int channelIndex, int value)
-	{
-		BMSChannel channelValues = new BMSChannel(channelIndex);
-		channelValues.values = new List<int>(1);
-		channelValues.values.Add(value);
-		channelList.Add(channelValues);
-	}
+		public List<BMSChannel> channelList = new List<BMSChannel>();
 
-	public void Add(int channelIndex, List<int> values)
-	{
-		BMSChannel channelValues = new BMSChannel(channelIndex);
-		channelValues.values = values;
-		channelList.Add(channelValues);
-	}
+		public BMSMeasure(int index, double meter = 1.0)
+		{
+			this.index = index;
+			this.meter = meter;
+		}
 
-	public bool HasChannel(BMSChannel.Type channel)
-	{
-		return HasChannel((int)channel);
-	}
+		public void Add(int channelIndex, int value)
+		{
+			BMSChannel channelValues = new BMSChannel(channelIndex);
+			channelValues.values = new List<int>(1);
+			channelValues.values.Add(value);
+			channelList.Add(channelValues);
+		}
 
-	public bool HasChannel(int channelIndex)
-	{
-		return GetChannel(channelIndex) != null;
-	}
+		public void Add(int channelIndex, List<int> values)
+		{
+			BMSChannel channelValues = new BMSChannel(channelIndex);
+			channelValues.values = values;
+			channelList.Add(channelValues);
+		}
 
-	public BMSChannel GetChannel(BMSChannel.Type channel)
-	{
-		return GetChannel((int)channel);
-	}
+		public bool HasChannel(BMSChannel.Type channel)
+		{
+			return HasChannel((int)channel);
+		}
 
-	public BMSChannel GetChannel(int channelIndex)
-	{
-		foreach (BMSChannel channel in channelList)
-			if (channel.index == channelIndex)
-				return channel;
+		public bool HasChannel(int channelIndex)
+		{
+			return GetChannel(channelIndex) != null;
+		}
 
-		return null;
+		public BMSChannel GetChannel(BMSChannel.Type channel)
+		{
+			return GetChannel((int)channel);
+		}
+
+		public BMSChannel GetChannel(int channelIndex)
+		{
+			foreach (BMSChannel channel in channelList)
+				if (channel.index == channelIndex)
+					return channel;
+
+			return null;
+		}
 	}
 }

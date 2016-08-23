@@ -2,7 +2,7 @@
 {
 	public abstract class ChartParser
 	{
-		public abstract Chart LoadHeaders(string path);
+		public bool headerOnly = false;
 		public abstract Chart Load(string path);
 	}
 }

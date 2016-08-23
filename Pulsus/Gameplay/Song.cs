@@ -53,7 +53,7 @@ namespace Pulsus.Gameplay
 				chart.Dispose();
 		}
 
-		public void Load(bool metaOnly = false)
+		public void Load(bool headerOnly = false)
 		{
 			if (!File.Exists(path))
 				throw new ApplicationException("Failed to load song, file doesn't exist: " + path);
@@ -67,12 +67,9 @@ namespace Pulsus.Gameplay
 				throw new ApplicationException("Parser " + parserType.Name + " is not a subclass of " + nameof(ChartParser));
 
 			ChartParser parser = Activator.CreateInstance(parserType) as ChartParser;
+			parser.headerOnly = headerOnly;
 
-			if (metaOnly)
-				chart = parser.LoadHeaders(path);
-			else
-				chart = parser.Load(path);
-
+			chart = parser.Load(path);
 			if (chart == null)
 				throw new ApplicationException("Failed to load chart data from: " + path);
 		}

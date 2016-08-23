@@ -1,64 +1,118 @@
 ﻿using System;
 using System.IO;
-using System.Runtime.InteropServices;
-using SDL2;
 
 namespace Pulsus
 {
 	public static partial class Utility
 	{
-		public static bool FastStartsWith(this string str, string str2)
+		static Utility()
+		{
+			base36CharValueMap = new int[256];
+			for (int i = 0; i < base36CharValueMap.Length; i++)
+				base36CharValueMap[i] = short.MaxValue;
+			for (int i = '0', j = 0; i <= '9'; i++, j++)
+				base36CharValueMap[i] = j;
+			for (int i = 'a', j = 10; i <= 'z'; i++, j++)
+				base36CharValueMap[i] = j;
+			for (int i = 'A', j = 10; i <= 'Z'; i++, j++)
+				base36CharValueMap[i] = j;
+		}
+
+		/// <summary> Optimized version of StartsWith with StringComparison.Ordinal </summary>
+		public static bool StartsWithFast(this string str, string str2)
 		{
 			int len = str2.Length < str.Length ? str2.Length : str.Length;
 			for (int i = 0; i < len; ++i)
-				if (str[i] != str2[i] && str[i] != char.ToLower(str2[i]))
+				if (str[i] != str2[i])
 					return false;
 
 			return len > 0;
 		}
 
+		/// <summary> Optimized version of StartsWith with StringComparison.OrdinalIgnoreCase </summary>
+		public static bool StartsWithFastIgnoreCase(this string str, string str2)
+		{
+			int len = str2.Length < str.Length ? str2.Length : str.Length;
+			for (int i = 0; i < len; ++i)
+			{
+				char c1 = str[i];
+				char c2 = str2[i];
+				if (c1 == c2)
+					continue;
+
+				// convert to lowercase
+				if (c1 >= 'A' && c1 <= 'Z')
+					c1 = (char)(c1 + 'a' - 'A');
+				if (c2 >= 'A' && c2 <= 'Z')
+					c2 = (char)(c2 + 'a' - 'A');
+				if (c1 == c2)
+					continue;
+
+				return false;
+			}
+			return len > 0;
+		}
+
 		private static readonly char[] base36Table = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ".ToCharArray();
+		private static readonly int[] base36CharValueMap;
 
 		public static string ToBase36(int index)
 		{
 			if (index >= 1296)
-				throw new OverflowException();
+				throw new ArgumentException("Value too big to encode in base36");
 
-			char[] chrs = new char[2] { '0', '0' };
-			if (index == 0)
-				return new string(chrs);
+			return new string(new char[2] { base36Table[(index / 36) % 36], base36Table[index % 36] });
+		}
 
-			int i = 1;
-			while (index != 0)
+		public static int FromBase36(char c)
+		{
+			int value = base36CharValueMap[c];
+			if (value >= 36 * 36)
+				throw new ArgumentException("'" + c + "' is not a valid base36 value");
+
+			return value;
+		}
+
+		public static int FromBase36(char c1, char c2)
+		{
+			int value = base36CharValueMap[c1] * 36 + base36CharValueMap[c2];
+			if (value >= 36 * 36)
+				throw new ArgumentException("'" + c1 + c2 + "' is not a valid base36 value");
+
+			return value;
+		}
+
+		public static bool TryFromBase36(char c1, char c2, out int value)
+		{
+			value = base36CharValueMap[c1] * 36 + base36CharValueMap[c2];
+			if (value >= 36 * 36)
 			{
-				chrs[i--] = base36Table[index % 36];
-				index /= 36;
+				value = 0;
+				return false;
 			}
 
-			return new string(chrs);
+			return true;
+		}
+
+		public static int FromBase36(params char[] str)
+		{
+			throw new ArgumentException("Invalid base36 string, string must has length of 1-2");
 		}
 
 		public static int FromBase36(string str)
 		{
-			if (string.IsNullOrEmpty(str) || str.Length != 2)
-				throw new ArgumentException("Invalid index (string length != 2)");
+			int value;
+			if (str.Length == 2)
+				value = base36CharValueMap[str[0]] * 36 + base36CharValueMap[str[1]];
+			else if (str.Length == 1)
+				value = base36CharValueMap[str[0]];
+			else
+				throw new ArgumentException("Invalid base36 string, string must has length of 1-2");
 
-			str = str.ToUpper();
+			if (value >= 36 * 36)
+				throw new ArgumentException("'" + str + "' is not a valid base36 value");
 
-			int i1 = -1;
-			int i2 = -1;
-			for (int i = 0; i < base36Table.Length; ++i)
-			{
-				if (str[0] == base36Table[i])
-					i1 = i;
-				if (str[1] == base36Table[i])
-					i2 = i;
-			}
-
-			if (i1 == -1 || i2 == -1)
-				throw new ArgumentException("'" + str + "' is not a valid index");
-
-			return i1 * 36 + i2;
+			return value;
 		}
 
 		public static int lcm(int a, int b)
@@ -121,7 +175,7 @@ namespace Pulsus
 				random = new Random();
 
 			// NextDouble upper is exclusive
-			return ((random.NextDouble() / 0.99999999999999978) * (max-min)) + min;
+			return ((random.NextDouble() / 0.99999999999999978) * (max - min)) + min;
 		}
 
 		// finds a file that matches the filename from alternative locations and with different file extensions
