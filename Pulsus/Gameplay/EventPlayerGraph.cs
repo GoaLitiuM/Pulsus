@@ -19,17 +19,6 @@ namespace Pulsus.Gameplay
 				player.startTime = startTime;
 		}
 
-		public void AdjustTimeline(double offset)
-		{
-			double globalAdjust = 0.0;
-			foreach (EventPlayer player in players)
-				globalAdjust = Math.Max(player.startTime, globalAdjust);
-
-			globalAdjust = -globalAdjust + offset;
-			foreach (EventPlayer player in players)
-				player.startTime += globalAdjust;
-		}
-
 		public void Start()
 		{
 			foreach (EventPlayer player in players)

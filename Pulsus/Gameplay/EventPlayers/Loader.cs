@@ -56,10 +56,14 @@ namespace Pulsus.Gameplay
 			else if (loadBgas)
 				Log.Info("Preloading BGA objects " + preloadAheadTime.ToString() + "s ahead");
 
+			double oldStartTime = startTime;
+			
 			Seek(0.0);
 			Seek(preloadAheadTime);
 
 			StartPreload();
+
+			Seek(oldStartTime);
 		}
 
 		public void PreloadAll(bool preloadSound = true, bool preloadBga = true)
@@ -74,10 +78,14 @@ namespace Pulsus.Gameplay
 			else if (loadBgas)
 				Log.Info("Preloading all BGA objects");
 
+			double oldStartTime = startTime;
+
 			Seek(0.0);
 			SeekEnd();
 
 			StartPreload();
+
+			Seek(oldStartTime);
 		}
 
 		private void StartPreload()

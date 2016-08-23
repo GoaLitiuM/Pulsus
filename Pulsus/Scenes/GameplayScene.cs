@@ -61,7 +61,6 @@ namespace Pulsus
 			}
 
 			playerGraph.SetStartPosition(startTime);
-			playerGraph.AdjustTimeline(-adjustTimeline);
 
 			player.autoplay = settings.gameplay.autoplay;
 			if (!player.autoplay)
