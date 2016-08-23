@@ -67,10 +67,11 @@ namespace Pulsus.Gameplay
 		public bool Load(string basePath = "")
 		{
 			basePath = Directory.GetParent(basePath).FullName;
+			string filename = path;
 			path = Utility.FindRealFile(Path.Combine(basePath, path), lookupPaths, lookupExtensions);
 			if (!File.Exists(path))
 			{
-				Log.Warning("BGA file not found: " + path);
+				Log.Warning("BGA file not found: " + filename);
 				return false;
 			}
 
@@ -94,6 +95,10 @@ namespace Pulsus.Gameplay
 			catch when (Path.GetExtension(path).ToLower() == ".lua")
 			{
 				// scripted background are not supported (yet?)
+			}
+			catch (System.Threading.ThreadAbortException)
+			{
+
 			}
 			catch (Exception e)
 			{

@@ -35,10 +35,11 @@ namespace Pulsus.Gameplay
 		public bool Load(string basePath = "")
 		{
 			basePath = Directory.GetParent(basePath).FullName;
+			string filename = path;
 			path = Utility.FindRealFile(Path.Combine(basePath, path), lookupPaths, lookupExtensions);
 			if (!File.Exists(path))
 			{
-				Log.Warning("Sound not found: " + path);
+				Log.Warning("Sound not found: " + filename);
 				return false;
 			}
 
@@ -46,6 +47,10 @@ namespace Pulsus.Gameplay
 			{
 				sound = FFmpegHelper.SoundFromFile(path);
 				sound.polyphony = 1;
+			}
+			catch (System.Threading.ThreadAbortException)
+			{
+
 			}
 			catch (Exception e)
 			{
