@@ -149,7 +149,7 @@ namespace Pulsus.Audio
 				IntPtr streamOffset = stream.AddrOfPinnedObject();
 				streamOffset += (int)instance.offsetStart;
 
-				byte finalVolume = (byte)Math.Round(volume * instance.volume);
+				byte finalVolume = (byte)Math.Round(Math.Min(volume * instance.volume * SDL.SDL_MIX_MAXVOLUME, SDL.SDL_MIX_MAXVOLUME));
 				SDL_MixAudioFormat(streamOffset, instance.sound.data, audioSpec.format, (uint)playLength, finalVolume);
 			}
 			
@@ -188,7 +188,7 @@ namespace Pulsus.Audio
 
 				CopySample(instance, userData, stream, length);
 
-				byte finalVolume = (byte)Math.Round(volume * instance.volume);
+				byte finalVolume = (byte)Math.Round(Math.Min(volume * instance.volume * SDL.SDL_MIX_MAXVOLUME, SDL.SDL_MIX_MAXVOLUME));
 				SDL_MixAudioFormat(stream, audioBuffer, audioSpec.format, (uint)length, finalVolume);
 
 				if (instance.remove)

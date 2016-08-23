@@ -7,7 +7,7 @@ namespace Pulsus.Audio
 		public Sound sound { get; private set; }
 		public uint length { get { return (uint)sound.data.Length; } }
 		public uint position;
-		public byte volume { get; private set; }
+		public float volume { get; private set; }
 
 		public uint startPosition { get; private set; }
 		public uint endPosition { get; private set; }
@@ -23,7 +23,7 @@ namespace Pulsus.Audio
 		public SoundInstance(Sound sound, float volume = 1.0f)
 		{
 			this.sound = sound;
-			this.volume = Math.Min((byte)Math.Round(128*volume), (byte)128);
+			this.volume = Math.Max(0.0f, volume);
 
 			endPosition = length;
 		}
@@ -31,7 +31,7 @@ namespace Pulsus.Audio
 		public SoundInstance(Sound sound, uint startSample, uint endSample, float volume = 1.0f)
 		{
 			this.sound = sound;
-			this.volume = Math.Min((byte)Math.Round(128*volume), (byte)128);
+			this.volume = Math.Max(0.0f, volume);
 
 			startPosition = startSample;
 			endPosition = endSample;
