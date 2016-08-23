@@ -6,14 +6,26 @@ namespace Pulsus.Gameplay
 	{
 		AudioEngine audioEngine;
 
+		private bool seeking;
+
 		public BGM(AudioEngine audioEngine, Song song)
 			: base(song)
 		{
 			this.audioEngine = audioEngine;
 		}
 
+		public override void StartPlayer()
+		{
+			seeking = true;
+			base.StartPlayer();
+			seeking = false;
+		}
+
 		public override void OnBGM(SoundEvent soundEvent)
 		{
+			if (seeking)
+				return;
+
 			if (soundEvent.sound == null)
 				return;
 

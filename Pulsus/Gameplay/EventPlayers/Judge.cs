@@ -8,12 +8,11 @@ namespace Pulsus.Gameplay
 		protected List<NoteScore> noteScores;
 		protected List<NoteScore> pendingNoteScores;
 
+		protected double judgeTime;
 		protected double processAheadTime;
 		protected double missWindow;
 
-		protected Dictionary<int, int> lastNote = new Dictionary<int, int>();
-
-		protected double judgeTime;
+		protected bool seeking;
 
 		public Judge(Song song)
 			: base(song)
@@ -27,6 +26,10 @@ namespace Pulsus.Gameplay
 
 		public override void StartPlayer()
 		{
+			seeking = true;
+			base.StartPlayer();
+			seeking = false;
+
 			startTime += processAheadTime;
 			base.StartPlayer();
 		}
@@ -60,11 +63,17 @@ namespace Pulsus.Gameplay
 
 		public override void OnPlayerKey(NoteEvent noteEvent)
 		{
+			if (seeking)
+				return;
+
 			pendingNoteScores.Add(new NoteScore(noteEvent, noteEvent.timestamp, NoteJudgeType.JudgePress));
 		}
 
 		public override void OnPlayerKeyLong(LongNoteEvent noteEvent)
 		{
+			if (seeking)
+				return;
+
 			pendingNoteScores.Add(new NoteScore(noteEvent, noteEvent.timestamp, NoteJudgeType.JudgeHold));
 			pendingNoteScores.Add(new NoteScore(noteEvent.endNote, noteEvent.endNote.timestamp, NoteJudgeType.JudgeRelease));
 		}

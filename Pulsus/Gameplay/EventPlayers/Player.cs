@@ -5,11 +5,13 @@ namespace Pulsus.Gameplay
 {
 	public class Player : EventPlayer
 	{
+		public bool autoplay;
+
 		AudioEngine audioEngine;
 		BMSJudge judge;
 		Skin skin;
 
-		public bool autoplay;
+		private bool seeking;
 
 		public Player(AudioEngine audioEngine, Song song, BMSJudge judge, Skin skin)
 			: base(song)
@@ -18,7 +20,14 @@ namespace Pulsus.Gameplay
 			this.judge = judge;
 			this.skin = skin;
 		}
-	
+
+		public override void StartPlayer()
+		{
+			seeking = true;
+			base.StartPlayer();
+			seeking = false;
+		}
+
 		public override void OnPlayerKey(NoteEvent noteEvent)
 		{
 			if (!autoplay)
@@ -56,6 +65,9 @@ namespace Pulsus.Gameplay
 		
 		private void PressKey(int lane, SoundObject value, NoteEvent pressNote = null)
 		{
+			if (seeking)
+				return;
+
 			if (skin != null)
 				skin.OnKeyPress(lane);
 
@@ -126,6 +138,9 @@ namespace Pulsus.Gameplay
 
 		private void ReleaseKey(int lane, SoundObject value = null)
 		{
+			if (seeking)
+				return;
+
 			if (skin != null)
 				skin.OnKeyRelease(lane);
 
