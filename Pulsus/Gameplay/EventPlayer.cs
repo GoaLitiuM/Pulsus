@@ -93,11 +93,17 @@ namespace Pulsus.Gameplay
 				currentTime += deltaTime * timeMultiplier;
 
 				// calculate current pulse from time events
-				for (; lastTimeEventIndex<chart.timeEventList.Count; lastTimeEventIndex++)
+				for (; lastTimeEventIndex < chart.timeEventList.Count; lastTimeEventIndex++)
 				{
 					Event timeEvent = chart.timeEventList[lastTimeEventIndex];
 					if (timeEvent.timestamp >= currentTime)
+					{
+						// process last event again next time in order to handle
+						// accumulating stop time from last event correctly.
+						if (lastTimeEventIndex > 0)
+							lastTimeEventIndex--;
 						break;
+					}
 
 					lastTimeEventTime = timeEvent.timestamp;
 					lastTimeEventPulse = timeEvent.pulse;
@@ -119,7 +125,7 @@ namespace Pulsus.Gameplay
 				}
 				double remainderTime = currentTime - lastTimeEventTime;
 				double elapsedPulses = (remainderTime * (lastTimeEventBpm / lastTimeEventMeter) / 60.0 * chart.resolution);
-				
+
 				long lastPulse = pulse;
 				pulse = lastTimeEventPulse + (long)elapsedPulses;
 
