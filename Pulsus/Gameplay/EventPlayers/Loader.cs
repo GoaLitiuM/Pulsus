@@ -140,7 +140,8 @@ namespace Pulsus.Gameplay
 			{
 				lock (bgaQueue)
 				{
-					loadThread.Abort();
+					if (soundQueue.Count == 0 && bgaQueue.Count == 0)
+						loadThread.Abort();
 				}
 			}
 		}
