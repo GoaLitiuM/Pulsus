@@ -602,7 +602,7 @@ namespace Pulsus.Gameplay
 		private void OnHeader(BMSChart data, string command, string value)
 		{
 			if (!data.HeaderDefined(command))
-				throw new ApplicationException("Unsupported header command: " + command);
+				Log.Error("Unsupported header command: " + command);
 
 			int valueInt = 0;
 			double valueDouble = 0.0;
