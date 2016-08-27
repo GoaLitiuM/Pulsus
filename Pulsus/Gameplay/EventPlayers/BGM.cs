@@ -16,6 +16,9 @@ namespace Pulsus.Gameplay
 
 		public override void StartPlayer()
 		{
+			if (playing)
+				return;
+
 			seeking = true;
 			base.StartPlayer();
 			seeking = false;

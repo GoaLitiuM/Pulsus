@@ -26,12 +26,17 @@ namespace Pulsus.Gameplay
 
 		public override void StartPlayer()
 		{
+			if (playing)
+				return;
+
 			seeking = true;
 			base.StartPlayer();
 			seeking = false;
 
 			startTime += processAheadTime;
-			base.StartPlayer();
+			currentTime = startTime;
+			AdvanceTime(0.0);
+			UpdateSong();
 		}
 
 		public override void AdvanceTime(double deltaTime)

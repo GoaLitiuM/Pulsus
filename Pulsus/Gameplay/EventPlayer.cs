@@ -50,6 +50,9 @@ namespace Pulsus.Gameplay
 
 		public virtual void StartPlayer()
 		{
+			if (playing)
+				return;
+
 			currentTime = startTime;
 			AdvanceTime(0.0);
 			UpdateSong();

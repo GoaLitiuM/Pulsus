@@ -285,6 +285,9 @@ namespace Pulsus.Gameplay
 
 		public override void StartPlayer()
 		{
+			if (playing)
+				return;
+
 			base.StartPlayer();
 			lastScrollEvent = lastEventIndex;
 		}
