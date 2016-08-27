@@ -196,7 +196,7 @@
     <Compile Include="SettingsWindow.cs" />
     <Compile Include="Gameplay\EventPlayers\Skin.cs" />
     <Compile Include="Gameplay\BMS\BMSJudge.cs" />
-    <Compile Include="Gameplay\EventPlayers\Loader.cs" />
+    <Compile Include="Gameplay\EventPlayers\BackgroundLoader.cs" />
     <Compile Include="Gameplay\EventPlayerGraph.cs" />
     <Compile Include="Input\InputMapper.cs" />
     <Compile Include="Gameplay\EventPlayers\BGM.cs" />

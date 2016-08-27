@@ -3,9 +3,12 @@ using System.Threading;
 
 namespace Pulsus.Gameplay
 {
-	public class Loader : EventPlayer
+	public class BackgroundLoader : EventPlayer
 	{
-		Thread loadThread;
+		const double preloadAheadTime = 20.0;
+
+		public bool skipSound = false;
+		public bool skipBGA = false;
 
 		Queue<SoundObject> soundQueue = new Queue<SoundObject>();
 		Queue<BGAObject> bgaQueue = new Queue<BGAObject>();
@@ -14,23 +17,18 @@ namespace Pulsus.Gameplay
 		HashSet<BGAObject> bgaUniques = new HashSet<BGAObject>();
 
 		string songBasePath;
-		bool loadSounds = true;
-		bool loadBgas = true;
-		const double preloadAheadTime = 20.0;
-		bool disableBGA;
 
+		Thread loadThread;
 		System.Diagnostics.Stopwatch loadTimer;
 
-		public Loader(Song song)
+		public BackgroundLoader(Song song)
 			: base(song)
 		{
 			loadThread = new Thread(new ThreadStart(LoadThread));
-			loadThread.Name = "ObjectLoaderThread";
+			loadThread.Name = "BackgroundLoaderThread";
 			loadThread.IsBackground = true;
 
 			songBasePath = song.path;
-
-			disableBGA = SettingsManager.instance.gameplay.disableBGA;
 		}
 
 		public override void Dispose()
@@ -44,38 +42,42 @@ namespace Pulsus.Gameplay
 			bgaUniques.Clear();
 		}
 
-		public void Preload(bool preloadSound = true, bool preloadBga = true, double preloadAheadTime = Loader.preloadAheadTime)
+		public void Preload(double preloadAheadTime = BackgroundLoader.preloadAheadTime)
 		{
-			loadSounds = preloadSound;
-			loadBgas = preloadBga;
+			Preload(!skipSound, !skipBGA, preloadAheadTime);
+		}
 
-			if (loadSounds && loadBgas)
+		public void Preload(bool preloadSound, bool preloadBga, double preloadAheadTime = BackgroundLoader.preloadAheadTime)
+		{
+			if (preloadSound && preloadBga)
 				Log.Info("Preloading objects " + preloadAheadTime.ToString() + "s ahead");
-			else if (loadSounds)
+			else if (preloadSound)
 				Log.Info("Preloading sound objects " + preloadAheadTime.ToString() + "s ahead");
-			else if (loadBgas)
+			else if (preloadBga)
 				Log.Info("Preloading BGA objects " + preloadAheadTime.ToString() + "s ahead");
 
 			double oldStartTime = startTime;
 			
 			Seek(0.0);
-			Seek(preloadAheadTime);
+			Seek(oldStartTime+preloadAheadTime);
 
-			StartPreload();
+			StartPreload(preloadSound, preloadBga);
 
 			Seek(oldStartTime);
 		}
 
-		public void PreloadAll(bool preloadSound = true, bool preloadBga = true)
+		public void PreloadAll()
 		{
-			loadSounds = preloadSound;
-			loadBgas = preloadBga;
+			PreloadAll(!skipSound, !skipBGA);
+		}
 
-			if (loadSounds && loadBgas)
+		public void PreloadAll(bool preloadSound, bool preloadBga)
+		{
+			if (preloadSound && preloadBga)
 				Log.Info("Preloading all objects");
-			else if (loadSounds)
+			else if (preloadSound)
 				Log.Info("Preloading all sound objects");
-			else if (loadBgas)
+			else if (preloadBga)
 				Log.Info("Preloading all BGA objects");
 
 			double oldStartTime = startTime;
@@ -83,15 +85,20 @@ namespace Pulsus.Gameplay
 			Seek(0.0);
 			SeekEnd();
 
-			StartPreload();
+			StartPreload(preloadSound, preloadBga);
 
 			Seek(oldStartTime);
 		}
 
-		private void StartPreload()
+		private void StartPreload(bool preloadSound, bool preloadBga)
 		{
 			if (chart == null)
 				return;
+
+			bool oldSkipSound = skipSound;
+			bool oldSkipBGA = skipBGA;
+			skipSound = !preloadSound;
+			skipBGA = !preloadBga;
 
 			UpdateSong();
 
@@ -112,15 +119,17 @@ namespace Pulsus.Gameplay
 
 			Log.Info("Preloaded  {0} sound objects, {1} BGA objects", soundCount, bgaCount);
 
-			loadSounds = true;
-			loadBgas = true;
+			skipSound = oldSkipSound;
+			skipBGA = oldSkipBGA;
 		}
 
 		public override void StartPlayer()
 		{
+			if (playing)
+				return;
+
 			base.StartPlayer();
 
-			Seek(0.0);
 			SeekEnd();
 
 			loadTimer = System.Diagnostics.Stopwatch.StartNew();
@@ -148,7 +157,7 @@ namespace Pulsus.Gameplay
 
 		public override void OnSoundObject(SoundEvent soundEvent)
 		{
-			if (!loadSounds)
+			if (skipSound)
 				return;
 
 			if (soundEvent.sound == null)
@@ -166,10 +175,7 @@ namespace Pulsus.Gameplay
 
 		public override void OnBGAObject(BGAEvent bgaEvent)
 		{
-			if (disableBGA)
-				return;
-
-			if (!loadBgas)
+			if (skipBGA)
 				return;
 
 			if (bgaEvent.bga == null)

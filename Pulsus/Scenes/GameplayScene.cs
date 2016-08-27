@@ -14,7 +14,7 @@ namespace Pulsus
 		BGM bgmPlayer;
 		BMSJudge judge;
 		Player player;
-		Loader loader;
+		BackgroundLoader loader;
 
 		public GameplayScene(Game game, Song song) : base(game)
 		{
@@ -37,7 +37,7 @@ namespace Pulsus
 
 			bgmPlayer = new BGM(audio, song);
 			player = new Player(audio, song, judge, skin);
-			loader = new Loader(song);
+			loader = new BackgroundLoader(song);
 
 			// add players to graph
 			playerGraph = new EventPlayerGraph();
@@ -68,13 +68,17 @@ namespace Pulsus
 
 			// load sound and bga objects
 
+			loader.skipBGA = settings.gameplay.disableBGA;
+
 			System.Diagnostics.Stopwatch loadTimer = System.Diagnostics.Stopwatch.StartNew();
 			if (settings.songPreload)
 				loader.PreloadAll();
 			else
 			{
 				// preload all BGA objects
-				loader.PreloadAll(false, true);
+				if (!settings.gameplay.disableBGA)
+					loader.PreloadAll(false, true);
+
 				loader.Preload(); // preload few seconds ahead
 			}
 			loadTimer.Stop();
