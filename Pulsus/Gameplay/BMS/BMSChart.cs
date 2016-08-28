@@ -17,6 +17,7 @@ namespace Pulsus.Gameplay
 		public override double gaugeMultiplier { get { return 1.0; } }
 		public override double volume { get { return GetHeader<double>("VOLWAV") / 100.0; } }
 		public override int playLevel { get { return GetHeader<int>("PLAYLEVEL"); } }
+		public override string previewFile { get { return GetHeader<string>("PREVIEW"); } }
 
 		private Dictionary<string, object> headerObjects = new Dictionary<string, object>()
 		{
@@ -31,6 +32,7 @@ namespace Pulsus.Gameplay
 			{ "VOLOGG", 100.0 },
 			{ "LNTYPE", 1 },        // 1: RDM-notation, non-zero events marks start and end points
 									// 2: MGQ-notation, continuous non-zero events marks the duration
+			{ "PREVIEW", null },	// path to sound used for preview
 		};
 
 		public static HashSet<string> unsupportedObjects = new HashSet<string>()

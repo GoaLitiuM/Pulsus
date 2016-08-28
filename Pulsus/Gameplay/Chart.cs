@@ -15,6 +15,7 @@ namespace Pulsus.Gameplay
 		public abstract double gaugeMultiplier { get; }
 		public abstract double volume { get; }
 		public abstract int playLevel { get; }
+		public abstract string previewFile { get; }
 
 		public long resolution = 240;
 
