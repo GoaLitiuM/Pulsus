@@ -119,9 +119,10 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\ThirdParty\FFmpeg.AutoGen.dll</HintPath>
     </Reference>
-    <Reference Include="Newtonsoft.Json">
-      <HintPath>..\ThirdParty\Newtonsoft.Json.dll</HintPath>
+    <Reference Include="Jil">
+      <HintPath>..\ThirdParty\Jil.dll</HintPath>
     </Reference>
+    <Reference Include="Microsoft.CSharp" />
     <Reference Include="SDL2-CS, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\ThirdParty\SDL2-CS.dll</HintPath>
@@ -129,6 +130,9 @@
     <Reference Include="SharpBgfx, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\ThirdParty\SharpBgfx.dll</HintPath>
+    </Reference>
+    <Reference Include="Sigil">
+      <HintPath>..\ThirdParty\Sigil.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.IO.Compression" />

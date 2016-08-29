@@ -1,7 +1,7 @@
-﻿using System.Text;
-using System.IO;
-using Newtonsoft.Json;
+﻿using Jil;
 using Pulsus.Gameplay;
+using System.IO;
+using System.Text;
 
 namespace Pulsus
 {
@@ -25,29 +25,18 @@ namespace Pulsus
 			}
 		}
 
-		private static JsonSerializerSettings serializerSettings;
-
-		static SettingsManager()
-		{
-			serializerSettings = new JsonSerializerSettings()
-			{
-				Formatting = Formatting.Indented,
-				ObjectCreationHandling = ObjectCreationHandling.Replace,
-			};
-		}
-
 		public static Settings Load(string path)
 		{
 			if (!File.Exists(path))
 				return null;
 
-			return JsonConvert.DeserializeObject<Settings>(File.ReadAllText(path, Encoding.UTF8), serializerSettings);
+			return JSON.Deserialize<Settings>(File.ReadAllText(path, Encoding.UTF8), Options.PrettyPrint);
 		}
 
 		public static Settings Clone(Settings settings)
 		{
 			// HACK: creates a copy of the settings through serialization and deserialization
-			return JsonConvert.DeserializeObject<Settings>(JsonConvert.SerializeObject(settings, serializerSettings), serializerSettings);
+			return JSON.Deserialize<Settings>(JSON.Serialize<Settings>(settings));
 		}
 
 		public static void LoadDefaults()
@@ -62,7 +51,7 @@ namespace Pulsus
 			if (settings == null)
 			{
 				Log.Info("Settings file (" + defaultPath + ") not found, loading defaults");
-				
+
 				settings = new Settings();
 				LoadPersistent(settings);
 				SavePersistent();
@@ -84,7 +73,7 @@ namespace Pulsus
 
 		public static void SavePersistent()
 		{
-			string json = JsonConvert.SerializeObject(persistent, serializerSettings);
+			string json = JSON.Serialize<Settings>(persistent, Options.PrettyPrint);
 			File.WriteAllText(defaultPath, json, Encoding.UTF8);
 		}
 
@@ -150,8 +139,8 @@ namespace Pulsus
 			{
 				string key = args[i];
 				string value = null;
-				if (i+1 < args.Length && !args[i+1].StartsWith("-"))
-					value = args[i+1];
+				if (i + 1 < args.Length && !args[i + 1].StartsWith("-"))
+					value = args[i + 1];
 
 				if (ParseArg(key, value))
 					i++;

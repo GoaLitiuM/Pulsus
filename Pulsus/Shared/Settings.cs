@@ -1,12 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Converters;
-using Pulsus.Graphics;
+﻿using Jil;
 using Pulsus.Audio;
 using Pulsus.Gameplay;
+using Pulsus.Graphics;
 using Pulsus.Input;
 using SDL2;
+using System.Collections.Generic;
+using System;
 
 namespace Pulsus
 {
@@ -33,19 +32,19 @@ namespace Pulsus
 
 		// settings used by commandline options
 
-		[JsonIgnore]
+		[JilDirective(Ignore = true)]
 		public string playPath;
 
-		[JsonIgnore]
+		[JilDirective(Ignore = true)]
 		public OutputMode outputMode;
 
-		[JsonIgnore]
+		[JilDirective(Ignore = true)]
 		public string outputPath;
 
-		[JsonIgnore]
+		[JilDirective(Ignore = true)]
 		public int startMeasure;
 
-		[JsonIgnore]
+		[JilDirective(Ignore = true)]
 		public bool showSettings;
 	}
 
@@ -61,11 +60,9 @@ namespace Pulsus
 	public class VideoSettings
 	{
 		// renderer backend
-		[JsonConverter(typeof(StringEnumConverter))]
 		public RendererType renderer = RendererType.Direct3D11;
 
 		// windowing mode
-		[JsonConverter(typeof(StringEnumConverter))]
 		public VideoMode mode = VideoMode.Windowed;
 
 		// monitor vertical sync
@@ -85,7 +82,6 @@ namespace Pulsus
 
 	public class AudioSettings
 	{
-		[JsonConverter(typeof(StringEnumConverter))]
 		public AudioDriver driver = AudioDriver.Default;
 
 		public uint volume = 30;
@@ -263,7 +259,7 @@ namespace Pulsus
 
 	public class GameplaySettings
 	{
-		[JsonIgnore]
+		[JilDirective(Ignore = true)]
 		public bool autoplay { get { return assistMode == AssistMode.Autoplay; } }
 
 		// scrolling time for notes in s
@@ -278,22 +274,11 @@ namespace Pulsus
 		// disables loading and displaying BGA
 		public bool disableBGA;
 
-		[JsonConverter(typeof(StringEnumConverter))]
 		public AssistMode assistMode;
-
-		//[JsonConverter(typeof(StringEnumConverter))]
 		//public ScrollMode scrollMode;
-
-		//[JsonConverter(typeof(StringEnumConverter))]
 		//public PlayMode playMode;
-
-		//[JsonConverter(typeof(StringEnumConverter))]
 		//public LaneMode laneMode;
-
-		[JsonConverter(typeof(StringEnumConverter))]
 		public GaugeMode gaugeMode;
-
-		//[JsonConverter(typeof(StringEnumConverter))]
 		//public RandomMode randomMode;
 	}
 

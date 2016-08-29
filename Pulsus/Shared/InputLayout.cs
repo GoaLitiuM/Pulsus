@@ -1,13 +1,17 @@
-﻿using System;
-using System.Collections.Generic;
-using Pulsus.Input;
+﻿using Pulsus.Input;
 using SDL2;
+using System.Collections.Generic;
+using System;
 
 namespace Pulsus
 {
 	public class InputLayout
 	{
 		public Dictionary<string, string[]> keys;
+
+		public InputLayout()
+		{
+		}
 
 		public InputLayout(params Tuple<string, InputType[]>[] otherInputs)
 		{
@@ -74,7 +78,7 @@ namespace Pulsus
 		{
 			if (keyInputs != null)
 				for (int i = 0; i < keyInputs.Length; i++)
-					keys["key" + (i+1).ToString()] = GetKeyStrings(keyInputs[i]);
+					keys["key" + (i + 1).ToString()] = GetKeyStrings(keyInputs[i]);
 		}
 	}
 

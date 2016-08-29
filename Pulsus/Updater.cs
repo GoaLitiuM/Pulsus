@@ -1,9 +1,10 @@
-﻿using System;
-using System.IO;
+﻿using Jil;
+using Pulsus.FFmpeg;
 using System.IO.Compression;
+using System.IO;
 using System.Net;
 using System.Reflection;
-using Pulsus.FFmpeg;
+using System;
 
 namespace Pulsus
 {
@@ -33,22 +34,22 @@ namespace Pulsus
 				{
 					using (StreamReader stream = new StreamReader(response.GetResponseStream()))
 					{
-						var result = Newtonsoft.Json.Linq.JObject.Parse(stream.ReadToEnd());
+						var result = JSON.DeserializeDynamic(stream.ReadToEnd());
 
 						info = new UpdateInfo()
 						{
-							changelog = result.Value<string>("body"),
-							version = Version.Parse(result.Value<string>("tag_name")),
-							date = result.Value<string>("published_at"),
+							changelog = (string)result.body,
+							version = Version.Parse((string)result.tag_name),
+							date = (string)result.published_at,
 						};
 
 						// having undefined revision messes up equality comparison between two versions
 						if (info.version.Revision == -1)
 							info.version = new Version(info.version.Major, info.version.Minor, info.version.Build, 0);
 
-						foreach (var asset in result.GetValue("assets").Children())
+						foreach (var asset in result.assets)
 						{
-							string filename = asset.Value<string>("name");
+							string filename = (string)asset.name;
 							string[] tokens = filename.Split(new char[] { '_' });
 
 							string fileVersion = tokens[1];
@@ -61,7 +62,7 @@ namespace Pulsus
 
 							if (filePlatform.Equals(Program.platformId, StringComparison.OrdinalIgnoreCase))
 							{
-								info.downloadUrl = asset.Value<string>("browser_download_url");
+								info.downloadUrl = (string)asset.browser_download_url;
 								break;
 							}
 						}
