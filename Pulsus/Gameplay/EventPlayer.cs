@@ -14,7 +14,7 @@ namespace Pulsus.Gameplay
 		public bool playing = false;
 		public double startTime = 0.0;
 
-		public int currentMeasure = 0;
+		public int currentMeasure = -1;
 		public double currentTime = 0.0;
 		public long pulse = 0;
 
