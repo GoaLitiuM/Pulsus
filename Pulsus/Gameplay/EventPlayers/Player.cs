@@ -21,13 +21,11 @@ namespace Pulsus.Gameplay
 			this.skin = skin;
 		}
 
-		public override void StartPlayer()
+		public override void OnPlayerStart()
 		{
-			if (playing)
-				return;
-
 			seeking = true;
-			base.StartPlayer();
+			if (pulse > 0)
+				UpdateSong();
 			seeking = false;
 		}
 

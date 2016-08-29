@@ -283,12 +283,8 @@ namespace Pulsus.Gameplay
 			judgeFont.Dispose();
 		}
 
-		public override void StartPlayer()
+		public override void OnPlayerStart()
 		{
-			if (playing)
-				return;
-
-			base.StartPlayer();
 			lastScrollEvent = lastEventIndex;
 		}
 

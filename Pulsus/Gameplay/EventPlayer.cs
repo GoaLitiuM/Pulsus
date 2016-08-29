@@ -48,16 +48,16 @@ namespace Pulsus.Gameplay
 		{
 		}
 
-		public virtual void StartPlayer()
+		public void StartPlayer()
 		{
 			if (playing)
 				return;
 
 			currentTime = startTime;
 			AdvanceTime(0.0);
-			UpdateSong();
 
 			playing = true;
+			OnPlayerStart();
 		}
 
 		public void StopPlayer()
@@ -65,6 +65,7 @@ namespace Pulsus.Gameplay
 			if (!playing)
 				return;
 
+			playing = false;
 			OnPlayerStop();
 		}
 
@@ -246,7 +247,7 @@ namespace Pulsus.Gameplay
 
 		public virtual void OnPlayerStop()
 		{
-			playing = false;
+			
 		}
 
 		public virtual void OnSongEnd()

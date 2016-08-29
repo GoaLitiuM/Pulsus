@@ -123,28 +123,16 @@ namespace Pulsus.Gameplay
 			skipBGA = oldSkipBGA;
 		}
 
-		public override void StartPlayer()
+		public override void OnPlayerStart()
 		{
-			if (playing)
-				return;
-
-			base.StartPlayer();
-
 			SeekEnd();
 
 			loadTimer = System.Diagnostics.Stopwatch.StartNew();
 			loadThread.Start();
 		}
 
-		public override void OnSongEnd()
-		{
-			StopPlayer();
-		}
-
 		public override void OnPlayerStop()
 		{
-			base.OnPlayerStop();
-
 			lock (soundQueue)
 			{
 				lock (bgaQueue)

@@ -24,17 +24,15 @@ namespace Pulsus.Gameplay
 			pendingNoteScores = new List<NoteScore>(chart.playerEventCount);
 		}
 
-		public override void StartPlayer()
+		public override void OnPlayerStart()
 		{
-			if (playing)
-				return;
-
+			// process and ignore past player events
 			seeking = true;
-			base.StartPlayer();
+			if (pulse > 0)
+				UpdateSong();
 			seeking = false;
 
-			startTime += processAheadTime;
-			currentTime = startTime;
+			currentTime += processAheadTime;
 			AdvanceTime(0.0);
 			UpdateSong();
 		}

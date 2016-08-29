@@ -14,13 +14,12 @@ namespace Pulsus.Gameplay
 			this.audioEngine = audioEngine;
 		}
 
-		public override void StartPlayer()
+		public override void OnPlayerStart()
 		{
-			if (playing)
-				return;
-
+			// process and ignore past sound events
 			seeking = true;
-			base.StartPlayer();
+			if (pulse > 0)
+				UpdateSong();
 			seeking = false;
 		}
 
