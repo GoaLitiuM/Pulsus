@@ -6,6 +6,7 @@ Features
 ---
 - Supports following file formats (not completely):
  - bms/bme/bml/pms, RDM-LN, MGQ-LN
+ - bmson 1.0.0
 - Single-Play support for 5key, 7key and 9key modes, Double-Play is not supported at the moment
 - Basic gameplay and judge using similar timing gates from LR2
 - Engine Framework:
@@ -15,7 +16,7 @@ Features
  - Graphics with following backends: D3D9, D3D11, OpenGL. ([bgfx](https://github.com/bkaradzic/bgfx) + [SharpBgfx](https://github.com/MikePopoloski/SharpBgfx))
  - Audio playback with following backends: XAudio2, DirectSound, PulseAudio, CoreAudio, and more. (SDL2)
  - Multimedia support for video, audio and image formats ([FFmpeg](https://ffmpeg.org/) + [FFmpeg.AutoGen](https://github.com/Ruslan-B/FFmpeg.AutoGen))
- - JSON ([Newtonsoft.Json](https://github.com/JamesNK/Newtonsoft.Json))
+ - JSON ([Jil](https://github.com/kevin-montrose/Jil))
 
 Requirements
 ---
