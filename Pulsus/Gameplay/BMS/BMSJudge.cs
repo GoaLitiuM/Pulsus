@@ -9,13 +9,13 @@ namespace Pulsus.Gameplay
 		// truncate off sub-millisecond values from judge timing
 		public bool truncateTiming = false;
 
-		public static readonly double[] timingWindowDefault =
+		public readonly double[] timingWindowDefault =
 		{
 			//PGreat, Great, Good, Bad, Poor (miss), Early Miss
 			.018, .040, .100, .200, .200, 1.000,	// same as LR2Normal
 		};
 
-		public static readonly double[][] timingWindowLR2 =
+		public readonly double[][] timingWindowLR2 =
 		{
 			// source for timing windows used in LR2:
 			// http://hitkey.nekokan.dyndns.info/diary1501.php#D150119
@@ -26,7 +26,7 @@ namespace Pulsus.Gameplay
 			new double[] { .021, .060, .120, .200, .200, 1.000 },	// LR2Easy
 		};
 
-		public static readonly double[] rankTimingMultipliers =
+		public readonly double[] rankTimingMultipliers =
 		{
 			0.5,	// #RANK 0
 			0.75,	// #RANK 1
@@ -39,7 +39,7 @@ namespace Pulsus.Gameplay
 
 		readonly int scoreExMax;
 
-		public double[] timingWindow { get; private set; } = timingWindowDefault;	
+		public double[] timingWindow { get; private set; }
 		
 		public int combo { get; private set; }
 		public int scorePGreatCount = 0;
@@ -54,7 +54,7 @@ namespace Pulsus.Gameplay
 		public int delaySlowCount2 = 0;
 		public double gaugeHealth = 0.0;
 
-		double judgeTimingMulti = rankTimingMultipliers[2];
+		double judgeTimingMulti;
 
 		double gaugeMinHealth = 0.0;
 		double gaugeFailThreshold = 0.0;
@@ -77,6 +77,9 @@ namespace Pulsus.Gameplay
 				return;
 
 			Settings settings = SettingsManager.instance;
+
+			timingWindow = timingWindowDefault;
+			judgeTimingMulti = rankTimingMultipliers[2];
 
 			// setup gauge
 
