@@ -17,7 +17,7 @@ namespace Pulsus
 		public bool checkUpdates = false;
 
 		// fully load song data beforehand
-		public bool songPreload = false;
+		public bool songPreload = true;
 
 		public List<string> songPaths = new List<string>()
 		{
