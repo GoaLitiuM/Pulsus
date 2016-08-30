@@ -1,6 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Diagnostics;
+using System;
 
 namespace Pulsus.Gameplay
 {
@@ -312,10 +312,10 @@ namespace Pulsus.Gameplay
 			return values;
 		}
 
-		// maps BMS channels to lane numbers
+		// maps BMS player channels to lane numbers, first lane is scratch
 		public static int GetLaneIndex(int channel, int keyCount, int playerCount)
 		{
-			int noteChannel = -1;
+			int lane = -1;
 
 			// long note
 			if (channel >= (int)BMSChannel.Type.P1LongFirst && channel <= (int)BMSChannel.Type.P2LongLast)
@@ -337,11 +337,11 @@ namespace Pulsus.Gameplay
 				if (BMSChannel.IsP1Key(channel))
 				{
 					if (channel >= (int)BMSChannel.KeyBMS.P1Key1 && channel <= (int)BMSChannel.KeyBMS.P1Key5)
-						noteChannel = 1 + channel - (int)BMSChannel.KeyBMS.P1Key1;
+						lane = 1 + channel - (int)BMSChannel.KeyBMS.P1Key1;
 					else if (channel >= (int)BMSChannel.KeyBMS.P1Key6 && channel <= (int)BMSChannel.KeyBMS.P1Key7)
-						noteChannel = 1 + 5 + channel - (int)BMSChannel.KeyBMS.P1Key6;
+						lane = 1 + 5 + channel - (int)BMSChannel.KeyBMS.P1Key6;
 					else if (channel == (int)BMSChannel.KeyBMS.P1Scratch)
-						noteChannel = 0;
+						lane = 0;
 				}
 			}
 			else if (keyCount == 9)
@@ -349,9 +349,9 @@ namespace Pulsus.Gameplay
 				if (playerCount == 1)
 				{
 					if (channel >= (int)BMSChannel.KeyPMS.P1Key1 && channel <= (int)BMSChannel.KeyPMS.P1Key5)
-						noteChannel = channel - (int)BMSChannel.KeyPMS.P1Key1;
+						lane = channel - (int)BMSChannel.KeyPMS.P1Key1;
 					else if (channel >= (int)BMSChannel.KeyPMS.P1Key6 && channel <= (int)BMSChannel.KeyPMS.P1Key9)
-						noteChannel = 5 + (channel - (int)BMSChannel.KeyPMS.P1Key6);
+						lane = 5 + (channel - (int)BMSChannel.KeyPMS.P1Key6);
 				}
 				else if (playerCount == 2)
 				{
@@ -360,23 +360,21 @@ namespace Pulsus.Gameplay
 						offset = 9;
 						channel -= BMSChannel.KeyPMS.P2DPKey1 - BMSChannel.KeyPMS.P1DPKey1;
 					}
-
 					if (channel >= (int)BMSChannel.KeyPMS.P1DPKey1 && channel <= (int)BMSChannel.KeyPMS.P1DPKey5)
-						noteChannel = channel - (int)BMSChannel.KeyPMS.P1DPKey1;
+						lane = channel - (int)BMSChannel.KeyPMS.P1DPKey1;
 				}
 
 				if (channel == (int)BMSChannel.KeyPMS.P1DPKey6)
-					noteChannel = 5;
+					lane = 5;
 				else if (channel == (int)BMSChannel.KeyPMS.P1DPKey7)
-					noteChannel = 6;
+					lane = 6;
 				else if (channel == (int)BMSChannel.KeyPMS.P1DPKey8)
-					noteChannel = 7;
+					lane = 7;
 				else if (channel == (int)BMSChannel.KeyPMS.P1DPKey9)
-					noteChannel = 8;
-
-				noteChannel += offset;
+					lane = 8;
 			}
-			return noteChannel;
+			lane += offset;
+			return lane;
 		}
 	}
 }
