@@ -37,8 +37,14 @@ namespace Pulsus
 				dialog.Title = "Open Song...";
 				dialog.CheckFileExists = true;
 				dialog.Filters.Add(new FileDialogFilter(
+					"All Supported Files",
+					new string[] { ".bms", ".bme", ".bml", ".pms", ".bmson" }));
+				dialog.Filters.Add(new FileDialogFilter(
 					"Be-Music Source Files",
 					new string[] { ".bms", ".bme", ".bml", ".pms" }));
+				dialog.Filters.Add(new FileDialogFilter(
+					"BMSON Files",
+					new string[] { ".bmson" }));
 				
 				result = dialog.ShowDialog(Program.etoApplication.MainForm);
 				filePath = dialog.FileName;
