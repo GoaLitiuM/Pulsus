@@ -240,39 +240,41 @@ namespace Pulsus.Gameplay
 				}
 			}
 
-			// populate BGA objects
-			
-			Dictionary<uint, BGAObject> bgaObjects = new Dictionary<uint, BGAObject>(bmson.bga.bga_header.Length);
-			foreach (BMSON.BGAHeader bgaHeader in bmson.bga.bga_header)
-				bgaObjects[bgaHeader.id] = new BGAObject(bgaHeader.name, bgaHeader.name);
-
-			// generate BGA events
-
-			foreach (BMSON.BGAEvent bga in bmson.bga.bga_events)
+			if (bmson.bga.bga_header != null)
 			{
-				long pulse = bga.y;
-				BGAObject bgaObject = null;
-				
-				if (bgaObjects.TryGetValue(bga.id, out bgaObject))
-					eventList.Add(new BGAEvent(pulse, bgaObject, BGAEvent.BGAType.BGA));
-			}
+				// populate BGA objects
+				Dictionary<uint, BGAObject> bgaObjects = new Dictionary<uint, BGAObject>(bmson.bga.bga_header.Length);
+				foreach (BMSON.BGAHeader bgaHeader in bmson.bga.bga_header)
+					bgaObjects[bgaHeader.id] = new BGAObject(bgaHeader.name, bgaHeader.name);
 
-			foreach (BMSON.BGAEvent bga in bmson.bga.layer_events)
-			{
-				long pulse = bga.y;
-				BGAObject bgaObject = null;
-				
-				if (bgaObjects.TryGetValue(bga.id, out bgaObject))
-					eventList.Add(new BGAEvent(pulse, bgaObject, BGAEvent.BGAType.Layer));
-			}
+				// generate BGA events
 
-			foreach (BMSON.BGAEvent bga in bmson.bga.poor_events)
-			{
-				long pulse = bga.y;
-				BGAObject bgaObject = null;
-				
-				if (bgaObjects.TryGetValue(bga.id, out bgaObject))
-					eventList.Add(new BGAEvent(pulse, bgaObject, BGAEvent.BGAType.Poor));
+				foreach (BMSON.BGAEvent bga in bmson.bga.bga_events)
+				{
+					long pulse = bga.y;
+					BGAObject bgaObject = null;
+
+					if (bgaObjects.TryGetValue(bga.id, out bgaObject))
+						eventList.Add(new BGAEvent(pulse, bgaObject, BGAEvent.BGAType.BGA));
+				}
+
+				foreach (BMSON.BGAEvent bga in bmson.bga.layer_events)
+				{
+					long pulse = bga.y;
+					BGAObject bgaObject = null;
+
+					if (bgaObjects.TryGetValue(bga.id, out bgaObject))
+						eventList.Add(new BGAEvent(pulse, bgaObject, BGAEvent.BGAType.Layer));
+				}
+
+				foreach (BMSON.BGAEvent bga in bmson.bga.poor_events)
+				{
+					long pulse = bga.y;
+					BGAObject bgaObject = null;
+
+					if (bgaObjects.TryGetValue(bga.id, out bgaObject))
+						eventList.Add(new BGAEvent(pulse, bgaObject, BGAEvent.BGAType.Poor));
+				}
 			}
 
 			eventList.Sort(new Comparison<Event>((e1, e2) =>
