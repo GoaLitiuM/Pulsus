@@ -4,37 +4,38 @@ namespace Pulsus.Audio
 {
 	public class SoundInstance
 	{
-		public Sound sound { get; private set; }
-		public uint length { get { return (uint)sound.data.Length; } }
-		public uint position;
-		public float volume { get; private set; }
+		public SoundData sound { get; }
+		public float volume { get; }
+		public uint startPosition { get; }
+		public uint endPosition { get; }
 
-		public uint startPosition { get; private set; }
-		public uint endPosition { get; private set; }
-
-		public bool loop { get; private set; }
-		public bool paused;
-		public bool remove;
-
-		// starting and stopping offsets in next sound buffer
-		public uint offsetStart;
-		public uint offsetStop;
-
-		public SoundInstance(Sound sound, float volume = 1.0f)
+		private SoundInstance(SoundData sound, float volume = 1.0f)
+			: this(sound, 0, 0, volume)
 		{
-			this.sound = sound;
-			this.volume = Math.Max(0.0f, volume);
-
-			endPosition = length;
+			endPosition = (uint)sound.data.Length;
 		}
 
-		public SoundInstance(Sound sound, uint startSample, uint endSample, float volume = 1.0f)
+		private SoundInstance(SoundData sound, uint startSample, uint endSample, float volume = 1.0f)
 		{
 			this.sound = sound;
 			this.volume = Math.Max(0.0f, volume);
 
 			startPosition = startSample;
-			endPosition = endSample;
+
+			if (endSample > startSample)
+				endPosition = endSample;
+			else
+				endPosition = (uint)sound.data.Length;
+		}
+
+		public static SoundInstance Create(SoundData sound, float volume = 1.0f)
+		{
+			return new SoundInstance(sound, volume);
+		}
+
+		public static SoundInstance CreateSlice(SoundData sound, uint startSample, uint endSample, float volume = 1.0f)
+		{
+			return new SoundInstance(sound, startSample, endSample, volume);
 		}
 	}
 }

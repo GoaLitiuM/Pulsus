@@ -139,10 +139,11 @@
     <Reference Include="System.IO.Compression.FileSystem" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Audio\SoundFile.cs" />
     <Compile Include="Gameplay\Event\LongNoteEvent.cs" />
     <Compile Include="Graphics\SubTexture.cs" />
     <Compile Include="Properties\AssemblyInfo_Version.cs" />
-    <Compile Include="Audio\Sound.cs" />
+    <Compile Include="Audio\SoundData.cs" />
     <Compile Include="Audio\SoundInstance.cs" />
     <Compile Include="FFmpeg\FFmpegException.cs" />
     <Compile Include="Gameplay\EventPlayers\Judge.cs" />

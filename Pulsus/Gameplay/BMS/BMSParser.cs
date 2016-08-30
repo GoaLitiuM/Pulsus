@@ -1,8 +1,9 @@
-﻿using System;
+﻿using Pulsus.Audio;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System;
 
 namespace Pulsus.Gameplay
 {
@@ -14,9 +15,11 @@ namespace Pulsus.Gameplay
 		const bool skipToFirstMeasure = false;
 
 		Dictionary<int, int> channelRefs = new Dictionary<int, int>();
+		string basePath;
 
 		public override Chart Load(string path)
 		{
+			basePath = Directory.GetParent(path).FullName;
 			BMSChart data = new BMSChart();
 			BMSMeasure lastMeasure = null;
 
@@ -536,7 +539,7 @@ namespace Pulsus.Gameplay
 			string indexStr = command.Substring(3);
 			int index = Utility.FromBase36(indexStr);
 
-			data.soundObjects[index] = new SoundObject(value, indexStr);
+			data.soundObjects[index] = new SoundObject(new SoundFile(Path.Combine(basePath, value)), 1, indexStr);
 		}
 
 		private void OnBMP(BMSChart data, string command, string value)
@@ -547,7 +550,7 @@ namespace Pulsus.Gameplay
 			string indexStr = command.Substring(3);
 			int index = Utility.FromBase36(indexStr);
 
-			data.bgaObjects[index] = new BGAObject(value, indexStr);
+			data.bgaObjects[index] = new BGAObject(Path.Combine(basePath, value), indexStr);
 		}
 
 		private void OnBPM(BMSChart data, string command, string value)

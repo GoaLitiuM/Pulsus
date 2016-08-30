@@ -28,7 +28,7 @@ namespace Pulsus.Gameplay
 			loadThread.Name = "BackgroundLoaderThread";
 			loadThread.IsBackground = true;
 
-			songBasePath = song.path;
+			songBasePath = song.basePath;
 		}
 
 		public override void Dispose()
@@ -108,7 +108,7 @@ namespace Pulsus.Gameplay
 			while (soundQueue.Count > 0)
 			{
 				SoundObject value = soundQueue.Dequeue();
-				value.Load(songBasePath);
+				value.Load();
 			}
 
 			while (bgaQueue.Count > 0)

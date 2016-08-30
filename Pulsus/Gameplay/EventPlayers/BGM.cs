@@ -31,15 +31,21 @@ namespace Pulsus.Gameplay
 			if (soundEvent.sound == null)
 				return;
 
-			if (soundEvent.sound.sound != null)
+			SoundObject soundObject = soundEvent.sound;
+			if (soundObject != null)
 			{
-				if (realtime)
-					audioEngine.Play(soundEvent.sound.sound, (float)chart.volume);
+				if (soundObject.sound.data != null)
+				{
+					SoundData soundData = soundObject.sound.data;
+					SoundInstance instance = soundObject.CreateInstance(audioEngine, (float)chart.volume);
+					if (realtime)
+						audioEngine.Play(instance, soundObject.polyphony);
+					else
+						audioEngine.PlayScheduled(soundEvent.timestamp, instance, soundObject.polyphony);
+				}
 				else
-					audioEngine.PlayScheduled(soundEvent.timestamp, soundEvent.sound.sound, (float)chart.volume);
+					Log.Warning("Sound file not loaded: " + soundObject.name);
 			}
-			else
-				Log.Warning("Failed to play sound " + soundEvent.sound.name);
 		}
 	}
 }

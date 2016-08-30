@@ -122,18 +122,20 @@ namespace Pulsus.Gameplay
 				}
 			}
 
-			SoundObject keySound = value;
-			if (keySound != null && keySound.sound != null)
+			SoundObject soundObject = value;
+			if (soundObject != null)
 			{
-				if (keySound.sound != null)
+				if (soundObject.sound.data != null)
 				{
+					SoundData soundData = soundObject.sound.data;
+					SoundInstance instance = soundObject.CreateInstance(audioEngine, (float)chart.volume);
 					if (realtime)
-						audioEngine.Play(keySound.sound, (float)chart.volume);
+						audioEngine.Play(instance, soundObject.polyphony);
 					else
-						audioEngine.PlayScheduled(currentTime, keySound.sound, (float)chart.volume);
+						audioEngine.PlayScheduled(currentTime, instance, soundObject.polyphony);
 				}
 				else
-					Log.Warning("Failed to play sound: " + keySound.name);
+					Log.Warning("Sound file not loaded: " + soundObject.name);
 			}
 		}
 

@@ -107,12 +107,12 @@ namespace Pulsus.FFmpeg
 			return bytes.ToArray();
 		}
 
-		public static Sound SoundFromFile(string path)
+		public static SoundData SoundFromFile(string path)
 		{
-			return SoundFromFile(path, Sound.targetFreq, Sound.targetFormat);
+			return SoundFromFile(path, SoundData.targetFreq, SoundData.targetFormat);
 		}
 
-		public static Sound SoundFromFile(string path, int targetSampleRate, ushort targetFormat)
+		public static SoundData SoundFromFile(string path, int targetSampleRate, ushort targetFormat)
 		{
 			AVSampleFormat targetFormat2;
 			switch (targetFormat)
@@ -149,7 +149,7 @@ namespace Pulsus.FFmpeg
 					bytes.AddRange(ffContext.GetFrameData());
 
 				int realCount = bytes.Count / (ffContext.GetBytesPerSample() * channels);
-				Sound sound = new Sound(bytes.ToArray(), realCount, ffContext.GetSampleRate(), channels);
+				SoundData sound = new SoundData(bytes.ToArray(), realCount, ffContext.GetSampleRate(), channels);
 				return sound;
 			}
 		}

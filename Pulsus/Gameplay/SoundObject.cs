@@ -1,52 +1,60 @@
-﻿using System;
+﻿using Pulsus.Audio;
 using System.IO;
-using Pulsus.Audio;
-using Pulsus.FFmpeg;
+using System;
 
 namespace Pulsus.Gameplay
 {
 	public class SoundObject
 	{
-		public string path { get; private set; }
-		public string name { get; private set; }
-		public Sound sound { get; private set; }
+		public string name { get; }
+		public SoundFile sound { get; private set; }
+		public double sliceStart { get; private set; }
+		public double sliceEnd { get; private set; }
+		public int polyphony { get; }
 
-		public bool loaded { get { return sound != null; } }
+		public bool loaded { get { return sound.data != null; } }
 
-		// alternate paths where to look up missing files
-		static string[] lookupPaths =
+		public SoundObject(SoundFile soundFile, int polyphony, string name = "")
 		{
-			"",			// current directory
-			"..\\",		// previous directory (compatibility fix for bms files in sub-folders)
-		};
-
-		static string[] lookupExtensions =
-		{
-			".wav",
-			".ogg",
-		};
-
-		public SoundObject(string path, string name = "")
-		{
-			this.path = path;
+			sound = soundFile;
+			this.polyphony = polyphony;
 			this.name = name;
+		}
+
+		public SoundObject(SoundFile soundFile, int polyphony, double sliceStart, double sliceEnd, string name = "")
+		{
+			sound = soundFile;
+			this.polyphony = polyphony;
+			this.sliceStart = sliceStart;
+			this.sliceEnd = sliceEnd;
+			this.name = name;
+		}
+
+		public SoundInstance CreateInstance(AudioEngine audio, float volume = 1.0f)
+		{
+			uint sampleStart = (uint)Math.Round(sliceStart * audio.audioSpec.freq);
+			uint sampleEnd = (uint)Math.Round(sliceEnd * audio.audioSpec.freq);
+
+			sampleStart *= audio.bytesPerSample;
+			sampleEnd *= audio.bytesPerSample;
+
+			if (sampleEnd > sound.data.data.Length)
+				sampleEnd = 0;
+			if (sampleStart > sound.data.data.Length)
+				sampleStart = 0;
+
+			return SoundInstance.CreateSlice(sound.data, sampleStart, sampleEnd, volume);
 		}
 
 		public bool Load(string basePath = "")
 		{
-			basePath = Directory.GetParent(basePath).FullName;
-			string filename = path;
-			path = Utility.FindRealFile(Path.Combine(basePath, path), lookupPaths, lookupExtensions);
-			if (!File.Exists(path))
-			{
-				Log.Warning("Sound not found: " + filename);
-				return false;
-			}
-
 			try
 			{
-				sound = FFmpegHelper.SoundFromFile(path);
-				sound.polyphony = 1;
+				if (!sound.Load())
+				{
+					Log.Warning("Sound not found: " + Path.GetFileName(sound.path));
+					return false;
+				}
 			}
 			catch (System.Threading.ThreadAbortException)
 			{
@@ -55,11 +63,12 @@ namespace Pulsus.Gameplay
 			catch (Exception e)
 			{
 				Log.Error("FFmpeg: " + e.Message);
+				sound = null;
 			}
 
 			if (sound == null)
 			{
-				Log.Error("Failed to load sound object " + Path.GetFileName(path));
+				Log.Error("Failed to load sound: " + Path.GetFileName(sound.path));
 				return false;
 			}
 

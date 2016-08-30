@@ -8,7 +8,7 @@ namespace Pulsus.Gameplay
 	public class BGAObject : IDisposable
 	{
 		public Texture2D texture { get; private set; }
-		public string path { get; private set; }
+		public string filename { get; private set; }
 		public string name { get; private set; }
 
 		private FFmpegVideo video;
@@ -50,9 +50,9 @@ namespace Pulsus.Gameplay
 			".m4v",
 		};
 
-		public BGAObject(string path, string name)
+		public BGAObject(string filename, string name)
 		{
-			this.path = path;
+			this.filename = filename;
 			this.name = name;
 		}
 
@@ -66,10 +66,8 @@ namespace Pulsus.Gameplay
 
 		public bool Load(string basePath = "")
 		{
-			basePath = Directory.GetParent(basePath).FullName;
-			string filename = path;
-			path = Utility.FindRealFile(Path.Combine(basePath, path), lookupPaths, lookupExtensions);
-			if (!File.Exists(path))
+			string fullPath = Utility.FindRealFile(Path.Combine(basePath, filename), lookupPaths, lookupExtensions);
+			if (!File.Exists(fullPath))
 			{
 				Log.Warning("BGA file not found: " + filename);
 				return false;
@@ -78,7 +76,7 @@ namespace Pulsus.Gameplay
 			video = new FFmpegVideo();
 			try
 			{
-				if (video.Load(path) && video.width * video.height > 0)
+				if (video.Load(fullPath) && video.width * video.height > 0)
 					texture = new Texture2D(video.width, video.height);
 
 				if (texture != null)
@@ -92,7 +90,7 @@ namespace Pulsus.Gameplay
 					}
 				}
 			}
-			catch when (Path.GetExtension(path).ToLower() == ".lua")
+			catch when (Path.GetExtension(filename).ToLower() == ".lua")
 			{
 				// scripted background are not supported (yet?)
 			}
@@ -111,7 +109,7 @@ namespace Pulsus.Gameplay
 					video.Dispose();
 				video = null;
 
-				Log.Error("Failed to load bga object " + Path.GetFileName(path));
+				Log.Error("Failed to load BGA: " + filename);
 				return false;
 			}
 

@@ -8,6 +8,27 @@ namespace Pulsus.Audio
 {
 	public class AudioEngine : IDisposable
 	{
+		class SoundInstanceInternal
+		{
+			public SoundInstance instance;
+
+			public bool paused;		// playback pause
+			public bool remove;		// should be removed from the sound pool
+
+			public uint position;		// position in sound sample
+			public uint offsetStart;	// starting offset in sound buffer
+			public uint offsetStop;		// stopping offset in sound buffer
+
+			public SoundData sound { get { return instance.sound; } }
+			public float volume { get { return instance.volume; } }
+			public uint endPosition { get { return instance.endPosition; } }
+
+			public SoundInstanceInternal(SoundInstance instance)
+			{
+				this.instance = instance;
+			}
+		}
+
 		public SDL.SDL_AudioSpec audioSpec;
 		public AudioDriver audioDriver;
 
@@ -17,8 +38,8 @@ namespace Pulsus.Audio
 		SDL.SDL_AudioCallback audioCallback;
 		uint outputDevice;
 
-		readonly List<SoundInstance> audibleSounds = new List<SoundInstance>(256);
-		uint bytesPerSample;
+		readonly List<SoundInstanceInternal> audibleSounds = new List<SoundInstanceInternal>(256);
+		public uint bytesPerSample { get; }
 		byte[] emptyBuffer;
 		byte[] audioBuffer;
 		Stopwatch bufferTimer;
@@ -99,8 +120,8 @@ namespace Pulsus.Audio
 			emptyBuffer = new byte[audioSpec.size];
 			audioBuffer = new byte[audioSpec.size];
 			//Sound.audioEngine = this;
-			Sound.targetFormat = audioSpec.format;
-			Sound.targetFreq = audioSpec.freq;
+			SoundData.targetFormat = audioSpec.format;
+			SoundData.targetFreq = audioSpec.freq;
 
 			lastCallback = 0.0;
 			bufferTimer = Stopwatch.StartNew();
@@ -125,9 +146,9 @@ namespace Pulsus.Audio
 			uint streamLength = 0;
 			for (int i = 0; i < audibleSounds.Count; ++i)
 			{
-				SoundInstance instance = audibleSounds[i];
-				if (streamLength < instance.offsetStart+instance.length)
-					streamLength = instance.offsetStart+instance.length;
+				SoundInstanceInternal instance = audibleSounds[i];
+				if (streamLength < instance.offsetStart+instance.endPosition)
+					streamLength = instance.offsetStart+instance.endPosition;
 			}
 			
 			if (streamLength == 0)
@@ -138,13 +159,13 @@ namespace Pulsus.Audio
 
 			for (int i = 0; i < audibleSounds.Count; ++i)
 			{
-				SoundInstance instance = audibleSounds[i];
+				SoundInstanceInternal instance = audibleSounds[i];
 				
 				int playLength = (int)(instance.offsetStop - instance.offsetStart);
-				if (playLength > instance.length)
-					playLength = (int)instance.length;
+				if (playLength > instance.endPosition)
+					playLength = (int)instance.endPosition;
 				else if (playLength <= 0)
-					playLength = (int)instance.length;
+					playLength = (int)instance.endPosition;
 
 				IntPtr streamOffset = stream.AddrOfPinnedObject();
 				streamOffset += (int)instance.offsetStart;
@@ -181,7 +202,7 @@ namespace Pulsus.Audio
 		{
 			for (int i = 0; i < audibleSounds.Count; ++i)
 			{
-				SoundInstance instance = audibleSounds[i];
+				SoundInstanceInternal instance = audibleSounds[i];
 
 				// fill temporary buffer with silence
 				Array.Copy(emptyBuffer, 0, audioBuffer, 0, length);
@@ -200,9 +221,9 @@ namespace Pulsus.Audio
 			}
 		}
 
-		private void CopySample(SoundInstance instance, IntPtr userData, IntPtr stream, int length)
+		private void CopySample(SoundInstanceInternal instance, IntPtr userData, IntPtr stream, int length)
 		{
-			uint sampleLeft = Math.Min(instance.length - instance.position, (uint)length);
+			uint sampleLeft = Math.Min(instance.endPosition - instance.position, (uint)length);
 
 			uint startOffset = instance.offsetStart;
 			uint pauseOffset = instance.offsetStop;
@@ -228,7 +249,7 @@ namespace Pulsus.Audio
 			else
 				instance.offsetStart -= (uint)length;
 			
-			if (instance.position >= instance.length)
+			if (instance.position >= instance.endPosition)
 				instance.remove = true;
 		}
 
@@ -239,143 +260,96 @@ namespace Pulsus.Audio
 			return offset;
 		}
 
-		public SoundInstance Play(Sound sound, float volume = 1.0f)
+		public void Play(SoundInstance soundInstance, int polyphony)
 		{
-			SoundInstance instance = new SoundInstance(sound, volume);
-			AddInstance(instance);
-
-			return instance;
+			AddInstance(soundInstance, polyphony);
 		}
 
-		public SoundInstance PlayScheduled(double position, Sound sound, float volume = 1.0f)
+		public void PlayScheduled(double position, SoundInstance soundInstance, int polyphony)
 		{
-			SoundInstance instance = new SoundInstance(sound, volume);
+			SoundInstanceInternal instance = new SoundInstanceInternal(soundInstance);
 
 			double bufferPosition = (position - lastCallback) * ((double)audioSpec.freq);
 			uint offset = (uint)(bufferPosition * bytesPerSample);
 			if (offset % 4 != 0)
-				offset += 4 - (offset % 4);//offset = offset;
-			lock (audibleSounds)
-			{
-				instance.offsetStart = offset;
-			}
+				offset += 4 - (offset % 4);
 
-			if (sound.polyphony > 0 && sound.instances >= sound.polyphony)
-			{
-				int removeCount = sound.instances - sound.polyphony + 1;
-				lock (audibleSounds)
-				{
-					for (int i = 0; i < audibleSounds.Count; ++i)
-					{
-						if (audibleSounds[i].sound != sound)
-							continue;
+			instance.offsetStart = offset;
+			instance.position = soundInstance.startPosition;
 
-						if (audibleSounds[i].remove)
-							continue;
-
-						// mark instance for removal
-						audibleSounds[i].paused = true;
-						audibleSounds[i].remove = true;
-						audibleSounds[i].offsetStop = offset;
-
-						removeCount--;
-						if (removeCount <= 0)
-							break;
-					}
-				}
-			}
+			EnforcePolyphony(polyphony, instance, offset);
 
 			lock (audibleSounds)
 			{
 				audibleSounds.Add(instance);
-				sound.instances++;
+				instance.sound.instances++;
 			}
-
-			return instance;
 		}
 		
-		public SoundInstance PlayLooped(Sound sound, float volume = 1.0f)
+		public SoundInstance PlayLooped(SoundData sound, float volume = 1.0f)
 		{
 			throw new NotImplementedException();
 		}
 
-		public SoundInstance PlayLooped(Sound sound, uint startSample, uint endSample, float volume = 1.0f)
+		public SoundInstance PlayLooped(SoundData sound, uint startSample, uint endSample, float volume = 1.0f)
 		{
 			throw new NotImplementedException();
 		}
 
-		private void AddInstance(SoundInstance instance)
+		private void AddInstance(SoundInstance soundInstance, int polyphony)
 		{
-			instance.offsetStart = 0;
+			SoundInstanceInternal instance = new SoundInstanceInternal(soundInstance);
+
 			lock (audibleSounds)
-			{
-				instance.offsetStart += GetBufferOffset();
-
-				Sound sound = instance.sound;
-				if (sound.polyphony > 0 && sound.instances >= sound.polyphony)
-				{
-					int removeCount = sound.instances - sound.polyphony + 1;
-					for (int i = 0; i < audibleSounds.Count; ++i)
-					{
-						if (audibleSounds[i].sound != sound)
-							continue;
-
-						if (audibleSounds[i].remove)
-							continue;
-
-						// mark instance for removal
-						audibleSounds[i].paused = true;
-						audibleSounds[i].remove = true;
-						audibleSounds[i].offsetStop = GetBufferOffset();
-
-						removeCount--;
-						if (removeCount <= 0)
-							break;
-					}	
-				}
-
-				audibleSounds.Add(instance);
-				sound.instances++;
-			}
-		}
-
-		// continues playing from paused state
-		public void Play(SoundInstance instance)
-		{
-			lock (audibleSounds)
-			{
-				if (!instance.paused)
-					return;
-
-				instance.paused = false;
 				instance.offsetStart = GetBufferOffset();
+			instance.position = soundInstance.startPosition;
+
+			EnforcePolyphony(polyphony, instance, instance.offsetStart);
+
+			lock (audibleSounds)
+			{
+				audibleSounds.Add(instance);
+				instance.sound.instances++;
 			}
 		}
 
-		public void Pause(SoundInstance instance)
+		private void EnforcePolyphony(int polyphony, SoundInstanceInternal instance, uint offset)
 		{
+			if (polyphony == 0)
+				return;
+
+			SoundData sound = instance.sound;
+			if (sound.instances < polyphony)
+				return;
+
+			int removeCount = sound.instances - polyphony + 1;
 			lock (audibleSounds)
 			{
-				if (instance.paused)
-					return;
+				for (int i = 0; i < audibleSounds.Count; ++i)
+				{
+					SoundInstanceInternal audibleInstance = audibleSounds[i];
+					if (audibleInstance.sound != sound)
+						continue;
 
-				instance.paused = true;
-				instance.offsetStop = GetBufferOffset();
-			}
-		}
+					if (audibleInstance.remove)
+						continue;
 
-		// removes SoundInstance from audio pool (irreversible)
-		public void Stop(SoundInstance instance)
-		{
-			lock (audibleSounds)
-			{
-				if (instance.remove)
-					return;
+					// only apply polyphony to identical slices
+					if (audibleInstance.instance.startPosition != instance.instance.startPosition ||
+						audibleInstance.instance.endPosition != instance.instance.endPosition)
+					{
+						continue;
+					}
+					
+					// mark instance for later removal
+					audibleInstance.paused = true;
+					audibleInstance.remove = true;
+					audibleInstance.offsetStop = offset;
 
-				// mark instance for removal
-				instance.paused = true;
-				instance.remove = true;
-				instance.offsetStop = GetBufferOffset();
+					removeCount--;
+					if (removeCount <= 0)
+						break;
+				}
 			}
 		}
 

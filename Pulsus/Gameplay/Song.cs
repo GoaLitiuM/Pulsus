@@ -11,6 +11,7 @@ namespace Pulsus.Gameplay
 		public Chart chart;
 
 		// path to song folder/package
+		public string basePath { get; private set; }
 		public string path { get; private set; }
 
 		static Dictionary<string, Type> parsers = new Dictionary<string, Type>
@@ -45,6 +46,7 @@ namespace Pulsus.Gameplay
 		public Song(string path)
 		{
 			this.path = path;
+			basePath = Directory.GetParent(path).FullName;
 		}
 
 		public void Dispose()
