@@ -202,6 +202,7 @@ namespace Pulsus.Gameplay
 			}
 
 			data.playerChannels = Math.Max(p1KeyCount, p2KeyCount);
+			data.hasTurntable = data.playerChannels == 6 || data.playerChannels == 8;
 
 			if (p2KeyCount > 0)
 				data.players = 2;
@@ -235,7 +236,7 @@ namespace Pulsus.Gameplay
 				}
 			}
 
-			data.resolution = resolution;
+			data.resolution_ = resolution;
 
 			return data;
 		}

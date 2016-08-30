@@ -49,15 +49,25 @@ namespace Pulsus
 
 			// adjust offsets
 
-			double adjustTimeline = 0.0;
 			double startTime = 0;
 			if (settings.startMeasure > 0)
 				startTime = chart.GetTimeFromPulse(chart.measurePositions[settings.startMeasure].Item2);
-			else if (chart != null && chart.firstPlayerEvent != -1)
+			else
 			{
-				double noteTimestamp = chart.eventList[chart.firstPlayerEvent].timestamp;
-				if (noteTimestamp < skin.startTime)
-					adjustTimeline += skin.baseScrollTime;
+				double firstNoteTimestamp = 0.0;
+				foreach (Event @event in chart.eventList)
+				{
+					NoteEvent noteEvent = @event as NoteEvent;
+					if (noteEvent == null)
+						continue;
+
+					firstNoteTimestamp = noteEvent.timestamp;
+					break;
+				}
+
+				// give player some time to react to the first note
+				if (firstNoteTimestamp < skin.baseScrollTime)
+					startTime -= skin.baseScrollTime;
 			}
 
 			playerGraph.SetStartPosition(startTime);

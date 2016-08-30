@@ -26,8 +26,16 @@ namespace Pulsus
 			if (string.IsNullOrWhiteSpace(Path.GetExtension(outputPath)))
 				outputPath += ".wav";
 
-			foreach (var sound in song.chart.soundObjects)
-				sound.Value.Load(song.path);
+			// preload all audio
+			foreach (Event @event in song.chart.eventList)
+			{
+				SoundEvent soundEvent = @event as SoundEvent;
+				if (soundEvent == null)
+					continue;
+
+				if (!soundEvent.sound.loaded)
+					soundEvent.sound.Load();
+			}		
 
 			songPlayer = new BGM(audio, song);
 			autoplay = new Player(audio, song, null, null);

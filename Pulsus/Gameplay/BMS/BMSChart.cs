@@ -18,9 +18,21 @@ namespace Pulsus.Gameplay
 		public override double volume { get { return GetHeader<double>("VOLWAV") / 100.0; } }
 		public override int playLevel { get { return GetHeader<int>("PLAYLEVEL"); } }
 		public override string previewFile { get { return GetHeader<string>("PREVIEW"); } }
+		public override long resolution { get { return resolution_; } }
+
+		public override int players { get; internal set; }
+		public override int playerChannels { get; internal set; }
+		public override bool hasTurntable { get; internal set; }
+		public override int playerEventCount { get; internal set; }
+		public override int noteCount { get; internal set; }
+		public override int longNoteCount { get; internal set; }
+		public override int landmineCount { get; internal set; }
+		public override int measureCount { get; internal set; }
+		public override double songLength { get; internal set; }
 
 		private Dictionary<string, object> headerObjects = new Dictionary<string, object>()
 		{
+			// #HEADER, <default value>
 			{ "ARTIST", "" },
 			{ "TITLE", "" },
 			{ "GENRE", "" },
@@ -52,7 +64,25 @@ namespace Pulsus.Gameplay
 			"ENDRANDOM",
 		};
 
-		public int eventCount = 0;
+		public Dictionary<int, SoundObject> soundObjects = new Dictionary<int, SoundObject>();
+		public Dictionary<int, BGAObject> bgaObjects = new Dictionary<int, BGAObject>();
+		public Dictionary<int, double> bpmObjects = new Dictionary<int, double>();
+		public Dictionary<int, double> stopObjects = new Dictionary<int, double>();
+		public HashSet<int> lnObjects = new HashSet<int>();
+
+		internal int eventCount = 0;
+		internal long resolution_ = 0;
+
+		public override void Dispose()
+		{
+			base.Dispose();
+
+			foreach (BGAObject bga in bgaObjects.Values)
+				bga.Dispose();
+
+			soundObjects.Clear();
+			bgaObjects.Clear();
+		}
 
 		public T GetHeader<T>(string header)
 		{
@@ -121,7 +151,7 @@ namespace Pulsus.Gameplay
 
 		public override List<Event> GenerateEvents(bool seekable = false)
 		{
-			List<Event> eventList = new List<Event>(eventCount);
+			eventList = new List<Event>(eventCount);
 
 			int longNoteType = GetHeader<int>("LNTYPE");
 			Dictionary<int, LongNoteEvent> lastLNEvent = new Dictionary<int, LongNoteEvent>();
@@ -131,9 +161,11 @@ namespace Pulsus.Gameplay
 			long pulse = 0;
 			double currentBpm = bpmObjects[0];
 			double meter = 1.0;
-
+		
 			if (longNoteType == 2)
 			{
+				// insert empty measure at the end to close longnotes ending at last beat (#LNTYPE 2)
+
 				int measureIndex = 0;
 				if (measureList.Count > 0)
 					measureIndex = measureList[measureList.Count - 1].index + 1;
@@ -146,7 +178,8 @@ namespace Pulsus.Gameplay
 			{
 				List<Event> measureEvents = new List<Event>();
 
-				if (lastLNEvent.Count > 0 && longNoteType == 2)
+				// check if long notes should be ended at previous measure (#LNTYPE 2)
+				if (longNoteType == 2 && lastLNEvent.Count > 0)
 				{
 					List<int> keys = lastLNEvent.Keys.ToList();
 					foreach (var lnChannel in keys)
@@ -160,6 +193,7 @@ namespace Pulsus.Gameplay
 								measure.channelList[i].values[0] != 0)
 							{
 								breakNote = false;
+								break;
 							}
 						}
 
@@ -198,7 +232,6 @@ namespace Pulsus.Gameplay
 				eventList.Add(measureMarker);
 
 				double nextBpm = 0.0;
-
 				Dictionary<long, double> bpmExValues = new Dictionary<long, double>();
 				foreach (BMSChannel channel in measure.channelList)
 				{
@@ -243,7 +276,7 @@ namespace Pulsus.Gameplay
 									{
 										// ignore section filler events with #LNTYPE 2
 										// skip all the events except the first one, and restore the last
-										// skipped event at the end.
+										// skipped event at the end of long note.
 
 										if (lastLNEvent.ContainsKey(channel.index))
 										{
@@ -413,9 +446,6 @@ namespace Pulsus.Gameplay
 					NoteEvent noteEvent = bmsEvent as NoteEvent;
 					if (noteEvent != null)
 					{
-						if (firstPlayerEvent == -1)
-							firstPlayerEvent = eventList.Count;
-
 						playerEventCount++;
 
 						if (noteEvent is LandmineEvent)
@@ -446,64 +476,7 @@ namespace Pulsus.Gameplay
 				}
 			}
 
-			double lastTimeEventTime = 0.0;
-			double lastBpm = bpm;
-			double lastMeter = 1.0;
-			long lastPulse = 0;
-			int lastTimeEventIndex = 0;
-
-			for (int i = 0; i < eventList.Count; i++)
-			{
-				Event bmsEvent = eventList[i];
-
-				// generate event timestamps
-
-				for (; lastTimeEventIndex < timeEventList.Count; lastTimeEventIndex++)
-				{
-					Event timeEvent = timeEventList[lastTimeEventIndex];
-					if (timeEvent.pulse >= bmsEvent.pulse)
-						break;
-
-					double increment = (double)(timeEvent.pulse - lastPulse) / resolution * 60.0 / (lastBpm / lastMeter);
-
-					lastTimeEventTime += increment;
-					lastPulse = timeEvent.pulse;
-
-					if (timeEvent is BPMEvent)
-					{
-						lastBpm = (timeEvent as BPMEvent).bpm;
-						if (lastBpm < 0.0)
-							lastBpm = -lastBpm;
-					}
-					else if (timeEvent is StopEvent)
-					{
-						double stopPulses = (timeEvent as StopEvent).stopTime;
-						double stopTime = stopPulses / resolution * 60.0 / lastBpm;
-						lastTimeEventTime += stopTime;
-					}
-					else if (timeEvent is MeterEvent)
-						lastMeter = (timeEvent as MeterEvent).meter;
-				}
-
-				bmsEvent.timestamp = lastTimeEventTime + (double)(bmsEvent.pulse - lastPulse) / resolution * 60.0 / (lastBpm / lastMeter);
-
-				// sanity check for long notes
-				LongNoteEvent longNoteEvent = bmsEvent as LongNoteEvent;
-				if (longNoteEvent != null)
-				{
-					if (longNoteEvent.endNote == null)
-					{
-						Log.Warning("Longnote is missing end point");
-
-						// turn longnote into regular note
-						longNoteCount--;
-						eventList[i] = new NoteEvent(longNoteEvent.pulse, longNoteEvent.sound, longNoteEvent.lane);
-						eventList[i].timestamp = bmsEvent.timestamp;
-					}
-					else if (longNoteEvent.length <= 0)
-						Log.Warning("Invalid longnote length");
-				}
-			}
+			GenerateTimestamps();
 
 			if (eventList.Count > 0)
 				songLength = eventList[eventList.Count - 1].timestamp;

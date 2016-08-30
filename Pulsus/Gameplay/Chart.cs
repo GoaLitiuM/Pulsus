@@ -16,42 +16,29 @@ namespace Pulsus.Gameplay
 		public abstract double volume { get; }
 		public abstract int playLevel { get; }
 		public abstract string previewFile { get; }
+		public abstract long resolution { get; }
 
-		public long resolution = 240;
+		public abstract int players { get; internal set; }
+		public abstract int playerChannels { get; internal set; }
+		public abstract bool hasTurntable { get; internal set; }	
+		public abstract int playerEventCount { get; internal set; }
+		public abstract int noteCount { get; internal set; }
+		public abstract int longNoteCount { get; internal set; }
+		public abstract int landmineCount { get; internal set; }
+		public abstract int measureCount { get; internal set; }
+		public abstract double songLength { get; internal set; }
 
 		public abstract List<Event> GenerateEvents(bool seekable = false);
 
-		public int players = 0;
-		public int playerChannels = 0;
-		public int firstPlayerEvent = -1;
-		public int playerEventCount = 0;
-		public int noteCount = 0;
-		public int longNoteCount = 0;
-		public int landmineCount = 0;
-		public int measureCount = 0;
-		public double songLength = 0.0;
+		public int playerKeyCount { get { return (playerChannels - (hasTurntable ? 1 : 0)) * players; } }
 
 		public List<Event> eventList;
 		public List<Event> timeEventList = new List<Event>();
 		public List<BMSMeasure> measureList = new List<BMSMeasure>();
 		public List<Tuple<int, long>> measurePositions = new List<Tuple<int, long>>();
 
-		public Dictionary<int, SoundObject> soundObjects = new Dictionary<int, SoundObject>();
-		public Dictionary<int, BGAObject> bgaObjects = new Dictionary<int, BGAObject>();
-		public Dictionary<int, double> bpmObjects = new Dictionary<int, double>();
-		public Dictionary<int, double> stopObjects = new Dictionary<int, double>();
-		public HashSet<int> lnObjects = new HashSet<int>();
-
-		public bool hasTurntable { get { return playerChannels == 6 || playerChannels == 8; } }
-		public int playerKeyCount { get { return (playerChannels - (hasTurntable ? 1 : 0)) * players; } }
-
-		public void Dispose()
+		public virtual void Dispose()
 		{
-			foreach (BGAObject bga in bgaObjects.Values)
-				bga.Dispose();
-
-			soundObjects.Clear();
-			bgaObjects.Clear();
 		}
 
 		public double GetTimeFromPulse(long pulse)
@@ -121,6 +108,68 @@ namespace Pulsus.Gameplay
 			double increment = (remaining * (currentBpm / currentMeter) / 60.0 * resolution);
 			lastPulse += (long)increment;
 			return lastPulse;
+		}
+
+		protected void GenerateTimestamps()
+		{
+			double lastTimeEventTime = 0.0;
+			double lastBpm = bpm;
+			double lastMeter = 1.0;
+			long lastPulse = 0;
+			int lastTimeEventIndex = 0;
+
+			for (int i = 0; i < eventList.Count; i++)
+			{
+				Event bmsEvent = eventList[i];
+
+				// generate event timestamps
+
+				for (; lastTimeEventIndex < timeEventList.Count; lastTimeEventIndex++)
+				{
+					Event timeEvent = timeEventList[lastTimeEventIndex];
+					if (timeEvent.pulse >= bmsEvent.pulse)
+						break;
+
+					double increment = (double)(timeEvent.pulse - lastPulse) / resolution * 60.0 / (lastBpm / lastMeter);
+
+					lastTimeEventTime += increment;
+					lastPulse = timeEvent.pulse;
+
+					if (timeEvent is BPMEvent)
+					{
+						lastBpm = (timeEvent as BPMEvent).bpm;
+						if (lastBpm < 0.0)
+							lastBpm = -lastBpm;
+					}
+					else if (timeEvent is StopEvent)
+					{
+						double stopPulses = (timeEvent as StopEvent).stopTime;
+						double stopTime = stopPulses / resolution * 60.0 / lastBpm;
+						lastTimeEventTime += stopTime;
+					}
+					else if (timeEvent is MeterEvent)
+						lastMeter = (timeEvent as MeterEvent).meter;
+				}
+
+				bmsEvent.timestamp = lastTimeEventTime + (double)(bmsEvent.pulse - lastPulse) / resolution * 60.0 / (lastBpm / lastMeter);
+
+				// sanity check for long notes
+				LongNoteEvent longNoteEvent = bmsEvent as LongNoteEvent;
+				if (longNoteEvent != null)
+				{
+					if (longNoteEvent.endNote == null)
+					{
+						Log.Warning("Longnote is missing end point");
+
+						// turn longnote into regular note
+						longNoteCount--;
+						eventList[i] = new NoteEvent(longNoteEvent.pulse, longNoteEvent.sound, longNoteEvent.lane);
+						eventList[i].timestamp = bmsEvent.timestamp;
+					}
+					else if (longNoteEvent.length <= 0)
+						Log.Warning("Invalid longnote length");
+				}
+			}
 		}
 	}
 }
