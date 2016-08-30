@@ -416,7 +416,7 @@ namespace Pulsus.Gameplay
 
 							BGAEvent.BGAType type = BGAEvent.BGAType.BGA;
 							if (channel.index == (int)BMSChannel.Type.BGALayer)
-								type = BGAEvent.BGAType.Layer1;
+								type = BGAEvent.BGAType.LayerTransparentBlack;
 							else if (channel.index == (int)BMSChannel.Type.BGAPoor)
 								type = BGAEvent.BGAType.Poor;
 

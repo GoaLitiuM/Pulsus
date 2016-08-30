@@ -19,8 +19,8 @@ namespace Pulsus.Gameplay
 		{
 			BGA,
 			Poor,
-			Layer1,
-			Layer2,
+			LayerTransparentBlack,	// BMS default
+			Layer,
 		}
 	}
 }

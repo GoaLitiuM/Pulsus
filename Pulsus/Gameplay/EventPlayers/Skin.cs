@@ -1,8 +1,7 @@
-﻿using System;
+﻿using Pulsus.Graphics;
 using System.Collections.Generic;
-using System.Linq;
-using Pulsus.Graphics;
 using System.IO;
+using System;
 
 namespace Pulsus.Gameplay
 {
@@ -145,7 +144,7 @@ namespace Pulsus.Gameplay
 			Poor,
 		};
 
-		public class BGAImage
+		class BGAImage
 		{
 			public BGAImage(Texture2D texture, Color color, Color transparent)
 			{
@@ -163,10 +162,10 @@ namespace Pulsus.Gameplay
 
 		Texture2D bgaRTTexture;
 		FrameBuffer bgaFramebuffer;
-		public BGAImage bgaBase;
-		public BGAImage bgaLayer1;
-		public BGAImage bgaLayer2;
-		public BGAImage bgaPoor;
+		BGAImage bgaBase;
+		BGAImage bgaLayerKeyed;
+		BGAImage bgaLayer;
+		BGAImage bgaPoor;
 
 		public Skin(Song song, Renderer renderer, BMSJudge judge)
 			: base(song)
@@ -175,8 +174,8 @@ namespace Pulsus.Gameplay
 			this.judge = judge;
 
 			bgaBase = new BGAImage(null, Color.Black, Color.Black);
-			bgaLayer1 = new BGAImage(null, Color.Black, Color.Black);
-			bgaLayer2 = new BGAImage(null, Color.Black, Color.Black);
+			bgaLayerKeyed = new BGAImage(null, Color.Black, Color.Black);
+			bgaLayer = new BGAImage(null, Color.Black, Color.Black);
 			bgaPoor = new BGAImage(null, Color.Black, Color.Black);
 
 			string skinPath = Path.Combine(Program.basePath, "Skins", SettingsManager.instance.skin);
@@ -316,7 +315,7 @@ namespace Pulsus.Gameplay
 			else
 				PrintJudge(JudgeText.Poor, judge.combo);
 		}
-		
+
 		public override void OnBGA(BGAEvent bgaEvent)
 		{
 			if (bgaEvent.bga == null)
@@ -333,7 +332,7 @@ namespace Pulsus.Gameplay
 			{
 				texture = bga.texture;
 
-				if (bga.texture != null)
+				if (texture != null)
 					color = Color.White;
 				else
 					Log.Warning("Failed to show BGA object: " + bgaEvent.bga.name);
@@ -344,18 +343,23 @@ namespace Pulsus.Gameplay
 			if (bgaEvent.type == BGAEvent.BGAType.BGA)
 			{
 				bgaBase.bga = bga;
-				bgaBase.texture = bga.texture;
+				bgaBase.texture = texture;
 				bgaBase.color = color;
 			}
 			else if (bgaEvent.type == BGAEvent.BGAType.Poor)
 			{
-				bgaPoor.texture = bga.texture;
+				bgaPoor.texture = texture;
 				bgaPoor.color = color;
 			}
-			else if (bgaEvent.type == BGAEvent.BGAType.Layer1)
+			else if (bgaEvent.type == BGAEvent.BGAType.LayerTransparentBlack)
 			{
-				bgaLayer1.texture = bga.texture;
-				bgaLayer1.color = color;
+				bgaLayerKeyed.texture = texture;
+				bgaLayerKeyed.color = color;
+			}
+			else if (bgaEvent.type == BGAEvent.BGAType.Layer)
+			{
+				bgaLayer.texture = texture;
+				bgaLayer.color = color;
 			}
 
 			bgaBase.frametimer = 0.0;
@@ -405,7 +409,7 @@ namespace Pulsus.Gameplay
 				{
 					double timestamp = currentEvent.timestamp;
 					double delta = timestamp - lastTimestamp;
-				
+
 					relPosition += delta / currentScrollTime;
 
 					laneBpm = (currentEvent as BPMEvent).bpm;
@@ -432,7 +436,7 @@ namespace Pulsus.Gameplay
 					double oldRel = relPosition;
 					if (relPosition >= 1.0)
 						break;
-					
+
 					LaneObject laneObject = null;
 					if (currentEvent is MeasureMarkerEvent && relPosition >= 0.0)
 						laneObject = LaneObject.CreateMeasureMarker(currentEvent as MeasureMarkerEvent, relPosition);
@@ -554,7 +558,7 @@ namespace Pulsus.Gameplay
 
 			if (laneActive[lane] == 0)
 				press = fadeTime - press;
-			
+
 			if (fadeTime != 0.0f)
 				return (float)(press / fadeTime);
 			else
@@ -567,7 +571,7 @@ namespace Pulsus.Gameplay
 			double press = timer - laneLastPress[lane];
 			if (laneActive[lane] > 0 && lane != 0)
 				fadeTime = pressKeyFadeInTime;
-			
+
 			press = Math.Min(Math.Max(press, 0.0), fadeTime);
 
 			if (laneActive[lane] == 0)
@@ -592,7 +596,7 @@ namespace Pulsus.Gameplay
 			UpdateLaneNotes();
 
 			RenderBGALayers(deltaTime);
-			
+
 			SpriteRenderer spriteRenderer = renderer.spriteRenderer;
 			spriteRenderer.Begin();
 			spriteRenderer.Clear(Color.Black);
@@ -602,7 +606,7 @@ namespace Pulsus.Gameplay
 			RenderLaneGlow(deltaTime, new Rectangle(
 				laneStartPos.x, laneStartPos.y + laneHeight - textureLaneGlow.height,
 				laneTotalWidth, textureLaneGlow.height));
-			
+
 			RenderJudgeLine(deltaTime, new Rectangle(laneStartPos.x, laneStartPos.y + laneHeight,
 				laneTotalWidth, noteHeight));
 
@@ -711,7 +715,7 @@ namespace Pulsus.Gameplay
 			}
 			else if (lane % 2 == 1)
 				return textureLaneBG2;
-			
+
 			return textureLaneBG1;
 		}
 
@@ -726,7 +730,7 @@ namespace Pulsus.Gameplay
 			}
 			else if (lane % 2 == 1)
 				return textureLanePress2;
-			
+
 			return textureLanePress1;
 		}
 
@@ -739,7 +743,7 @@ namespace Pulsus.Gameplay
 			{
 				Texture2D laneBG = GetLaneTexture(i);
 				Texture2D lanePress = GetLanePressTexture(i);
-				
+
 				// lane backgrounds	
 				Int2 lanePos = laneStartPos + new Int2(laneX, 0);
 				spriteRenderer.Draw(laneBG, lanePos, Color.White);
@@ -851,7 +855,7 @@ namespace Pulsus.Gameplay
 				return;
 
 			judgePos.x += (int)judgePosOffset;
-			
+
 			SpriteRenderer spriteRenderer = renderer.spriteRenderer;
 
 			if (judgeFont != null)
@@ -907,7 +911,7 @@ namespace Pulsus.Gameplay
 					}
 				}*/
 			}
-			
+
 			if (judgePrintTimer > 0.0)
 				judgePrintTimer -= deltaTime;
 			if (judgePrintTimer <= 0.0)
@@ -935,7 +939,7 @@ namespace Pulsus.Gameplay
 			{
 				if (!(laneObject.laneEvent is MeasureMarkerEvent))
 					continue;
-				
+
 				int y = (int)((1.0 - laneObject.position) * laneHeight);
 				int lineThickness = noteHeight / 2;
 				float lineOffset = (noteHeight - lineThickness) / 2.0f;
@@ -988,7 +992,7 @@ namespace Pulsus.Gameplay
 				int y = (int)Math.Round((1.0 - Math.Max(laneObject.position, 0.0)) * laneHeight);
 
 				LongNoteEvent longNote = note as LongNoteEvent;
-				if (longNote != null) 
+				if (longNote != null)
 				{
 					Color color = Color.White;
 
@@ -1019,39 +1023,40 @@ namespace Pulsus.Gameplay
 		{
 			SpriteRenderer spriteRenderer = renderer.spriteRenderer;
 
-			if (bgaLayer1.texture != null)
+			if (bgaLayerKeyed.texture == null)
+				return;
+
+			Texture2D layerTexture = bgaLayerKeyed.texture;
+			Color color = bgaLayerKeyed.color;
+
+			int bgaWidth = layerTexture.width;
+			int bgaHeight = layerTexture.height;
+
+			if (bgaRTTexture == null ||
+				bgaWidth != bgaRTTexture.width ||
+				bgaHeight != bgaRTTexture.height)
 			{
-				Texture2D bgaLayer = bgaLayer1.texture;
-				Color color = bgaLayer1.color;
-				int bgaWidth = bgaLayer.width;
-				int bgaHeight = bgaLayer.height;
-
-				if (bgaRTTexture == null ||
-					bgaWidth != bgaRTTexture.width ||
-					bgaHeight != bgaRTTexture.height)
-				{
-					if (bgaFramebuffer != null)
-						bgaFramebuffer.Dispose();
-
-					if (bgaRTTexture != null)
-						bgaRTTexture.Dispose();
-
-					bgaRTTexture = new Texture2D(bgaWidth, bgaHeight, SharpBgfx.TextureFlags.RenderTarget);
-					bgaFramebuffer = new FrameBuffer(bgaRTTexture);
-				}
-
 				if (bgaFramebuffer != null)
-				{
-					spriteRenderer.Begin(spriteRenderer.colorKeyProgram, SharpBgfx.TextureFlags.None);
-					spriteRenderer.SetFrameBuffer(bgaFramebuffer);
-					spriteRenderer.Clear(Color.Transparent);
+					bgaFramebuffer.Dispose();
 
-					spriteRenderer.SetColorKey(Color.Black);
+				if (bgaRTTexture != null)
+					bgaRTTexture.Dispose();
 
-					spriteRenderer.Draw(bgaLayer1.texture, new Int2(0, 0), Color.White);
+				bgaRTTexture = new Texture2D(bgaWidth, bgaHeight, SharpBgfx.TextureFlags.RenderTarget);
+				bgaFramebuffer = new FrameBuffer(bgaRTTexture);
+			}
 
-					spriteRenderer.End();
-				}
+			if (bgaFramebuffer != null)
+			{
+				spriteRenderer.Begin(spriteRenderer.colorKeyProgram, SharpBgfx.TextureFlags.None);
+				spriteRenderer.SetFrameBuffer(bgaFramebuffer);
+				spriteRenderer.Clear(Color.Transparent);
+
+				spriteRenderer.SetColorKey(Color.Black);
+
+				spriteRenderer.Draw(layerTexture, new Int2(0, 0), color);
+
+				spriteRenderer.End();
 			}
 		}
 
@@ -1082,13 +1087,14 @@ namespace Pulsus.Gameplay
 				Rectangle rect = new Rectangle(bgaRect.x + offsetX, bgaRect.y + offsetY, newWidth, newHeight);
 				spriteRenderer.Draw(bgaBase.texture, rect, bgaBase.color);
 
-				if (bgaRTTexture != null)
+				Texture2D layerTexture = bgaLayer.texture ?? bgaRTTexture;
+				if (layerTexture != null)
 				{
 					offsetX = 0;
 					offsetY = 0;
 
-					newWidth = (int)Math.Round(bgaLayer1.texture.width * scale);
-					newHeight = (int)Math.Round(bgaLayer1.texture.height * scale);
+					newWidth = (int)Math.Round(layerTexture.width * scale);
+					newHeight = (int)Math.Round(layerTexture.height * scale);
 
 					// BGA layers are centered along the X-axis only
 
@@ -1096,8 +1102,8 @@ namespace Pulsus.Gameplay
 						offsetX = (int)Math.Round((bgaRect.width - newWidth) / 2.0);
 
 					rect = new Rectangle(bgaRect.x + offsetX, bgaRect.y + offsetY, newWidth, newHeight);
-					
-					spriteRenderer.Draw(bgaRTTexture, rect, Color.White);
+
+					spriteRenderer.Draw(layerTexture, rect, Color.White);
 				}
 			}
 		}
@@ -1149,13 +1155,13 @@ namespace Pulsus.Gameplay
 			int tickWidth = textureGaugeTick.width;
 			int tickHeight = textureGaugeTick.height;
 			const double gaugeTarget = 0.8;
-			const int topPos = (int)(50 * gaugeTarget)-2;
-			
+			const int topPos = (int)(50 * gaugeTarget) - 2;
+
 			double gauge = judge.gaugeHealth * 100.0;
-			int fullTicks = (int)(gauge*0.5);
-			double partialTickOpacity = (gauge*0.5)-fullTicks;
+			int fullTicks = (int)(gauge * 0.5);
+			double partialTickOpacity = (gauge * 0.5) - fullTicks;
 			partialTickOpacity = Math.Pow(Math.Round(partialTickOpacity * 4) / 4.0, 0.25);
-			
+
 			Texture2D tickTexture = textureGaugeTick;
 			Texture2D tickTextureOff = textureGaugeTickOff;
 			for (int i = 0; i < 50; i++)
@@ -1167,20 +1173,20 @@ namespace Pulsus.Gameplay
 				}
 
 				if (i < fullTicks)
-					spriteRenderer.Draw(tickTexture, gaugeStartPos + new Int2(tickWidth*i, 0), Color.White);
+					spriteRenderer.Draw(tickTexture, gaugeStartPos + new Int2(tickWidth * i, 0), Color.White);
 				else
-					spriteRenderer.Draw(tickTextureOff, gaugeStartPos + new Int2(tickWidth*i, 0), Color.White);
+					spriteRenderer.Draw(tickTextureOff, gaugeStartPos + new Int2(tickWidth * i, 0), Color.White);
 
 				if (i == fullTicks)
 				{
 					float opacity = (float)partialTickOpacity * gaugeTickState;
-					spriteRenderer.Draw(tickTexture, gaugeStartPos + new Int2(tickWidth*i, 0), Color.White * opacity);
+					spriteRenderer.Draw(tickTexture, gaugeStartPos + new Int2(tickWidth * i, 0), Color.White * opacity);
 				}
-				
+
 			}
 
 			spriteRenderer.DrawText(Game.debugFont, gauge.ToString("0") + "%",
-				gaugeStartPos + new Int2((50*tickWidth) + 5, (tickHeight-Game.debugFont.pointSize)/2), Color.White);
+				gaugeStartPos + new Int2((50 * tickWidth) + 5, (tickHeight - Game.debugFont.pointSize) / 2), Color.White);
 		}
 	}
 }
