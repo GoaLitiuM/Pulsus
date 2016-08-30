@@ -614,6 +614,9 @@ namespace Pulsus.Gameplay
 			RenderNoteHit(deltaTime, laneStartPos + new Int2(0, laneHeight));
 			RenderGauge(deltaTime, laneStartPos + new Int2(-9, laneHeight + 94));
 
+			string songInfo = string.Format("{0} - {1}", chart.artist, chart.title);
+			spriteRenderer.DrawText(Game.debugFont, songInfo, new Int2(0, Game.debugFont.pointSize * 1), Color.White);
+
 			double scrollTime = SettingsManager.instance.gameplay.scrollTime * 1000;
 			spriteRenderer.DrawText(Game.debugFont, "Scroll: " + scrollTime.ToString("0ms"), new Int2(10, 720 - Game.debugFont.pointSize - 10), Color.White);
 
