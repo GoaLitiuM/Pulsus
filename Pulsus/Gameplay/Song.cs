@@ -20,6 +20,7 @@ namespace Pulsus.Gameplay
 			{ ".bme", typeof(BMSParser) },
 			{ ".bml", typeof(BMSParser) },
 			{ ".pms", typeof(BMSParser) },
+			{ ".bmson", typeof(BMSONParser) },
 		};
 
 		public static readonly string[] supportedFileFormats = parsers.Keys.ToArray();
