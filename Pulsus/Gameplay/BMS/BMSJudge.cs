@@ -89,9 +89,9 @@ namespace Pulsus.Gameplay
 			if (total <= 0.0)
 				total = Math.Max(7.605 * notes / (0.01 * notes + 6.5), 260.0);
 
-			if (totalMultiplier >= 0.0)
+			if (totalMultiplier > 0.0)
 				total *= totalMultiplier;
-			else
+			else if (totalMultiplier < 0.0)
 				throw new ApplicationException("Negative total multiplier not supported");
 
 			switch (settings.gameplay.gaugeMode)
