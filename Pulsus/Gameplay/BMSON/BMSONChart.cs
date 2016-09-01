@@ -11,8 +11,8 @@ namespace Pulsus.Gameplay
 		public override string title { get { return bmson.info.title; } }
 		public override string genre { get { return bmson.info.genre; } }
 		public override double bpm { get { return bmson.info.init_bpm; } }
-		public override int rank { get { return 2; } }
-		public override double rankMultiplier { get { return bmson.info.judge_rank / 100.0; } }
+		public override int rank { get { return rankLegacy; } }
+		public override double rankMultiplier { get { return rankMultiplierReal; } }
 		public override double gaugeTotal { get { return 0.0; } }
 		public override double gaugeMultiplier { get { return bmson.info.total / 100.0; } }
 		public override double volume { get { return 1.0; } }
@@ -33,6 +33,9 @@ namespace Pulsus.Gameplay
 		private BMSONHeader bmson;
 		private string basePath;
 
+		private int rankLegacy = 2;
+		private double rankMultiplierReal = 1.0;
+
 		public BMSONChart(string basePath, BMSONHeader bmson)
 		{
 			this.basePath = basePath;
@@ -46,6 +49,13 @@ namespace Pulsus.Gameplay
 
 			BMSON bmson = (BMSON)this.bmson;
 			eventList = new List<Event>();
+
+			// some charts use judge_rank the same way as #RANK in BMS charts
+			// which is wrong, as the judge_rank is supposed to be a multiplier in percents.
+			if (bmson.info.judge_rank <= 4)
+				rankLegacy = (int)bmson.info.judge_rank;
+			else
+				rankMultiplierReal = bmson.info.judge_rank / 100.0;
 
 			// collect all time related events into one collection
 			timeEventList = new List<Event>(bmson.bpm_events.Length + bmson.stop_events.Length);
