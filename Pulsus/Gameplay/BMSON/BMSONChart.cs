@@ -30,10 +30,10 @@ namespace Pulsus.Gameplay
 		public override int measureCount { get; internal set; }
 		public override double songLength { get; internal set; }
 
-		private BMSON bmson;
+		private BMSONHeader bmson;
 		private string basePath;
 
-		public BMSONChart(string basePath, BMSON bmson)
+		public BMSONChart(string basePath, BMSONHeader bmson)
 		{
 			this.basePath = basePath;
 			this.bmson = bmson;
@@ -41,6 +41,10 @@ namespace Pulsus.Gameplay
 
 		public override List<Event> GenerateEvents(bool seekable = false)
 		{
+			if (!(this.bmson is BMSON))
+				throw new ApplicationException("Can not generate events from partial BMSON object");
+
+			BMSON bmson = (BMSON)this.bmson;
 			eventList = new List<Event>();
 
 			// collect all time related events into one collection

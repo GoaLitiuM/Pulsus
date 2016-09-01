@@ -10,7 +10,6 @@ namespace Pulsus.Gameplay
 		public override Chart Load(string path)
 		{
 			BMSONChart chart = null;
-			BMSON bmson = null;
 			BMSONHeader bmsonHeader = null;
 
 			string version = null;
@@ -19,17 +18,12 @@ namespace Pulsus.Gameplay
 				using (StreamReader streamReader = new StreamReader(path, Encoding.UTF8))
 				{
 					if (headerOnly)
-					{
 						bmsonHeader = JSON.Deserialize<BMSONHeader>(streamReader);
-						if (bmsonHeader != null)
-							version = bmsonHeader.version;
-					}
 					else
-					{
-						bmson = JSON.Deserialize<BMSON>(streamReader);
-						if (bmson != null)
-							version = bmson.version;
-					}
+						bmsonHeader = JSON.Deserialize<BMSON>(streamReader);
+
+					if (bmsonHeader != null)
+						version = bmsonHeader.version;
 				}
 			}
 			catch (Exception e)
@@ -38,8 +32,8 @@ namespace Pulsus.Gameplay
 				return null;
 			}
 
-			if (bmson != null || bmsonHeader != null)
-				chart = new BMSONChart(Directory.GetParent(path).FullName, bmson);
+			if (bmsonHeader != null)
+				chart = new BMSONChart(Directory.GetParent(path).FullName, bmsonHeader);
 
 			if (string.IsNullOrEmpty(version))
 				Log.Error("BMSON version is not defined, legacy BMSON files are not supported.");
