@@ -424,7 +424,9 @@ namespace Pulsus.FFmpeg
 
 						long pts = ffmpeg.av_frame_get_best_effort_timestamp(frame);
 						double currentFrameTime = pts > 0 ? ((double)pts * timeBase.num / timeBase.den) : 0.0;
-						currentFrameTime -= formatContext->start_time / 1000000.0; // AV_TIME_BASE
+
+						if (formatContext->start_time > 0)
+							currentFrameTime -= formatContext->start_time / 1000000.0; // AV_TIME_BASE
 
 						// current frame may be repeated multiple times
 						currentFrameTime += frame->repeat_pict * (((double)timeBase.num / timeBase.den) * 0.5);
