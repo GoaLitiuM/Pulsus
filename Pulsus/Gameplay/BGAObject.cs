@@ -86,10 +86,6 @@ namespace Pulsus.Gameplay
 				Log.Error("Failed to load BGA, scripted BGA not supported: " + filename);
 				return false;
 			}
-			catch (System.Threading.ThreadAbortException)
-			{
-
-			}
 			catch (Exception e)
 			{
 				Log.Error("FFmpeg: " + e.Message);

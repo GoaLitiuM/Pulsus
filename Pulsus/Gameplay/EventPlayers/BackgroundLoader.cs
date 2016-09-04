@@ -181,44 +181,50 @@ namespace Pulsus.Gameplay
 
 		private void LoadThread()
 		{
-			while (true)
+			try
 			{
-				SoundObject sound = null;
-				BGAObject bga = null;
-
-				if (soundQueue.Count > 0 && Monitor.TryEnter(soundQueue))
+				while (true)
 				{
-					try
+					SoundObject sound = null;
+					BGAObject bga = null;
+
+					if (soundQueue.Count > 0 && Monitor.TryEnter(soundQueue))
 					{
-						sound = soundQueue.Dequeue();
+						try
+						{
+							sound = soundQueue.Dequeue();
+						}
+						finally
+						{
+							Monitor.Exit(soundQueue);
+						}
 					}
-					finally
+					else if (bgaQueue.Count > 0 && Monitor.TryEnter(bgaQueue))
 					{
-						Monitor.Exit(soundQueue);
+						try
+						{
+							bga = bgaQueue.Dequeue();
+						}
+						finally
+						{
+							Monitor.Exit(bgaQueue);
+						}
 					}
-				}
-				else if (bgaQueue.Count > 0 && Monitor.TryEnter(bgaQueue))
-				{
-					try
-					{
-						bga = bgaQueue.Dequeue();
-					}
-					finally
-					{
-						Monitor.Exit(bgaQueue);
-					}
+
+					if (sound != null && !sound.loaded)
+						sound.Load(songBasePath);
+					else if (bga != null && !bga.loaded)
+						bga.Load(songBasePath);
+					else if (!playing && soundQueue.Count == 0 && bgaQueue.Count == 0)
+						break;
 				}
 
-				if (sound != null && !sound.loaded)
-					sound.Load(songBasePath);
-				else if (bga != null && !bga.loaded)
-					bga.Load(songBasePath);
-				else if (!playing && soundQueue.Count == 0 && bgaQueue.Count == 0)
-					break;
+				loadTimer.Stop();
+				Log.Warning("Background loading finished in " + loadTimer.Elapsed.TotalSeconds.ToString() + "s");
 			}
-
-			loadTimer.Stop();
-			Log.Warning("Background loading finished in " + loadTimer.Elapsed.TotalSeconds.ToString() + "s");
+			catch (ThreadAbortException)
+			{
+			}
 		}
 	}
 }

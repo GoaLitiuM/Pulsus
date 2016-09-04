@@ -56,19 +56,10 @@ namespace Pulsus.Gameplay
 					return false;
 				}
 			}
-			catch (System.Threading.ThreadAbortException)
-			{
-
-			}
 			catch (Exception e)
 			{
-				Log.Error("FFmpeg: " + e.Message);
+				Log.Error("FFmpeg failed to process sound '" + Path.GetFileName(sound.path) + "': " + e.Message);
 				sound = null;
-			}
-
-			if (sound == null)
-			{
-				Log.Error("Failed to load sound: " + Path.GetFileName(sound.path));
 				return false;
 			}
 
