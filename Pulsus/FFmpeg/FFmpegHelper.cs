@@ -94,8 +94,10 @@ namespace Pulsus.FFmpeg
 			List<byte> bytes = new List<byte>();
 			video.OnNextFrame += (data) => bytes.AddRange(data);
 
-			//video.NextFrame();
-			video.ReadFrames();
+			if (video.isVideo)
+				video.ReadNextFrame();
+			else
+				video.ReadFrames();
 
 			width = video.width;
 			height = video.height;
