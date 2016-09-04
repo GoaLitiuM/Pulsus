@@ -52,13 +52,13 @@ namespace Pulsus.Gameplay
 			{
 				if (!sound.Load())
 				{
-					Log.Warning("Sound not found: " + Path.GetFileName(sound.path));
+					Log.Warning("Sound file not found: " + Path.GetFileName(sound.path));
 					return false;
 				}
 			}
-			catch (Exception e)
+			catch (ApplicationException e)
 			{
-				Log.Error("FFmpeg failed to process sound '" + Path.GetFileName(sound.path) + "': " + e.Message);
+				Log.Error("Failed to load sound '" + Path.GetFileName(sound.path) + "': " + e.Message);
 				sound = null;
 				return false;
 			}

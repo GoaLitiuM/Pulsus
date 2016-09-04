@@ -83,13 +83,12 @@ namespace Pulsus.Gameplay
 			catch when (Path.GetExtension(filename).ToLower() == ".lua")
 			{
 				// scripted background are not supported (yet?)
-				Log.Error("Failed to load BGA, scripted BGA not supported: " + filename);
+				Log.Error("Failed to load BGA '" + filename + "', scripted BGA not supported");
 				return false;
 			}
-			catch (Exception e)
+			catch (ApplicationException e)
 			{
-				Log.Error("FFmpeg: " + e.Message);
-				Log.Error("Failed to load BGA: " + filename);
+				Log.Error("Failed to load BGA '" + filename + "': " + e.Message);
 
 				if (video != null)
 					video.Dispose();
