@@ -1,7 +1,7 @@
-﻿using Pulsus.Graphics;
-using System;
+﻿using Pulsus.FFmpeg;
+using Pulsus.Graphics;
 using System.IO;
-using Pulsus.FFmpeg;
+using System;
 
 namespace Pulsus.Gameplay
 {
@@ -76,23 +76,15 @@ namespace Pulsus.Gameplay
 			video = new FFmpegVideo();
 			try
 			{
-				if (video.Load(fullPath) && video.width * video.height > 0)
-					texture = new Texture2D(video.width, video.height);
-
-				if (texture != null)
-				{
-					video.nextFrame += texture.SetData;
-					if (!isVideo)
-					{
-						video.ReadFrames();
-						video.Dispose();
-						video = null;
-					}
-				}
+				video.Load(fullPath);
+				texture = new Texture2D(video.width, video.height);
+				video.OnNextFrame += texture.SetData;
 			}
 			catch when (Path.GetExtension(filename).ToLower() == ".lua")
 			{
 				// scripted background are not supported (yet?)
+				Log.Error("Failed to load BGA, scripted BGA not supported: " + filename);
+				return false;
 			}
 			catch (System.Threading.ThreadAbortException)
 			{
@@ -101,16 +93,21 @@ namespace Pulsus.Gameplay
 			catch (Exception e)
 			{
 				Log.Error("FFmpeg: " + e.Message);
-			}
+				Log.Error("Failed to load BGA: " + filename);
 
-			if (texture == null)
-			{
 				if (video != null)
 					video.Dispose();
 				video = null;
-
-				Log.Error("Failed to load BGA: " + filename);
+				
 				return false;
+			}
+
+			if (!isVideo)
+			{
+				// fully load image files
+				video.ReadFrames();
+				video.Dispose();
+				video = null;
 			}
 
 			return true;

@@ -1,144 +1,66 @@
-﻿using System;
+﻿using FFmpeg.AutoGen;
 using System.IO;
 using System.Runtime.InteropServices;
-using FFmpeg.AutoGen;
 using System.Threading;
+using System;
 
 namespace Pulsus.FFmpeg
 {
 	public class FFmpegVideo : IDisposable
 	{
-		Thread loadThread;
+		public int width { get; private set; }
+		public int height { get; private set; }
+		public double frametime { get; private set; }
+		public double length { get; private set; }
+		public double currentTime { get; private set; }
+		public int presentedFrames { get; private set; }
+		public int decodedFrames { get; private set; }
 
-		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-		public delegate void NextVideoFrameDelegate(byte[] data);
+		public OnNextFrameDelegate OnNextFrame;
 
 		public bool isVideo { get { return length > 0.0; } }
 
-		FFmpegContext ffContext;
-
 		string path;
-		public int width;
-		public int height;
-		public double frametime;
-		public double length;
-		public double currentTime;
+		double nextFramePts;
+		FFmpegContext ffContext;
+		Thread loadThread;
+		AutoResetEvent nextFrameEvent;
 
-		object frameLock = new object();
-		public int presentedFrames = 0;
-		public int decodedFrames = 0;
-
-		double nextFramePts = 0.0;
-
-		public NextVideoFrameDelegate nextFrame;
-
-		public FFmpegVideo()
-		{
-			loadThread = new Thread(new ThreadStart(LoadThread));
-			loadThread.Name = "FFmpegVideoThread";
-			loadThread.IsBackground = true;
-		}
+		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+		public delegate void OnNextFrameDelegate(byte[] data);
 
 		public void Dispose()
 		{
-			if (loadThread.IsAlive)
-				loadThread.Abort();
-
 			if (ffContext != null)
 				ffContext.Dispose();
 			ffContext = null;
-		}
 
-		public void Update(double deltaTime)
-		{
-			currentTime += deltaTime;
-
-			if (currentTime >= nextFramePts && presentedFrames < decodedFrames)
-				NextFrame();
-		}
-
-		public void ReadFrames()
-		{
-			while (ffContext.ReadNextFrame())
+			if (loadThread != null)
 			{
-				lock (frameLock)
-				{
-					nextFrame(ffContext.GetFrameData());
-					presentedFrames++;
-				}
+				nextFrameEvent.Set();
+				if (loadThread.IsAlive)
+					loadThread.Join();
 			}
 		}
 
-		private void NextFrame()
+		public void Load(string path)
 		{
-			if (ffContext == null)
-				return;
+			this.path = path;
 
-			if (Monitor.TryEnter(frameLock))
+			Load(new FileStream(path, FileMode.Open, FileAccess.Read));
+
+			if (isVideo)
 			{
-				try
-				{
-					nextFrame(ffContext.GetFrameData());
-					presentedFrames++;
-				}
-				finally
-				{
-					Monitor.Exit(frameLock);
-				}
-			}
-		}
+				loadThread = new Thread(new ThreadStart(LoadThread));
+				loadThread.Name = "FFmpegVideoThread";
+				loadThread.IsBackground = true;
 
-		public bool Load(string file)
-		{
-			path = file;
-			Load(new FileStream(file, FileMode.Open, FileAccess.Read));
-
-			return true;
-		}
-
-		public void Start()
-		{
-			if (loadThread.IsAlive)
-			{
-				lock (frameLock)
-				{
-					ffContext.Dispose();
-					ffContext = null;
-
-					currentTime = 0.0;
-					presentedFrames = 0;
-					decodedFrames = 0;
-					nextFramePts = 0.0;
-
-					Load(path);
-				}
-			}
-			else if (ffContext != null)
+				nextFrameEvent = new AutoResetEvent(false);
 				loadThread.Start();
-		}
-
-		private void LoadThread()
-		{
-			while (true)
-			{
-				lock (frameLock)
-				{
-					// decoder is one frame ahead of presentation
-					if (decodedFrames <= presentedFrames)
-					{
-						if (ffContext.ReadNextFrame())
-						{
-							decodedFrames++;
-							nextFramePts = ffContext.framePts;
-						}
-					}
-				}
-
-				Thread.Sleep(1);
 			}
 		}
 
-		public unsafe void Load(Stream stream)
+		private unsafe void Load(Stream stream)
 		{
 			if (!stream.CanRead)
 				throw new ApplicationException("Unable to read stream");
@@ -147,7 +69,7 @@ namespace Pulsus.FFmpeg
 			ffContext.FindStreamInfo();
 
 			ffContext.SelectStream(AVMediaType.AVMEDIA_TYPE_VIDEO);
-	
+
 			width = ffContext.GetWidth();
 			height = ffContext.GetHeight();
 			frametime = ffContext.GetFrametime();
@@ -158,6 +80,79 @@ namespace Pulsus.FFmpeg
 
 			// setup resamplers and other format converters if needed
 			ffContext.ConvertToFormat(AVPixelFormat.AV_PIX_FMT_BGRA);
+		}
+
+		public void Update(double deltaTime)
+		{
+			if (ffContext == null)
+				return;
+
+			currentTime += deltaTime;
+
+			if (currentTime >= nextFramePts && presentedFrames < decodedFrames)
+			{
+				OnNextFrame(ffContext.GetFrameData());
+				presentedFrames++;
+				nextFrameEvent.Set();
+			}
+		}
+
+		public void ReadFrames()
+		{
+			while (ffContext.ReadNextFrame())
+			{
+				OnNextFrame(ffContext.GetFrameData());
+				presentedFrames++;
+			}
+		}
+
+		public void Start()
+		{
+			if (presentedFrames == 0)
+			{
+				nextFrameEvent.Set();
+				return;
+			}
+
+			// TODO: seek back to first frame
+
+			ffContext.Dispose();
+			ffContext = null;
+
+			currentTime = 0.0;
+			presentedFrames = 0;
+			decodedFrames = 0;
+			nextFramePts = 0.0;
+
+			Load(path);
+			nextFrameEvent.Set();
+		}
+
+		private void LoadThread()
+		{
+			nextFrameEvent.WaitOne();
+			while (ffContext != null)
+			{
+				ReadNextFrame();
+				nextFrameEvent.WaitOne();
+			}
+		}
+
+		public bool ReadNextFrame()
+		{
+			// decoder is one frame ahead of presentation
+			if (decodedFrames <= presentedFrames)
+			{
+				if (ffContext.ReadNextFrame())
+				{
+					decodedFrames++;
+					nextFramePts = ffContext.framePts;
+				}
+				else
+					return false;
+			}
+
+			return true;
 		}
 	}
 }

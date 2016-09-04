@@ -1,10 +1,10 @@
-﻿using System;
+﻿using FFmpeg.AutoGen;
+using Pulsus.Audio;
+using SDL2;
 using System.Collections.Generic;
 using System.IO;
 using System.Runtime.InteropServices;
-using Pulsus.Audio;
-using FFmpeg.AutoGen;
-using SDL2;
+using System;
 
 namespace Pulsus.FFmpeg
 {
@@ -54,7 +54,7 @@ namespace Pulsus.FFmpeg
 			string envVariable = Environment.OSVersion.Platform == PlatformID.Win32NT ? "PATH" : "LD_LIBRARY_PATH";
 			string oldValue = Environment.GetEnvironmentVariable(envVariable);
 			Environment.SetEnvironmentVariable(envVariable, ffmpegPath + Path.PathSeparator + oldValue);
-			
+
 			try
 			{
 				ffmpeg.av_register_all();
@@ -77,7 +77,7 @@ namespace Pulsus.FFmpeg
 				string description = "Failed to initialize FFmpeg.";
 				if (Environment.OSVersion.Platform != PlatformID.Win32NT)
 					description += " Please install FFmpeg (3.0.2), or install the static FFmpeg binaries to \"" + ffmpegPath + "\"";
-				
+
 				throw new DllNotFoundException(description, e);
 			}
 		}
@@ -89,12 +89,11 @@ namespace Pulsus.FFmpeg
 			height = 0;
 			bytesPerPixel = 0;
 
-			if (!video.Load(path) || video.width * video.height <= 0)
-				return null;
-			
-			List<byte> bytes = new List<byte>();
+			video.Load(path);
 
-			video.nextFrame += (data) => bytes.AddRange(data);
+			List<byte> bytes = new List<byte>();
+			video.OnNextFrame += (data) => bytes.AddRange(data);
+
 			//video.NextFrame();
 			video.ReadFrames();
 
@@ -184,7 +183,7 @@ namespace Pulsus.FFmpeg
 		public const int AV_LOG_VERBOSE = 40;
 		public const int AV_LOG_DEBUG = 48;
 		public const int AV_LOG_TRACE = 56;
-		public const int AVERROR_EOF = -541478725;	// FFERRTAG( 'E','O','F',' ')
+		public const int AVERROR_EOF = -541478725;  // FFERRTAG( 'E','O','F',' ')
 
 		// corrected signatures from FFmpeg.AutoGen
 
