@@ -12,7 +12,7 @@ namespace Pulsus.Gameplay
 		public double sliceEnd { get; private set; }
 		public int polyphony { get; }
 
-		public bool loaded { get { return sound.data != null; } }
+		public bool loaded { get { return sound != null ? sound.data != null : false; } }
 
 		public SoundObject(SoundFile soundFile, int polyphony, string name = "")
 		{

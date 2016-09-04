@@ -32,7 +32,7 @@ namespace Pulsus.Gameplay
 				return;
 
 			SoundObject soundObject = soundEvent.sound;
-			if (soundObject != null)
+			if (soundObject != null && soundObject.sound != null)
 			{
 				if (soundObject.sound.data != null)
 				{
