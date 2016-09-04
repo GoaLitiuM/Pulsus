@@ -102,7 +102,12 @@ namespace Pulsus.Gameplay
 				return false;
 			}
 
-			if (!isVideo)
+			if (isVideo)
+			{
+				// preload first frame of the video
+				video.ReadNextFrame();
+			}
+			else
 			{
 				// fully load image files
 				video.ReadFrames();
