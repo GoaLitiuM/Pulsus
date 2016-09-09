@@ -7,35 +7,38 @@ namespace Pulsus
 {
 	public static partial class Utility
 	{
-		static PlatformID? osVersion;
+		static PlatformID platform;
+
 		static int ntCurrentResolution = 0;
+
 		static IntPtr timer = IntPtr.Zero;
 		static timeval tv;
+
+		static void Utility_Platform()
+		{
+			platform = Environment.OSVersion.Platform;
+			if (platform == PlatformID.Win32NT)
+			{
+				// use the lowest possible timer resolution we can get
+				if (ntCurrentResolution == 0)
+					NtSetTimerResolution(1, true, out ntCurrentResolution);
+
+				timer = CreateWaitableTimer(IntPtr.Zero, true, null);
+			}
+			else if (platform == PlatformID.Unix || platform == PlatformID.MacOSX)
+			{
+				tv = new timeval();
+			}
+		}
 
 		/// <summary> Suspends the current thread, time units in 1µs (or 0.001ms) </summary>
 		/// <param name="usec"> Minimum sleep time in microseconds. </param>
 		/// <remarks> System timer accuracy may affect how long thread will sleep at any given time.
-		/// On Windows, minimum timer accuracy is usually 500 or 1000 microseconds.</remarks>
+		/// On Windows, minimum timer accuracy is usually 1000 microseconds, but it can be lowered
+		/// down to 500 microseconds with undocumented NtSetTimerResolution function.</remarks>
 		public static void USleep(ulong usec)
 		{
-			if (osVersion == null)
-			{
-				osVersion = Environment.OSVersion.Platform;
-				if (osVersion == PlatformID.Win32NT)
-				{
-					// use the lowest possible timer resolution we can get
-					if (ntCurrentResolution == 0)
-						NtSetTimerResolution(1, true, out ntCurrentResolution);
-
-					timer = CreateWaitableTimer(IntPtr.Zero, true, null);
-				}
-				else if (osVersion == PlatformID.Unix || osVersion == PlatformID.MacOSX)
-				{
-					tv = new timeval();
-				}
-			}
-
-			if (osVersion == PlatformID.Win32NT)
+			if (platform == PlatformID.Win32NT)
 			{
 				// negative values represents relative time
 				long period = -(10 * (long)usec);
@@ -43,7 +46,7 @@ namespace Pulsus
 				SetWaitableTimer(timer, ref period, 0, IntPtr.Zero, IntPtr.Zero, false);
 				WaitForSingleObject(timer, 0xFFFFFFFF);
 			}
-			else if (osVersion == PlatformID.Unix || osVersion == PlatformID.MacOSX)
+			else if (platform == PlatformID.Unix || platform == PlatformID.MacOSX)
 			{
 				// adapted from SDL_Delay
 
@@ -79,7 +82,7 @@ namespace Pulsus
 
 		public static string GetPlatform()
 		{
-			if (Environment.OSVersion.Platform == PlatformID.Unix || Environment.OSVersion.Platform == PlatformID.Unix)
+			if (platform == PlatformID.Unix || platform == PlatformID.Unix)
 			{
 				try
 				{
@@ -99,18 +102,18 @@ namespace Pulsus
 				}
 				catch
 				{
-					return Environment.OSVersion.Platform.ToString();
+					return platform.ToString();
 				}
 			}
-			else if (Environment.OSVersion.Platform == PlatformID.Win32NT)
+			else if (platform == PlatformID.Win32NT)
 				return "Windows";
 			else
-				return Environment.OSVersion.Platform.ToString();
+				return platform.ToString();
 		}
 
 		public static string GetPlatformVersion()
 		{
-			if (Environment.OSVersion.Platform == PlatformID.Unix || Environment.OSVersion.Platform == PlatformID.MacOSX)
+			if (platform == PlatformID.Unix || platform == PlatformID.MacOSX)
 			{
 				try
 				{
@@ -121,7 +124,7 @@ namespace Pulsus
 					process.StartInfo.UseShellExecute = false;
 					process.StartInfo.RedirectStandardOutput = true;
 
-					if (Environment.OSVersion.Platform == PlatformID.Unix)
+					if (platform == PlatformID.Unix)
 					{
 						process.StartInfo.FileName = "lsb_release";
 						process.StartInfo.Arguments = "-i -r";
@@ -133,7 +136,7 @@ namespace Pulsus
 								version += e.Data.Replace("Release:", "").Trim();
 						};
 					}
-					else if (Environment.OSVersion.Platform == PlatformID.MacOSX)
+					else if (platform == PlatformID.MacOSX)
 					{
 						process.StartInfo.FileName = "sw_vers";
 						process.OutputDataReceived += (sender, e) =>
@@ -156,7 +159,7 @@ namespace Pulsus
 					return Environment.OSVersion.VersionString;
 				}
 			}
-			else if (Environment.OSVersion.Platform == PlatformID.Win32NT)
+			else if (platform == PlatformID.Win32NT)
 			{
 				int major = Environment.OSVersion.Version.Major;
 				int minor = Environment.OSVersion.Version.Minor;
@@ -179,6 +182,17 @@ namespace Pulsus
 				return Environment.OSVersion.VersionString;
 		}
 
+		public static void HideConsole()
+		{
+			if (platform == PlatformID.Win32NT)
+			{
+				const int SW_HIDE = 0;
+				ShowWindow(GetConsoleWindow(), SW_HIDE);
+			}
+		}
+
+		// Windows
+
 		[DllImport("ntdll.dll")]
 		static extern int NtSetTimerResolution(int DesiredResolution, bool SetResolution, out int CurrentResolution);
 		
@@ -195,6 +209,14 @@ namespace Pulsus
 		[return: MarshalAs(UnmanagedType.Bool)]
 		static extern bool CloseHandle(IntPtr hObject);
 
+		[DllImport("kernel32.dll")]
+		static extern IntPtr GetConsoleWindow();
+
+		[DllImport("user32.dll")]
+		static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
+
+		// Unix
+		
 		[StructLayout(LayoutKind.Sequential)]
 		struct timeval
 		{

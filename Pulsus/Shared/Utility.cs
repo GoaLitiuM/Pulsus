@@ -7,6 +7,8 @@ namespace Pulsus
 	{
 		static Utility()
 		{
+			Utility_Platform();
+
 			base36CharValueMap = new int[256];
 			for (int i = 0; i < base36CharValueMap.Length; i++)
 				base36CharValueMap[i] = short.MaxValue;

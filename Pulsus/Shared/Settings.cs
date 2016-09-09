@@ -46,6 +46,9 @@ namespace Pulsus
 
 		[JilDirective(Ignore = true)]
 		public bool showSettings;
+
+		[JilDirective(Ignore = true)]
+		public bool debug;
 	}
 
 	public class EngineSettings

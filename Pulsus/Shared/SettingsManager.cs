@@ -90,6 +90,9 @@ namespace Pulsus
 
 				switch (key)
 				{
+					case "--debug":
+						temporary.debug = true;
+						break;
 					case "--settings":
 					case "--config":
 						temporary.showSettings = true;

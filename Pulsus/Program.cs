@@ -79,6 +79,10 @@ namespace Pulsus
 
 			Settings settings = SettingsManager.instance;
 
+			// hide console window by default when launched from desktop
+			if (settings.outputMode == OutputMode.None && !settings.debug && Console.Title == assembly.Location)
+				Utility.HideConsole();
+
 			// start Eto context when not doing any command-line processing
 			if (settings.outputMode == OutputMode.None)
 				EtoStartup();
