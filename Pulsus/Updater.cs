@@ -82,8 +82,9 @@ namespace Pulsus
 			foreach (string file in Directory.EnumerateFiles(Program.basePath, "*.tmp", SearchOption.TopDirectoryOnly))
 				File.Delete(file);
 
-			foreach (string file in Directory.EnumerateFiles(FFmpegHelper.ffmpegPath, "*.tmp", SearchOption.TopDirectoryOnly))
-				File.Delete(file);
+			if (Directory.Exists(FFmpegHelper.ffmpegPath))
+				foreach (string file in Directory.EnumerateFiles(FFmpegHelper.ffmpegPath, "*.tmp", SearchOption.TopDirectoryOnly))
+					File.Delete(file);
 		}
 
 		public static string DownloadUpdate(UpdateInfo updateInfo)
