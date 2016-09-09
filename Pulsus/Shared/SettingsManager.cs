@@ -2,6 +2,7 @@
 using Pulsus.Gameplay;
 using System.IO;
 using System.Text;
+using System;
 
 namespace Pulsus
 {
@@ -82,6 +83,35 @@ namespace Pulsus
 			_temporary = null;
 		}
 
+		private static void PrintHelp()
+		{
+			Console.WriteLine(
+				"\nUsage: " + Environment.GetCommandLineArgs()[0] + " [OPTIONS] CHARTFILE\n" +
+				"\nOptions: "
+				);
+
+			var options = new Tuple<string, string>[]
+			{
+				Tuple.Create("-h, --help",                      "Prints this"),
+				Tuple.Create("--settings, --config",            "Opens configuration window"),
+				Tuple.Create("--skin SKINNAME",                 "Skin override"),
+				Tuple.Create("--debug",                         "Shows console window for debugging"),
+				Tuple.Create("", ""),
+				Tuple.Create("-p, --preview, -a, --autoplay",   "Enables chart preview mode (autoplay)"),
+				Tuple.Create("", ""),
+				Tuple.Create("--render OUTPUT.wav",             "Renders all audio of CHARTFILE to file"),
+				Tuple.Create("--dump-timestamps OUTPUT",        "Dumps all generated note event timestamps of CHARTFILE"),
+			};
+
+			foreach (var option in options)
+			{
+				Console.WriteLine("  {0,-35}{1}", option.Item1, option.Item2);
+			}
+
+			Console.Write("\n");
+			Environment.Exit(0);
+		}
+
 		private static bool ParseArg(string key, string value)
 		{
 			if (key.StartsWith("-"))
@@ -90,6 +120,11 @@ namespace Pulsus
 
 				switch (key)
 				{
+					case "--help":
+					case "-help":
+					case "-h":
+						PrintHelp();
+						break;
 					case "--debug":
 						temporary.debug = true;
 						break;
@@ -99,6 +134,8 @@ namespace Pulsus
 						break;
 					case "--autoplay":
 					case "-a":
+					case "--preview":
+					case "-p":
 						temporary.gameplay.assistMode = AssistMode.Autoplay;
 						break;
 					default:
@@ -130,6 +167,8 @@ namespace Pulsus
 					return true;
 				}
 			}
+			else if (key == "/?")
+				PrintHelp();
 			else
 				temporary.playPath = key;
 
