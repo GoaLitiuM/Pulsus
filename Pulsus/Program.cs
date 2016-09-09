@@ -181,7 +181,46 @@ namespace Pulsus
 			{
 				try
 				{
-					using (etoApplication = new Eto.Forms.Application())
+					Eto.Platform etoPlatform = null;
+					if (Environment.OSVersion.Platform == PlatformID.Win32NT && Type.GetType("Mono.Runtime") != null)
+					{
+						// Mono under Windows does not support WPF, which causes the
+						// automatic platform detection to fail loading it. Skip the
+						// detection and attempt to load the other platform assemblies
+						// manually.
+
+						string[] platformWinForms = Eto.Platforms.WinForms.Split(new char[] { ',' });
+						string[] platformGtk3 = Eto.Platforms.Gtk3.Split(new char[] { ',' });
+						string[] platformGtk2 = Eto.Platforms.Gtk2.Split(new char[] { ',' });
+
+						Tuple<string, string>[] platforms = new Tuple<string, string>[]
+						{
+							Tuple.Create(platformWinForms[0].Trim(), platformWinForms[1].Trim()),
+							Tuple.Create(platformGtk3[0].Trim(), platformGtk3[1].Trim()),
+							Tuple.Create(platformGtk2[0].Trim(), platformGtk2[1].Trim())
+						};
+
+						for (int i = 0; i < platforms.Length; i++)
+						{
+							try
+							{
+								string assemblyPath = Path.Combine(basePath, platforms[i].Item2 + ".dll");
+								Assembly assemblyWinForms = Assembly.LoadFile(assemblyPath);
+								Type platformType = assemblyWinForms.GetType(platforms[i].Item1);
+								etoPlatform = (Eto.Platform)Activator.CreateInstance(platformType);
+								break;
+							}
+							catch (Exception e)
+							{
+								Log.Error("Eto: Failed to load platform " + platforms[i].Item1 + ": " + e.Message);
+							}
+						}
+					}
+
+					if (etoPlatform == null)
+						etoPlatform = Eto.Platform.Detect;
+					
+					using (etoApplication = new Eto.Forms.Application(etoPlatform))
 					{
 						etoApplication.Initialized += (s, e) => etoWaitHandle.Set();
 						etoApplication.Run();
@@ -242,7 +281,6 @@ namespace Pulsus
 					exception.InnerException != null ? ("\n\n" + exception.InnerException.Message + "\n") : "",
 					exception.StackTrace, Log.logPath);
 
-				bool fallbackError = false;
 				try
 				{
 					EtoInvoke(() =>
@@ -251,11 +289,6 @@ namespace Pulsus
 					});
 				}
 				catch
-				{
-					fallbackError = true;
-				}
-				
-				if (fallbackError)
 				{
 					if (etoThread != null && Thread.CurrentThread != etoThread)
 						etoThread.Abort();
