@@ -98,6 +98,7 @@ namespace Pulsus
 				Tuple.Create("--debug",                         "Shows console window for debugging"),
 				Tuple.Create("", ""),
 				Tuple.Create("-p, --preview, -a, --autoplay",   "Enables chart preview mode (autoplay)"),
+				Tuple.Create("-m VALUE, --measure VALUE",       "Starts the chart from measure number VALUE [0-999]"),
 				Tuple.Create("", ""),
 				Tuple.Create("--render OUTPUT.wav",             "Renders all audio of CHARTFILE to file"),
 				Tuple.Create("--dump-timestamps OUTPUT",        "Dumps all generated note event timestamps of CHARTFILE"),
@@ -145,6 +146,11 @@ namespace Pulsus
 				{
 					switch (key)
 					{
+						case "--measure":
+						case "-m":
+							if (!int.TryParse(value, out temporary.startMeasure))
+								Log.Error("Invalid value for measure");
+							break;
 						case "--skin":
 							temporary.skin = value;
 							break;
