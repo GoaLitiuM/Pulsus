@@ -21,15 +21,20 @@ Features
 Requirements
 ---
 Windows users may need to install the following packages:
-- .NET Framework 4.5.1 or [later](https://www.microsoft.com/en-us/download/details.aspx?id=49981), or [Mono](http://www.mono-project.com/download/#download-win) (untested)
+- Vista/7: [.NET Framework 4.5.1 or later](https://www.microsoft.com/en-us/download/details.aspx?id=49981)
+- 8/8.1/10: No need to install anything
+- Mono: Using Mono Runtime instead of .NET Framework should work with some tweaks, not recommended.
 
 Linux users:
-- Install the following packages:
+- Install or build the following packages:
  - mono
  - referenceassemblies-pcl / mono-pcl
  - SDL2
  - SDL2_ttf
  - FFmpeg (3.0.2)
+- Build bgfx and Eto binaries
+- Download the Windows binaries of Pulsus and append the package with your built bgfx and Eto binaries (and other binaries if you chose to build them instead)
+- Run Pulsus: mono Pulsus.exe
 
 Building
 ---
