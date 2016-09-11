@@ -1,12 +1,10 @@
-﻿using System;
-using System.Diagnostics;
-using System.IO;
-using System.IO.Compression;
+﻿using System.Diagnostics;
 using System.Globalization;
-using SDL2;
+using System.IO;
 using System.Reflection;
 using System.Threading;
 using Pulsus.FFmpeg;
+using System;
 
 namespace Pulsus
 {
@@ -35,9 +33,9 @@ namespace Pulsus
 		public static Eto.Forms.Application etoApplication;
 		public static EventWaitHandle etoWaitHandle = new EventWaitHandle(false, EventResetMode.ManualReset);
 		private static Thread etoThread;
-	
-		private static bool restart;
-		private static bool hideErrorDialog;
+
+		private static bool restart = false;
+		private static bool hideErrorDialog = false;
 
 		[STAThread]
 		static void Main()
@@ -52,7 +50,7 @@ namespace Pulsus
 				AppDomain.CurrentDomain.UnhandledException +=
 					(sender, e) => OnCaughtException(e.ExceptionObject as Exception);
 			}
-			
+
 			// store program name and version number
 			Assembly assembly = Assembly.GetExecutingAssembly();
 			name = assembly.GetName().Name;
@@ -78,7 +76,7 @@ namespace Pulsus
 
 			//SettingsManager.LoadDefaults();
 			SettingsManager.Load();
-			SettingsManager.Save();	// refresh with new fields
+			SettingsManager.Save(); // refresh with new fields
 			SettingsManager.ParseArgs(Environment.GetCommandLineArgs());
 
 			Settings settings = SettingsManager.instance;
@@ -86,6 +84,7 @@ namespace Pulsus
 			// restore console window
 			if (settings.outputMode != OutputMode.None || settings.debug)
 				Utility.ShowConsole();
+
 			// start Eto context when not doing any command-line processing
 			if (settings.outputMode == OutputMode.None)
 				EtoStartup();
@@ -102,45 +101,9 @@ namespace Pulsus
 				{
 					if (!string.IsNullOrEmpty(updateInfo.downloadUrl))
 					{
-						SDL.SDL_MessageBoxButtonData[] buttons =
-						{
-							new SDL.SDL_MessageBoxButtonData()
-							{
-								buttonid = 0,
-								flags = SDL.SDL_MessageBoxButtonFlags.SDL_MESSAGEBOX_BUTTON_ESCAPEKEY_DEFAULT,
-								text = "No",
-							},
-							new SDL.SDL_MessageBoxButtonData()
-							{
-								buttonid = 1,
-								flags = SDL.SDL_MessageBoxButtonFlags.SDL_MESSAGEBOX_BUTTON_RETURNKEY_DEFAULT,
-								text = "Yes",
-							},
-						};
-
-						SDL.SDL_MessageBoxData data = new SDL.SDL_MessageBoxData
-						{
-							flags = SDL.SDL_MessageBoxFlags.SDL_MESSAGEBOX_INFORMATION,
-							window = IntPtr.Zero,
-							title = name + " Update",
-							message =
-								"New update available for " + name + "\n\n" +
-								"Download and apply update " + Utility.GetVersionString(updateInfo.version) + "?",
-							numbuttons = buttons.Length,
-							buttons = buttons,
-							colorScheme = null
-						};
-
-						int result = -1;
-						SDL.SDL_ShowMessageBox(ref data, out result);
-
-						if (result == 1)
-						{
-							string updateFile = Updater.DownloadUpdate(updateInfo);
-							Updater.ApplyUpdate(updateFile, updateInfo);
-							restart = true;
+						UpdateWindow.Show(updateInfo, out restart);
+						if (restart)
 							return; // exit early
-						}
 					}
 					else
 						Log.Warning("Update found, but no release files are available for this platform: " + platformId);
@@ -222,7 +185,7 @@ namespace Pulsus
 
 					if (etoPlatform == null)
 						etoPlatform = Eto.Platform.Detect;
-					
+
 					using (etoApplication = new Eto.Forms.Application(etoPlatform))
 					{
 						etoApplication.Initialized += (s, e) => etoWaitHandle.Set();
@@ -246,7 +209,7 @@ namespace Pulsus
 			if (etoApplication == null)
 				return;
 
-			EtoInvoke(() =>	etoApplication.Quit());
+			EtoInvoke(() => etoApplication.Quit());
 			etoThread.Join();
 		}
 
@@ -257,13 +220,13 @@ namespace Pulsus
 
 			if (etoApplication == null)
 				EtoStartup();
-			
+
 			etoWaitHandle.WaitOne();
 
 			if (etoApplication == null)
 				throw new ApplicationException("Eto context is invalid, initialization failed or Eto thread ended prematurely.");
 
-			etoApplication.Invoke(() =>	action());
+			etoApplication.Invoke(() => action());
 		}
 
 		public static bool ShowSettings(bool inGame = false)
@@ -296,7 +259,7 @@ namespace Pulsus
 					if (etoThread != null && Thread.CurrentThread != etoThread)
 						etoThread.Abort();
 
-					SDL.SDL_ShowSimpleMessageBox(SDL.SDL_MessageBoxFlags.SDL_MESSAGEBOX_ERROR,
+					SDL2.SDL.SDL_ShowSimpleMessageBox(SDL2.SDL.SDL_MessageBoxFlags.SDL_MESSAGEBOX_ERROR,
 						"Pulsus Error", message, IntPtr.Zero);
 				}
 			}
