@@ -10,28 +10,21 @@ namespace Pulsus
 	{
 		const string defaultPath = "settings.json";
 
-		public static Settings instance { get { return _temporary == null ? persistent : _temporary; } }
+		// returns most up to date settings 
+		public static Settings instance { get { return _temporary ?? persistent; } }
 
 		private static Settings persistent = null;
-		private static Settings _temporary = null; // commandline override
-
+		private static Settings _temporary = null; // values overridden by commandline options
 		private static Settings temporary
 		{
 			get
 			{
+				// on-demand cloning of persistent settings
 				if (_temporary == null)
 					LoadTemporary(persistent);
 
 				return _temporary;
 			}
-		}
-
-		public static Settings Load(string path)
-		{
-			if (!File.Exists(path))
-				return null;
-
-			return JSON.Deserialize<Settings>(File.ReadAllText(path, Encoding.UTF8), Options.PrettyPrint);
 		}
 
 		public static Settings Clone(Settings settings)
@@ -40,28 +33,35 @@ namespace Pulsus
 			return JSON.Deserialize<Settings>(JSON.Serialize<Settings>(settings));
 		}
 
+		public static Settings LoadFromFile(string path)
+		{
+			if (!File.Exists(path))
+				return null;
+
+			return JSON.Deserialize<Settings>(File.ReadAllText(path, Encoding.UTF8), Options.PrettyPrint);
+		}
+
 		public static void LoadDefaults()
 		{
-			LoadPersistent(new Settings());
+			Load(new Settings());
 		}
 
 		// loads settings from file and sets it as persistent
-		public static void LoadPersistent()
+		public static void Load()
 		{
-			Settings settings = Load(defaultPath);
-			if (settings == null)
+			Settings settings = LoadFromFile(defaultPath);
+			if (settings != null)
+				Load(settings);
+			else
 			{
 				Log.Info("Settings file (" + defaultPath + ") not found, loading defaults");
 
-				settings = new Settings();
-				LoadPersistent(settings);
-				SavePersistent();
+				LoadDefaults();
+				Save();
 			}
-
-			LoadPersistent(settings);
 		}
 
-		public static void LoadPersistent(Settings settings)
+		public static void Load(Settings settings)
 		{
 			persistent = settings;
 			ClearTemporary();
@@ -72,7 +72,7 @@ namespace Pulsus
 			_temporary = Clone(settings);
 		}
 
-		public static void SavePersistent()
+		public static void Save()
 		{
 			string json = JSON.Serialize<Settings>(persistent, Options.PrettyPrint);
 			File.WriteAllText(defaultPath, json, Encoding.UTF8);

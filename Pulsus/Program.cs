@@ -73,8 +73,8 @@ namespace Pulsus
 			AppDomain.CurrentDomain.ProcessExit += OnProcessExit;
 
 			//SettingsManager.LoadDefaults();
-			SettingsManager.LoadPersistent();
-			SettingsManager.SavePersistent();	// refresh with new fields
+			SettingsManager.Load();
+			SettingsManager.Save();	// refresh with new fields
 			SettingsManager.ParseArgs(Environment.GetCommandLineArgs());
 
 			Settings settings = SettingsManager.instance;
@@ -157,7 +157,7 @@ namespace Pulsus
 			using (Game game = new Game())
 				game.Run();
 
-			SettingsManager.SavePersistent();
+			SettingsManager.Save();
 		}
 
 		private static void OnProcessExit(object sender, EventArgs e)
