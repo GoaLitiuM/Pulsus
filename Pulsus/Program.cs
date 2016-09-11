@@ -3,7 +3,6 @@ using System.Globalization;
 using System.IO;
 using System.Reflection;
 using System.Threading;
-using Pulsus.FFmpeg;
 using System;
 
 namespace Pulsus
@@ -117,8 +116,6 @@ namespace Pulsus
 				if (!ShowSettings(false))
 					return; // exit early
 			}
-
-			FFmpegHelper.Init();
 
 			using (Game game = new Game())
 				game.Run();

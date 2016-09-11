@@ -1,11 +1,12 @@
-﻿using System;
-using System.Diagnostics;
-using SDL2;
-using Pulsus.Graphics;
-using Pulsus.Audio;
-using Pulsus.Input;
+﻿using Pulsus.Audio;
+using Pulsus.FFmpeg;
 using Pulsus.Gameplay;
+using Pulsus.Graphics;
+using Pulsus.Input;
+using SDL2;
+using System.Diagnostics;
 using System.IO;
+using System;
 
 namespace Pulsus
 {
@@ -28,6 +29,9 @@ namespace Pulsus
 
 		public Game()
 		{
+			Log.Info("Initializing FFmpeg...");
+			FFmpegHelper.Init();
+
 			SDL.SDL_version sdlVersion;
 			SDL.SDL_VERSION(out sdlVersion);
 
