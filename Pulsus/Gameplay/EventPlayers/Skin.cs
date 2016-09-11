@@ -778,7 +778,7 @@ namespace Pulsus.Gameplay
 			SpriteRenderer spriteRenderer = renderer.spriteRenderer;
 
 			double glowAlpha = 1.0;
-			if (chart != null && currentMeasure + 1 < chart.measureCount)
+			if (chart != null && currentMeasure >= 0)
 			{
 				long positionAtMeasure = pulse - chart.measurePositions[currentMeasure].Item2;
 
