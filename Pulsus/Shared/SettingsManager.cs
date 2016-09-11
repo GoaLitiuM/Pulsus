@@ -1,6 +1,7 @@
 ﻿using Jil;
 using Pulsus.Gameplay;
 using System.IO;
+using System.Reflection;
 using System.Text;
 using System;
 
@@ -29,8 +30,14 @@ namespace Pulsus
 
 		public static Settings Clone(Settings settings)
 		{
-			// HACK: creates a copy of the settings through serialization and deserialization
-			return JSON.Deserialize<Settings>(JSON.Serialize<Settings>(settings));
+			Settings cloned = new Settings();
+			foreach (FieldInfo field in
+				typeof(Settings).GetFields(BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public))
+			{
+				field.SetValue(cloned, field.GetValue(settings));
+			}
+
+			return cloned;
 		}
 
 		public static Settings LoadFromFile(string path)
@@ -43,7 +50,7 @@ namespace Pulsus
 
 		public static void LoadDefaults()
 		{
-			Load(new Settings());
+			Apply(new Settings());
 		}
 
 		// loads settings from file and sets it as persistent
@@ -51,7 +58,7 @@ namespace Pulsus
 		{
 			Settings settings = LoadFromFile(defaultPath);
 			if (settings != null)
-				Load(settings);
+				Apply(settings);
 			else
 			{
 				Log.Info("Settings file (" + defaultPath + ") not found, loading defaults");
@@ -61,7 +68,7 @@ namespace Pulsus
 			}
 		}
 
-		public static void Load(Settings settings)
+		public static void Apply(Settings settings)
 		{
 			persistent = settings;
 			ClearTemporary();
