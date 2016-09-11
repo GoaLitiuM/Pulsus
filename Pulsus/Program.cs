@@ -42,6 +42,10 @@ namespace Pulsus
 		[STAThread]
 		static void Main()
 		{
+			// keep the console visible only when launched from command-line
+			if (Process.GetCurrentProcess().MainWindowHandle != IntPtr.Zero)
+				Utility.HideConsole();
+
 			if (!Debugger.IsAttached)
 			{
 				// handle thrown exceptions when debugger is not present
@@ -79,10 +83,9 @@ namespace Pulsus
 
 			Settings settings = SettingsManager.instance;
 
-			// hide console window by default when launched from desktop
-			if (settings.outputMode == OutputMode.None && !settings.debug && Console.Title == assembly.Location)
-				Utility.HideConsole();
-
+			// restore console window
+			if (settings.outputMode != OutputMode.None || settings.debug)
+				Utility.ShowConsole();
 			// start Eto context when not doing any command-line processing
 			if (settings.outputMode == OutputMode.None)
 				EtoStartup();

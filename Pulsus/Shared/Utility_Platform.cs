@@ -182,6 +182,15 @@ namespace Pulsus
 				return Environment.OSVersion.VersionString;
 		}
 
+		public static void ShowConsole()
+		{
+			if (platform == PlatformID.Win32NT)
+			{
+				const int SW_SHOW = 5;
+				ShowWindow(GetConsoleWindow(), SW_SHOW);
+			}
+		}
+
 		public static void HideConsole()
 		{
 			if (platform == PlatformID.Win32NT)
