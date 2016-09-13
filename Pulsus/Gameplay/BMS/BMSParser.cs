@@ -44,7 +44,7 @@ namespace Pulsus.Gameplay
 							OnWAV(data, command, value);
 						else if (command.StartsWithFast("BMP"))
 							OnBMP(data, command, value);
-						else if (command.StartsWithFast("BPM"))
+						else if (command.StartsWithFast("BPM") || command.StartsWithFast("EXBPM"))
 							OnBPM(data, command, value);
 						else if (command.StartsWithFast("STOP"))
 							OnStop(data, command, value);
@@ -558,7 +558,7 @@ namespace Pulsus.Gameplay
 		{
 			int index = 0;
 			if (!command.StartsWithFast("BPM "))
-				index = Utility.FromBase36(command.Substring(3));
+				index = Utility.FromBase36(command.Substring(command.Length-2));
 
 			double bpmValue = 0.0;
 
