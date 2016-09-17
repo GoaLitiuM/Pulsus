@@ -23,6 +23,9 @@ namespace Pulsus
 		/// <summary> Optimized version of StartsWith with StringComparison.Ordinal </summary>
 		public static bool StartsWithFast(this string str, string str2)
 		{
+			if (str2.Length > str.Length)
+				return false;
+
 			int len = str2.Length < str.Length ? str2.Length : str.Length;
 			for (int i = 0; i < len; ++i)
 				if (str[i] != str2[i])
@@ -34,6 +37,9 @@ namespace Pulsus
 		/// <summary> Optimized version of StartsWith with StringComparison.OrdinalIgnoreCase </summary>
 		public static bool StartsWithFastIgnoreCase(this string str, string str2)
 		{
+			if (str2.Length > str.Length)
+				return false;
+
 			int len = str2.Length < str.Length ? str2.Length : str.Length;
 			for (int i = 0; i < len; ++i)
 			{
