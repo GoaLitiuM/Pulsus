@@ -14,7 +14,7 @@ namespace Pulsus.Gameplay
 		public string basePath { get; private set; }
 		public string path { get; private set; }
 
-		static Dictionary<string, Type> parsers = new Dictionary<string, Type>
+		static Dictionary<string, Type> parsers = new Dictionary<string, Type>(Utility.StringComparerFastIgnoreCase)
 		{
 			{ ".bms", typeof(BMSParser) },
 			{ ".bme", typeof(BMSParser) },
@@ -58,16 +58,10 @@ namespace Pulsus.Gameplay
 
 		public void Load(bool headerOnly = false)
 		{
-			if (!File.Exists(path))
-				throw new ApplicationException("Failed to load song, file doesn't exist: " + path);
-
 			Type parserType;
-			string extension = Path.GetExtension(path).ToLowerInvariant();
+			string extension = Path.GetExtension(path);
 			if (!parsers.TryGetValue(extension, out parserType))
 				throw new ApplicationException("Parser for extension " + extension + " could not be found");
-
-			if (!parserType.IsSubclassOf(typeof(ChartParser)))
-				throw new ApplicationException("Parser " + parserType.Name + " is not a subclass of " + nameof(ChartParser));
 
 			ChartParser parser = Activator.CreateInstance(parserType) as ChartParser;
 			parser.headerOnly = headerOnly;
@@ -83,6 +77,11 @@ namespace Pulsus.Gameplay
 				return;
 
 			chart.eventList = chart.GenerateEvents();
+		}
+
+		public static bool IsSupportedExtension(string extension)
+		{
+			return parsers.ContainsKey(extension);
 		}
 	}
 }

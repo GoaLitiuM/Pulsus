@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 
 namespace Pulsus
@@ -59,6 +60,21 @@ namespace Pulsus
 				return false;
 			}
 			return len > 0;
+		}
+
+		public static readonly StringComparerFastImpl StringComparerFast = new StringComparerFastImpl();
+		public static readonly StringComparerFastIgnoreCaseImpl StringComparerFastIgnoreCase = new StringComparerFastIgnoreCaseImpl();
+
+		public class StringComparerFastImpl : IEqualityComparer<string>
+		{
+			public bool Equals(string x, string y) => (x.Length == y.Length && StartsWithFast(x, y));
+			public int GetHashCode(string obj) => obj.GetHashCode();
+		}
+
+		public class StringComparerFastIgnoreCaseImpl : IEqualityComparer<string>
+		{
+			public bool Equals(string x, string y) => (x.Length == y.Length && StartsWithFastIgnoreCase(x, y));
+			public int GetHashCode(string obj) => obj.GetHashCode();
 		}
 
 		private static readonly char[] base36Table = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ".ToCharArray();
