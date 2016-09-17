@@ -8,7 +8,7 @@ namespace Pulsus
 	public class GameplayScene : Scene
 	{
 		InputMapper inputMapper;
-		Song song;
+		Chart chart;
 		EventPlayerGraph playerGraph;
 		Skin skin;
 		BGM bgmPlayer;
@@ -16,28 +16,26 @@ namespace Pulsus
 		Player player;
 		BackgroundLoader loader;
 
-		public GameplayScene(Game game, Song song) : base(game)
+		public GameplayScene(Game game, string inputPath) : base(game)
 		{
-			this.song = song;
 			Settings settings = SettingsManager.instance;
 			double judgeOffset = settings.gameplay.judgeOffset / 1000.0;
 
-			Log.Info("Loading chart: " + song.path);
-			song.Load();
-			Chart chart = song.chart;
+			Log.Info("Loading chart: " + inputPath);
+			chart = Chart.Load(inputPath);
 
 			Log.Info("Generating events...");
-			song.GenerateEvents();
+			chart.GenerateEvents();
 
 			Log.Info("Initializing players...");
 
-			judge = new BMSJudge(song);
-			skin = new Skin(song, renderer, judge);
+			judge = new BMSJudge(chart);
+			skin = new Skin(chart, renderer, judge);
 			judge.OnNoteJudged += skin.OnNoteJudged;
 
-			bgmPlayer = new BGM(audio, song);
-			player = new Player(audio, song, judge, skin);
-			loader = new BackgroundLoader(song);
+			bgmPlayer = new BGM(chart, audio);
+			player = new Player(chart, audio, judge, skin);
+			loader = new BackgroundLoader(chart);
 
 			// add players to graph
 			playerGraph = new EventPlayerGraph();
@@ -147,8 +145,8 @@ namespace Pulsus
 				player.Dispose();
 			if (loader != null)
 				loader.Dispose();
-			if (song != null)
-				song.Dispose();
+			if (chart != null)
+				chart.Dispose();
 		}
 
 		private void BindInputLayout(InputLayout layout)
@@ -183,7 +181,7 @@ namespace Pulsus
 			if (!settings.gameplay.autoplay)
 			{
 				int laneOffset;
-				if (song.chart.hasTurntable)
+				if (chart.hasTurntable)
 				{
 					laneOffset = 0;
 					BindLaneKey(layout.GetInputs("turntable"), 0);

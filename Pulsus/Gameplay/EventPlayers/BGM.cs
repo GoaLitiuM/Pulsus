@@ -8,8 +8,8 @@ namespace Pulsus.Gameplay
 
 		private bool seeking;
 
-		public BGM(AudioEngine audioEngine, Song song)
-			: base(song)
+		public BGM(Chart chart, AudioEngine audioEngine)
+			: base(chart)
 		{
 			this.audioEngine = audioEngine;
 		}

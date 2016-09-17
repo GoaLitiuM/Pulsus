@@ -70,10 +70,10 @@ namespace Pulsus.Gameplay
 		public delegate void OnNoteJudgedDelegate(NoteScore noteScore);
 		public OnNoteJudgedDelegate OnNoteJudged;
 
-		public BMSJudge(Song song)
-			: base(song)
+		public BMSJudge(Chart chart)
+			: base(chart)
 		{
-			if (song == null || chart == null)
+			if (chart == null)
 				return;
 
 			Settings settings = SettingsManager.instance;

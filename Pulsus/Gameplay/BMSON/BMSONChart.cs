@@ -31,18 +31,17 @@ namespace Pulsus.Gameplay
 		public override double songLength { get; internal set; }
 
 		private BMSONHeader bmson;
-		private string basePath;
 
 		private int rankLegacy = 2;
 		private double rankMultiplierReal = 1.0;
 
 		public BMSONChart(string basePath, BMSONHeader bmson)
+			: base(basePath)
 		{
-			this.basePath = basePath;
 			this.bmson = bmson;
 		}
 
-		public override List<Event> GenerateEvents(bool seekable = false)
+		public override void GenerateEvents()
 		{
 			if (!(this.bmson is BMSON))
 				throw new ApplicationException("Can not generate events from partial BMSON object");
@@ -332,8 +331,6 @@ namespace Pulsus.Gameplay
 
 			if (eventList.Count > 0)
 				songLength = eventList[eventList.Count - 1].timestamp;
-
-			return eventList;
 		}
 	}
 }

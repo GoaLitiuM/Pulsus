@@ -73,6 +73,11 @@ namespace Pulsus.Gameplay
 		internal int eventCount = 0;
 		internal long resolution_ = 0;
 
+		public BMSChart(string basePath)
+			: base(basePath)
+		{
+		}
+
 		public override void Dispose()
 		{
 			base.Dispose();
@@ -149,7 +154,7 @@ namespace Pulsus.Gameplay
 			return null;
 		}
 
-		public override List<Event> GenerateEvents(bool seekable = false)
+		public override void GenerateEvents()
 		{
 			eventList = new List<Event>(eventCount);
 
@@ -480,8 +485,6 @@ namespace Pulsus.Gameplay
 
 			if (eventList.Count > 0)
 				songLength = eventList[eventList.Count - 1].timestamp;
-
-			return eventList;
 		}
 	}
 }

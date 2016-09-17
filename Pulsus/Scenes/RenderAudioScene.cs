@@ -19,15 +19,14 @@ namespace Pulsus
 				return;
 			}
 
-			Song song = new Song(inputPath);
-			song.Load();
-			song.GenerateEvents();
+			Chart chart = Chart.Load(inputPath);
+			chart.GenerateEvents();
 
 			if (string.IsNullOrWhiteSpace(Path.GetExtension(outputPath)))
 				outputPath += ".wav";
 
 			// preload all audio
-			foreach (Event @event in song.chart.eventList)
+			foreach (Event @event in chart.eventList)
 			{
 				SoundEvent soundEvent = @event as SoundEvent;
 				if (soundEvent == null)
@@ -37,8 +36,8 @@ namespace Pulsus
 					soundEvent.sound.Load();
 			}		
 
-			songPlayer = new BGM(audio, song);
-			autoplay = new Player(audio, song, null, null);
+			songPlayer = new BGM(chart, audio);
+			autoplay = new Player(chart, audio, null, null);
 
 			songPlayer.realtime = false;
 			autoplay.realtime = false;

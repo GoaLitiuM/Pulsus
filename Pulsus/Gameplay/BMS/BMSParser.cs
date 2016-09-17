@@ -20,7 +20,7 @@ namespace Pulsus.Gameplay
 		public override Chart Load(string path)
 		{
 			basePath = Directory.GetParent(path).FullName;
-			BMSChart data = new BMSChart();
+			BMSChart data = new BMSChart(basePath);
 			BMSMeasure lastMeasure = null;
 
 			bool warnRandom = false;
@@ -35,7 +35,7 @@ namespace Pulsus.Gameplay
 					while ((line = stream.ReadLine()) != null)
 					{
 						lineNumber++;
-
+						
 						string command, value;
 						if (!ParseCommandLine(line, out command, out value))
 							continue;

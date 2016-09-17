@@ -216,7 +216,6 @@
     <Compile Include="Gameplay\EventPlayer.cs" />
     <Compile Include="Gameplay\SoundObject.cs" />
     <Compile Include="Shared\Log.cs" />
-    <Compile Include="Gameplay\Song.cs" />
     <Compile Include="Gameplay\Chart.cs" />
     <Compile Include="Gameplay\ChartParser.cs" />
     <Compile Include="Gameplay\Event\Event.cs" />

@@ -14,10 +14,10 @@ namespace Pulsus.Gameplay
 
 		protected bool seeking;
 
-		public Judge(Song song)
-			: base(song)
+		public Judge(Chart chart)
+			: base(chart)
 		{
-			if (song == null || chart == null)
+			if (chart == null)
 				return;
 
 			noteScores = new List<NoteScore>(chart.playerEventCount);

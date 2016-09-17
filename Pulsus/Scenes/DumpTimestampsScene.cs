@@ -15,15 +15,14 @@ namespace Pulsus
 				return;
 			}
 
-			Song song = new Song(inputPath);
-			song.Load();
-			song.GenerateEvents();
+			Chart chart = Chart.Load(inputPath);
+			chart.GenerateEvents();
 
 			HashSet<double> uniqueTimestamps = new HashSet<double>();
 
 			using (StreamWriter writer = new StreamWriter(Path.Combine(Program.basePath, outputPath)))
 			{
-				foreach (Event ev in song.chart.eventList)
+				foreach (Event ev in chart.eventList)
 				{
 					if (ev is NoteEvent && (ev.GetType() == typeof(NoteEvent) || ev.GetType() == typeof(LongNoteEvent)))
 					{

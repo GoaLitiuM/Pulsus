@@ -31,12 +31,12 @@ namespace Pulsus.Gameplay
 
 		public double progress { get { return chart != null ? (currentTime / chart.songLength) : 0.0; } }
 
-		public EventPlayer(Song song)
+		public EventPlayer(Chart chart)
 		{
-			if (song == null || song.chart == null)
+			if (chart == null)
 				throw new ArgumentNullException("Invalid chart");
 
-			chart = song.chart;
+			this.chart = chart;
 			eventList = chart.eventList;
 
 			bpm = chart.bpm;

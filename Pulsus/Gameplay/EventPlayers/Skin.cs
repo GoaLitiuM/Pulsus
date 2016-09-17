@@ -167,8 +167,8 @@ namespace Pulsus.Gameplay
 		BGAImage bgaLayer;
 		BGAImage bgaPoor;
 
-		public Skin(Song song, Renderer renderer, BMSJudge judge)
-			: base(song)
+		public Skin(Chart chart, Renderer renderer, BMSJudge judge)
+			: base(chart)
 		{
 			this.renderer = renderer;
 			this.judge = judge;
@@ -211,8 +211,8 @@ namespace Pulsus.Gameplay
 			textureGaugeTickTop = new Texture2D(gfxPath + "GaugeTickTop.png");
 			textureGaugeTickTopOff = new Texture2D(gfxPath + "GaugeTickTopOff.png");
 
-			playerCount = song.chart.players;
-			keyCount = song.chart.playerChannels;
+			playerCount = chart.players;
+			keyCount = chart.playerChannels;
 
 			if (keyCount == 6 || // 5 keys + TT
 				keyCount == 8)   // 7 keys + TT

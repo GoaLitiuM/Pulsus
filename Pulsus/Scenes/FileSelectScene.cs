@@ -58,7 +58,7 @@ namespace Pulsus
 				return;
 			}
 
-			game.sceneManager.Push(new GameplayScene(game, new Song(filePath)));
+			game.sceneManager.Push(new GameplayScene(game, filePath));
 		}
 
 		public override void Update(double deltaTime)

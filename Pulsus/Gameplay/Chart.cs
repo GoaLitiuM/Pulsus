@@ -1,10 +1,22 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 
 namespace Pulsus.Gameplay
 {
 	public abstract class Chart : IDisposable
 	{
+		private static Dictionary<string, Type> parsers = new Dictionary<string, Type>(Utility.StringComparerFastIgnoreCase)
+		{
+			{ ".bms", typeof(BMSParser) },
+			{ ".bme", typeof(BMSParser) },
+			{ ".bml", typeof(BMSParser) },
+			{ ".pms", typeof(BMSParser) },
+			{ ".bmson", typeof(BMSONParser) },
+		};
+
+		public string basePath { get; }
+
 		public abstract string artist { get; }
 		public abstract string title { get; }
 		public abstract string genre { get; }
@@ -28,7 +40,7 @@ namespace Pulsus.Gameplay
 		public abstract int measureCount { get; internal set; }
 		public abstract double songLength { get; internal set; }
 
-		public abstract List<Event> GenerateEvents(bool seekable = false);
+		public abstract void GenerateEvents();
 
 		public int playerKeyCount { get { return (playerChannels - (hasTurntable ? 1 : 0)) * players; } }
 
@@ -37,8 +49,34 @@ namespace Pulsus.Gameplay
 		public List<BMSMeasure> measureList = new List<BMSMeasure>();
 		public List<Tuple<int, long>> measurePositions = new List<Tuple<int, long>>();
 
+		public Chart(string basePath)
+		{
+			this.basePath = basePath;
+		}
+
 		public virtual void Dispose()
 		{
+		}
+
+		public static Chart Load(string path, bool headerOnly = false)
+		{
+			Type parserType;
+			string extension = Path.GetExtension(path);
+			if (!parsers.TryGetValue(extension, out parserType))
+				throw new ApplicationException("Parser for extension " + extension + " could not be found");
+
+			ChartParser parser = Activator.CreateInstance(parserType) as ChartParser;
+			parser.headerOnly = headerOnly;
+
+			Chart chart = parser.Load(path);
+			if (chart == null)
+				throw new ApplicationException("Failed to load chart data from: " + path);
+			return chart;
+		}
+
+		public static bool IsSupportedExtension(string extension)
+		{
+			return parsers.ContainsKey(extension);
 		}
 
 		public double GetTimeFromPulse(long pulse)

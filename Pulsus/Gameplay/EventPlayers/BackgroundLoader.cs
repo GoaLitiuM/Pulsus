@@ -16,19 +16,19 @@ namespace Pulsus.Gameplay
 		HashSet<SoundObject> soundUniques = new HashSet<SoundObject>();
 		HashSet<BGAObject> bgaUniques = new HashSet<BGAObject>();
 
-		string songBasePath;
+		string basePath;
 
 		Thread loadThread;
 		System.Diagnostics.Stopwatch loadTimer;
 
-		public BackgroundLoader(Song song)
-			: base(song)
+		public BackgroundLoader(Chart chart)
+			: base(chart)
 		{
 			loadThread = new Thread(new ThreadStart(LoadThread));
 			loadThread.Name = "BackgroundLoaderThread";
 			loadThread.IsBackground = true;
 
-			songBasePath = song.basePath;
+			basePath = chart.basePath;
 		}
 
 		public override void Dispose()
@@ -114,9 +114,9 @@ namespace Pulsus.Gameplay
 			while (bgaQueue.Count > 0)
 			{
 				BGAObject value = bgaQueue.Dequeue();
-				value.Load(songBasePath);
+				value.Load(basePath);
 			}
-
+			
 			Log.Info("Preloaded  {0} sound objects, {1} BGA objects", soundCount, bgaCount);
 
 			skipSound = oldSkipSound;
@@ -156,9 +156,7 @@ namespace Pulsus.Gameplay
 
 			soundUniques.Add(soundEvent.sound);
 			lock (soundQueue)
-			{
 				soundQueue.Enqueue(soundEvent.sound);
-			}
 		}
 
 		public override void OnBGAObject(BGAEvent bgaEvent)
@@ -174,9 +172,7 @@ namespace Pulsus.Gameplay
 
 			bgaUniques.Add(bgaEvent.bga);
 			lock (bgaQueue)
-			{
 				bgaQueue.Enqueue(bgaEvent.bga);
-			}
 		}
 
 		private void LoadThread()
@@ -212,15 +208,15 @@ namespace Pulsus.Gameplay
 					}
 
 					if (sound != null && !sound.loaded)
-						sound.Load(songBasePath);
+						sound.Load(basePath);
 					else if (bga != null && !bga.loaded)
-						bga.Load(songBasePath);
+						bga.Load(basePath);
 					else if (!playing && soundQueue.Count == 0 && bgaQueue.Count == 0)
 						break;
 				}
 
 				loadTimer.Stop();
-				Log.Warning("Background loading finished in " + loadTimer.Elapsed.TotalSeconds.ToString() + "s");
+				Log.Info("Background loading finished in " + loadTimer.Elapsed.TotalSeconds.ToString() + "s");
 			}
 			catch (ThreadAbortException)
 			{

@@ -13,8 +13,8 @@ namespace Pulsus.Gameplay
 
 		private bool seeking;
 
-		public Player(AudioEngine audioEngine, Song song, BMSJudge judge, Skin skin)
-			: base(song)
+		public Player(Chart chart, AudioEngine audioEngine, BMSJudge judge, Skin skin)
+			: base(chart)
 		{
 			this.audioEngine = audioEngine;
 			this.judge = judge;
@@ -33,7 +33,7 @@ namespace Pulsus.Gameplay
 		{
 			if (!autoplay)
 				return;
-			
+
 			PressKey(noteEvent.lane, noteEvent.sound, noteEvent);
 			ReleaseKey(noteEvent.lane);
 		}
