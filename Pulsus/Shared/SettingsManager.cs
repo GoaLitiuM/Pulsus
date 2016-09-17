@@ -9,7 +9,7 @@ namespace Pulsus
 {
 	public static class SettingsManager
 	{
-		const string defaultPath = "settings.json";
+		private static readonly string defaultPath = Path.Combine(Program.basePath, "settings.json");
 
 		// returns most up to date settings 
 		public static Settings instance { get { return _temporary ?? persistent; } }
