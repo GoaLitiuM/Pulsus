@@ -40,19 +40,6 @@ namespace Pulsus
 			return cloned;
 		}
 
-		public static Settings LoadFromFile(string path)
-		{
-			if (!File.Exists(path))
-				return null;
-
-			return JSON.Deserialize<Settings>(File.ReadAllText(path, Encoding.UTF8), Options.PrettyPrint);
-		}
-
-		public static void LoadDefaults()
-		{
-			Apply(new Settings());
-		}
-
 		// loads settings from file and sets it as persistent
 		public static void Load()
 		{
@@ -68,10 +55,22 @@ namespace Pulsus
 			}
 		}
 
-		public static void Apply(Settings settings)
+		public static Settings LoadFromFile(string path)
 		{
-			persistent = settings;
-			ClearTemporary();
+			if (!File.Exists(path))
+				return null;
+
+			Settings settings = JSON.Deserialize<Settings>(File.ReadAllText(path, Encoding.UTF8));
+			Process(settings);
+
+			return settings;
+		}
+
+		public static void LoadDefaults()
+		{
+			Settings settings = new Settings();
+			Process(settings);
+			Apply(settings);
 		}
 
 		public static void LoadTemporary(Settings settings)
@@ -79,15 +78,35 @@ namespace Pulsus
 			_temporary = Clone(settings);
 		}
 
+		public static void ClearTemporary()
+		{
+			_temporary = null;
+		}
+
+		public static void Process(Settings settings)
+		{
+			if (settings == null)
+				return;
+
+			// ensure all the directory paths ends with directory separator character
+			for (int i = 0; i < settings.songPaths.Count; i++)
+			{
+				char lastChar = settings.songPaths[i][settings.songPaths[i].Length-1];
+				if (lastChar != Path.DirectorySeparatorChar && lastChar != Path.AltDirectorySeparatorChar)
+					settings.songPaths[i] += Path.DirectorySeparatorChar;
+			}
+		}
+
+		public static void Apply(Settings settings)
+		{
+			persistent = settings;
+			ClearTemporary();
+		}
+
 		public static void Save()
 		{
 			string json = JSON.Serialize<Settings>(persistent, Options.PrettyPrint);
 			File.WriteAllText(defaultPath, json, Encoding.UTF8);
-		}
-
-		public static void ClearTemporary()
-		{
-			_temporary = null;
 		}
 
 		private static void PrintHelp()
