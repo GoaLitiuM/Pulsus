@@ -557,7 +557,7 @@ namespace Pulsus.Gameplay
 		private void OnBPM(BMSChart data, string command, string value)
 		{
 			int index = 0;
-			if (!command.StartsWithFast("BPM "))
+			if (command != "BPM")
 				index = Utility.FromBase36(command.Substring(command.Length-2));
 
 			double bpmValue = 0.0;
