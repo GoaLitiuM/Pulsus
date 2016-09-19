@@ -1,7 +1,7 @@
-﻿using SDL2;
-using Pulsus.Input;
+﻿using System;
 using Pulsus.Gameplay;
-using System;
+using Pulsus.Input;
+using SDL2;
 
 namespace Pulsus
 {
@@ -14,7 +14,7 @@ namespace Pulsus
 		BGM bgmPlayer;
 		BMSJudge judge;
 		Player player;
-		BackgroundLoader loader;
+		Loader loader;
 
 		public GameplayScene(Game game, string inputPath) : base(game)
 		{
@@ -35,7 +35,7 @@ namespace Pulsus
 
 			bgmPlayer = new BGM(chart, audio);
 			player = new Player(chart, audio, judge, skin);
-			loader = new BackgroundLoader(chart);
+			loader = new Loader(chart, audio);
 
 			// add players to graph
 			playerGraph = new EventPlayerGraph();
@@ -76,11 +76,9 @@ namespace Pulsus
 
 			// load sound and bga objects
 
-			loader.skipBGA = settings.gameplay.disableBGA;
-
 			System.Diagnostics.Stopwatch loadTimer = System.Diagnostics.Stopwatch.StartNew();
 			if (settings.songPreload)
-				loader.PreloadAll();
+				loader.PreloadAll(true, !settings.gameplay.disableBGA);
 			else
 			{
 				// preload all BGA objects

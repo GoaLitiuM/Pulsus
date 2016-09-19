@@ -1,29 +1,28 @@
-﻿using Pulsus.Audio;
-using System.IO;
-using System;
+﻿using System;
+using Pulsus.Audio;
 
 namespace Pulsus.Gameplay
 {
 	public class SoundObject
 	{
 		public string name { get; }
-		public SoundFile sound { get; private set; }
+		public SoundFile soundFile { get; private set; }
 		public double sliceStart { get; private set; }
 		public double sliceEnd { get; private set; }
 		public int polyphony { get; }
 
-		public bool loaded { get { return sound != null ? sound.data != null : false; } }
+		public bool loaded { get { return soundFile != null ? soundFile.data != null : false; } }
 
 		public SoundObject(SoundFile soundFile, int polyphony, string name = "")
 		{
-			sound = soundFile;
+			this.soundFile = soundFile;
 			this.polyphony = polyphony;
 			this.name = name;
 		}
 
 		public SoundObject(SoundFile soundFile, int polyphony, double sliceStart, double sliceEnd, string name = "")
 		{
-			sound = soundFile;
+			this.soundFile = soundFile;
 			this.polyphony = polyphony;
 			this.sliceStart = sliceStart;
 			this.sliceEnd = sliceEnd;
@@ -38,32 +37,12 @@ namespace Pulsus.Gameplay
 			sampleStart *= audio.bytesPerSample;
 			sampleEnd *= audio.bytesPerSample;
 
-			if (sampleEnd > sound.data.data.Length)
+			if (sampleEnd > soundFile.data.data.Length)
 				sampleEnd = 0;
-			if (sampleStart > sound.data.data.Length)
+			if (sampleStart > soundFile.data.data.Length)
 				sampleStart = 0;
 
-			return SoundInstance.CreateSlice(sound.data, sampleStart, sampleEnd, volume);
-		}
-
-		public bool Load(string basePath = "")
-		{
-			try
-			{
-				if (!sound.Load())
-				{
-					Log.Warning("Sound file not found: " + Path.GetFileName(sound.path));
-					return false;
-				}
-			}
-			catch (ApplicationException e)
-			{
-				Log.Error("Failed to load sound '" + Path.GetFileName(sound.path) + "': " + e.Message);
-				sound = null;
-				return false;
-			}
-
-			return true;
+			return SoundInstance.CreateSlice(soundFile.data, sampleStart, sampleEnd, volume);
 		}
 	}
 }

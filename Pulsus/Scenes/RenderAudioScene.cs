@@ -1,7 +1,7 @@
 ﻿using System;
-using Pulsus.Gameplay;
 using System.IO;
 using Pulsus.FFmpeg;
+using Pulsus.Gameplay;
 
 namespace Pulsus
 {
@@ -26,15 +26,8 @@ namespace Pulsus
 				outputPath += ".wav";
 
 			// preload all audio
-			foreach (Event @event in chart.eventList)
-			{
-				SoundEvent soundEvent = @event as SoundEvent;
-				if (soundEvent == null)
-					continue;
-
-				if (!soundEvent.sound.loaded)
-					soundEvent.sound.Load();
-			}		
+			Loader loader = new Loader(chart, audio);
+			loader.PreloadAll(true, false);
 
 			songPlayer = new BGM(chart, audio);
 			autoplay = new Player(chart, audio, null, null);
@@ -57,7 +50,7 @@ namespace Pulsus
 			if (audioData.Length > 0)
 			{
 				FFmpegHelper.SaveSound(outputPath,
-					audioData, audioData.Length/4, audio.audioSpec.freq);
+					audioData, audioData.Length / 4, audio.audioSpec.freq);
 			}
 		}
 

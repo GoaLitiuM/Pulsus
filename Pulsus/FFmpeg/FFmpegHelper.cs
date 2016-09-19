@@ -1,10 +1,9 @@
-﻿using FFmpeg.AutoGen;
-using Pulsus.Audio;
-using SDL2;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Runtime.InteropServices;
-using System;
+using FFmpeg.AutoGen;
+using SDL2;
 
 namespace Pulsus.FFmpeg
 {
@@ -108,15 +107,43 @@ namespace Pulsus.FFmpeg
 			return bytes.ToArray();
 		}
 
-		public static SoundData SoundFromFile(string path)
+		public static byte[] SoundFromFile(string path, out int sampleRate, out int channels, out ushort sampleFormatSDL)
 		{
-			return SoundFromFile(path, SoundData.targetFreq, SoundData.targetFormat);
+			using (FFmpegContext ffContext = FFmpegContext.Read(path))
+			{
+				ffContext.SelectStream(AVMediaType.AVMEDIA_TYPE_AUDIO);
+
+				sampleRate = ffContext.audioSampleRate;
+				channels = ffContext.audioChannels;
+
+				AVSampleFormat sampleFormat = ffContext.audioSampleFormat;
+				switch (sampleFormat)
+				{
+					case AVSampleFormat.AV_SAMPLE_FMT_S16:
+						sampleFormatSDL = SDL.AUDIO_S16;
+						break;
+					case AVSampleFormat.AV_SAMPLE_FMT_FLT:
+						sampleFormatSDL = SDL.AUDIO_F32;
+						break;
+					case AVSampleFormat.AV_SAMPLE_FMT_S32:
+						sampleFormatSDL = SDL.AUDIO_S32;
+						break;
+					default:
+						throw new ApplicationException("Could not map AVSampleFormat to SDL audio format: " + sampleFormat.ToString());
+				}
+
+				List<byte> bytes = new List<byte>(ffContext.audioBytesTotal);
+				while (ffContext.ReadNextFrame())
+					bytes.AddRange(ffContext.GetFrameData());
+
+				return bytes.ToArray();
+			}
 		}
 
-		public static SoundData SoundFromFile(string path, int targetSampleRate, ushort targetFormat)
+		public static byte[] SoundFromFileResample(string path, int sampleRate, int channels, ushort sampleFormatSDL)
 		{
 			AVSampleFormat targetFormat2;
-			switch (targetFormat)
+			switch (sampleFormatSDL)
 			{
 				case SDL.AUDIO_S16:
 					targetFormat2 = AVSampleFormat.AV_SAMPLE_FMT_S16;
@@ -127,31 +154,26 @@ namespace Pulsus.FFmpeg
 				case SDL.AUDIO_S32:
 					targetFormat2 = AVSampleFormat.AV_SAMPLE_FMT_S32;
 					break;
-				/*case SDL.AUDIO_U8:
-					targetFormat2 = AVSampleFormat.AV_SAMPLE_FMT_U8;
-					break;*/
 				default:
-					throw new ApplicationException("Could not map SDL audio format to AVSampleFormat: " + targetFormat.ToString());
+					throw new ApplicationException("Could not map SDL audio format to AVSampleFormat: " + sampleFormatSDL.ToString());
 			}
-			using (FFmpegContext ffContext = FFmpegContext.Read(new FileStream(path, FileMode.Open, FileAccess.Read), path))
+
+			using (FFmpegContext ffContext = FFmpegContext.Read(new FileStream(path, FileMode.Open, FileAccess.Read)))
 			{
 				ffContext.SelectStream(AVMediaType.AVMEDIA_TYPE_AUDIO);
-				int channels = ffContext.GetChannels();
-
-				if (channels != 2 && channels != 1)
-					throw new ApplicationException("Invalid channel count: " + channels.ToString());
 
 				// setup resamplers and other format converters if needed
-				ffContext.ConvertToFormat(targetFormat2, targetSampleRate, 2);
+				ffContext.ConvertToFormat(targetFormat2, sampleRate, channels);
 
 				// read data
-				List<byte> bytes = new List<byte>(ffContext.GetTotalSampleCount() + 1024);
+				int allocated = ffContext.audioBytesTotal;
+				List<byte> bytes = new List<byte>(allocated);
 				while (ffContext.ReadNextFrame())
 					bytes.AddRange(ffContext.GetFrameData());
 
-				int realCount = bytes.Count / (ffContext.GetBytesPerSample() * channels);
-				SoundData sound = new SoundData(bytes.ToArray(), realCount, ffContext.GetSampleRate(), channels);
-				return sound;
+				int overshoot = allocated - bytes.Count;
+
+				return bytes.ToArray();
 			}
 		}
 

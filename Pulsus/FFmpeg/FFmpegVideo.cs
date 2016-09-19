@@ -1,8 +1,8 @@
-﻿using FFmpeg.AutoGen;
+﻿using System;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Threading;
-using System;
+using FFmpeg.AutoGen;
 
 namespace Pulsus.FFmpeg
 {
@@ -65,15 +65,15 @@ namespace Pulsus.FFmpeg
 			if (!stream.CanRead)
 				throw new ApplicationException("Unable to read stream");
 
-			ffContext = FFmpegContext.Read(stream, path);
+			ffContext = FFmpegContext.Read(stream);
 			ffContext.FindStreamInfo();
 
 			ffContext.SelectStream(AVMediaType.AVMEDIA_TYPE_VIDEO);
 
-			width = ffContext.GetWidth();
-			height = ffContext.GetHeight();
-			frametime = ffContext.GetFrametime();
-			length = ffContext.GetLength();
+			width = ffContext.imageWidth;
+			height = ffContext.imageHeight;
+			frametime = ffContext.videoFrametime;
+			length = ffContext.videoDuration;
 
 			if (width * height <= 0)
 				throw new ApplicationException("Invalid video size: " + width.ToString() + "x" + height.ToString());

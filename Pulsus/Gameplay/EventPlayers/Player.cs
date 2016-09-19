@@ -63,7 +63,7 @@ namespace Pulsus.Gameplay
 		{
 			ReleaseKey(lane, null);
 		}
-		
+
 		private void PressKey(int lane, SoundObject value, NoteEvent pressNote = null)
 		{
 			if (seeking)
@@ -123,11 +123,11 @@ namespace Pulsus.Gameplay
 			}
 
 			SoundObject soundObject = value;
-			if (soundObject != null && soundObject.sound != null)
+			if (soundObject != null && soundObject.soundFile != null)
 			{
-				if (soundObject.sound.data != null)
+				if (soundObject.soundFile.data != null)
 				{
-					SoundData soundData = soundObject.sound.data;
+					SoundData soundData = soundObject.soundFile.data;
 					SoundInstance instance = soundObject.CreateInstance(audioEngine, (float)chart.volume);
 					if (realtime)
 						audioEngine.Play(instance, soundObject.polyphony);

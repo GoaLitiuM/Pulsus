@@ -1,14 +1,18 @@
 ﻿using System.Collections.Generic;
+using System.IO;
 using System.Threading;
+using Pulsus.Audio;
 
 namespace Pulsus.Gameplay
 {
-	public class BackgroundLoader : EventPlayer
+	public class Loader : EventPlayer
 	{
-		const double preloadAheadTime = 20.0;
+		const double preloadAheadTime = 1.0;
 
 		public bool skipSound = false;
 		public bool skipBGA = false;
+
+		AudioEngine audio;
 
 		Queue<SoundObject> soundQueue = new Queue<SoundObject>();
 		Queue<BGAObject> bgaQueue = new Queue<BGAObject>();
@@ -21,9 +25,25 @@ namespace Pulsus.Gameplay
 		Thread loadThread;
 		System.Diagnostics.Stopwatch loadTimer;
 
-		public BackgroundLoader(Chart chart)
+		// alternate paths where to look up missing files
+		static string[] lookupPaths =
+		{
+			"",			// current directory
+			"..\\",		// previous directory (compatibility fix for bms files in sub-folders)
+		};
+
+		static string[] lookupAudioExtensions =
+		{
+			".wav",
+			".ogg",
+			".m4a",
+		};
+
+		public Loader(Chart chart, AudioEngine audio)
 			: base(chart)
 		{
+			this.audio = audio;
+
 			loadThread = new Thread(new ThreadStart(LoadThread));
 			loadThread.Name = "BackgroundLoaderThread";
 			loadThread.IsBackground = true;
@@ -42,12 +62,12 @@ namespace Pulsus.Gameplay
 			bgaUniques.Clear();
 		}
 
-		public void Preload(double preloadAheadTime = BackgroundLoader.preloadAheadTime)
+		public void Preload(double preloadAheadTime = Loader.preloadAheadTime)
 		{
 			Preload(!skipSound, !skipBGA, preloadAheadTime);
 		}
 
-		public void Preload(bool preloadSound, bool preloadBga, double preloadAheadTime = BackgroundLoader.preloadAheadTime)
+		public void Preload(bool preloadSound, bool preloadBga, double preloadAheadTime = Loader.preloadAheadTime)
 		{
 			if (preloadSound && preloadBga)
 				Log.Info("Preloading objects " + preloadAheadTime.ToString() + "s ahead");
@@ -57,9 +77,9 @@ namespace Pulsus.Gameplay
 				Log.Info("Preloading BGA objects " + preloadAheadTime.ToString() + "s ahead");
 
 			double oldStartTime = startTime;
-			
+
 			Seek(0.0);
-			Seek(oldStartTime+preloadAheadTime);
+			Seek(oldStartTime + preloadAheadTime);
 
 			StartPreload(preloadSound, preloadBga);
 
@@ -106,17 +126,11 @@ namespace Pulsus.Gameplay
 			int bgaCount = bgaQueue.Count;
 
 			while (soundQueue.Count > 0)
-			{
-				SoundObject value = soundQueue.Dequeue();
-				value.Load();
-			}
+				LoadSound(soundQueue.Dequeue());
 
 			while (bgaQueue.Count > 0)
-			{
-				BGAObject value = bgaQueue.Dequeue();
-				value.Load(basePath);
-			}
-			
+				bgaQueue.Dequeue().Load(basePath);
+
 			Log.Info("Preloaded  {0} sound objects, {1} BGA objects", soundCount, bgaCount);
 
 			skipSound = oldSkipSound;
@@ -129,18 +143,6 @@ namespace Pulsus.Gameplay
 
 			loadTimer = System.Diagnostics.Stopwatch.StartNew();
 			loadThread.Start();
-		}
-
-		public override void OnPlayerStop()
-		{
-			lock (soundQueue)
-			{
-				lock (bgaQueue)
-				{
-					if (soundQueue.Count == 0 && bgaQueue.Count == 0)
-						loadThread.Abort();
-				}
-			}
 		}
 
 		public override void OnSoundObject(SoundEvent soundEvent)
@@ -173,6 +175,19 @@ namespace Pulsus.Gameplay
 			bgaUniques.Add(bgaEvent.bga);
 			lock (bgaQueue)
 				bgaQueue.Enqueue(bgaEvent.bga);
+		}
+
+		private void LoadSound(SoundObject soundObject)
+		{
+			string path = Path.Combine(basePath, soundObject.soundFile.path);
+			path = Utility.FindRealFile(path, lookupPaths, lookupAudioExtensions);
+			if (File.Exists(path))
+			{
+				SoundData data = audio.LoadFromFile(path);
+				soundObject.soundFile.SetData(data);
+			}
+			else
+				Log.Error("Sound file not found: " + soundObject.soundFile.path);
 		}
 
 		private void LoadThread()
@@ -208,7 +223,7 @@ namespace Pulsus.Gameplay
 					}
 
 					if (sound != null && !sound.loaded)
-						sound.Load(basePath);
+						LoadSound(sound);
 					else if (bga != null && !bga.loaded)
 						bga.Load(basePath);
 					else if (!playing && soundQueue.Count == 0 && bgaQueue.Count == 0)

@@ -32,11 +32,11 @@ namespace Pulsus.Gameplay
 				return;
 
 			SoundObject soundObject = soundEvent.sound;
-			if (soundObject != null && soundObject.sound != null)
+			if (soundObject != null && soundObject.soundFile != null)
 			{
-				if (soundObject.sound.data != null)
+				if (soundObject.soundFile.data != null)
 				{
-					SoundData soundData = soundObject.sound.data;
+					SoundData soundData = soundObject.soundFile.data;
 					SoundInstance instance = soundObject.CreateInstance(audioEngine, (float)chart.volume);
 					if (realtime)
 						audioEngine.Play(instance, soundObject.polyphony);

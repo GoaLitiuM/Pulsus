@@ -12,12 +12,12 @@ namespace Pulsus.Audio
 		{
 			public SoundInstance instance;
 
-			public bool paused;		// playback pause
-			public bool remove;		// should be removed from the sound pool
+			public bool paused;     // playback pause
+			public bool remove;     // should be removed from the sound pool
 
-			public uint position;		// position in sound sample
-			public uint offsetStart;	// starting offset in sound buffer
-			public uint offsetStop;		// stopping offset in sound buffer
+			public uint position;       // position in sound sample
+			public uint offsetStart;    // starting offset in sound buffer
+			public uint offsetStop;     // stopping offset in sound buffer
 
 			public SoundData sound { get { return instance.sound; } }
 			public float volume { get { return instance.volume; } }
@@ -38,7 +38,8 @@ namespace Pulsus.Audio
 		SDL.SDL_AudioCallback audioCallback;
 		uint outputDevice;
 
-		readonly List<SoundInstanceInternal> audibleSounds = new List<SoundInstanceInternal>(256);
+		List<SoundInstanceInternal> audibleSounds = new List<SoundInstanceInternal>(256);
+		Dictionary<SoundData, int> dataInstanceCount = new Dictionary<SoundData, int>(100);
 		public uint bytesPerSample { get; }
 		byte[] emptyBuffer;
 		byte[] audioBuffer;
@@ -119,9 +120,6 @@ namespace Pulsus.Audio
 
 			emptyBuffer = new byte[audioSpec.size];
 			audioBuffer = new byte[audioSpec.size];
-			//Sound.audioEngine = this;
-			SoundData.targetFormat = audioSpec.format;
-			SoundData.targetFreq = audioSpec.freq;
 
 			lastCallback = 0.0;
 			bufferTimer = Stopwatch.StartNew();
@@ -147,10 +145,10 @@ namespace Pulsus.Audio
 			for (int i = 0; i < audibleSounds.Count; ++i)
 			{
 				SoundInstanceInternal instance = audibleSounds[i];
-				if (streamLength < instance.offsetStart+instance.endPosition)
-					streamLength = instance.offsetStart+instance.endPosition;
+				if (streamLength < instance.offsetStart + instance.endPosition)
+					streamLength = instance.offsetStart + instance.endPosition;
 			}
-			
+
 			if (streamLength == 0)
 				return null;
 
@@ -160,7 +158,7 @@ namespace Pulsus.Audio
 			for (int i = 0; i < audibleSounds.Count; ++i)
 			{
 				SoundInstanceInternal instance = audibleSounds[i];
-				
+
 				int playLength = (int)(instance.offsetStop - instance.offsetStart);
 				if (playLength > instance.endPosition)
 					playLength = (int)instance.endPosition;
@@ -173,7 +171,7 @@ namespace Pulsus.Audio
 				byte finalVolume = (byte)Math.Round(Math.Min(volume * instance.volume * SDL.SDL_MIX_MAXVOLUME, SDL.SDL_MIX_MAXVOLUME));
 				SDL_MixAudioFormat(streamOffset, instance.sound.data, audioSpec.format, (uint)playLength, finalVolume);
 			}
-			
+
 			stream.Free();
 			audibleSounds.Clear();
 
@@ -215,7 +213,7 @@ namespace Pulsus.Audio
 				if (instance.remove)
 				{
 					audibleSounds.RemoveAt(i);
-					instance.sound.instances--;
+					dataInstanceCount[instance.sound] = dataInstanceCount[instance.sound] - 1;
 					i--;
 				}
 			}
@@ -234,7 +232,7 @@ namespace Pulsus.Audio
 				if (instance.paused)
 				{
 					if (startOffset <= pauseOffset)
-						copyLength = Math.Min(pauseOffset-startOffset, copyLength);
+						copyLength = Math.Min(pauseOffset - startOffset, copyLength);
 					else
 						copyLength = 0;
 					instance.offsetStop = 0;
@@ -248,7 +246,7 @@ namespace Pulsus.Audio
 			}
 			else
 				instance.offsetStart -= (uint)length;
-			
+
 			if (instance.position >= instance.endPosition)
 				instance.remove = true;
 		}
@@ -258,6 +256,12 @@ namespace Pulsus.Audio
 			double percentage = (bufferTimer.Elapsed.TotalSeconds - lastCallback) / ((double)audioSpec.samples / audioSpec.freq);
 			uint offset = (uint)(percentage * audioSpec.samples) * bytesPerSample;
 			return offset;
+		}
+
+		public SoundData LoadFromFile(string path)
+		{
+			return new SoundData(FFmpeg.FFmpegHelper.SoundFromFileResample(path,
+				audioSpec.freq, audioSpec.channels, audioSpec.format));
 		}
 
 		public void Play(SoundInstance soundInstance, int polyphony)
@@ -282,10 +286,10 @@ namespace Pulsus.Audio
 			lock (audibleSounds)
 			{
 				audibleSounds.Add(instance);
-				instance.sound.instances++;
+				dataInstanceCount[instance.sound] = dataInstanceCount[instance.sound] + 1;
 			}
 		}
-		
+
 		public SoundInstance PlayLooped(SoundData sound, float volume = 1.0f)
 		{
 			throw new NotImplementedException();
@@ -300,6 +304,9 @@ namespace Pulsus.Audio
 		{
 			SoundInstanceInternal instance = new SoundInstanceInternal(soundInstance);
 
+			if (!dataInstanceCount.ContainsKey(instance.sound))
+				dataInstanceCount.Add(instance.sound, 0);
+
 			lock (audibleSounds)
 				instance.offsetStart = GetBufferOffset();
 			instance.position = soundInstance.startPosition;
@@ -309,7 +316,7 @@ namespace Pulsus.Audio
 			lock (audibleSounds)
 			{
 				audibleSounds.Add(instance);
-				instance.sound.instances++;
+				dataInstanceCount[instance.sound] = dataInstanceCount[instance.sound] + 1;
 			}
 		}
 
@@ -319,10 +326,10 @@ namespace Pulsus.Audio
 				return;
 
 			SoundData sound = instance.sound;
-			if (sound.instances < polyphony)
+			if (dataInstanceCount[sound] < polyphony)
 				return;
 
-			int removeCount = sound.instances - polyphony + 1;
+			int removeCount = dataInstanceCount[sound] - polyphony + 1;
 			lock (audibleSounds)
 			{
 				for (int i = 0; i < audibleSounds.Count; ++i)
@@ -340,7 +347,7 @@ namespace Pulsus.Audio
 					{
 						continue;
 					}
-					
+
 					// mark instance for later removal
 					audibleInstance.paused = true;
 					audibleInstance.remove = true;
@@ -402,7 +409,7 @@ namespace Pulsus.Audio
 		Alsa,
 		Dsp, // OSS
 		Esd,
-		
+
 		// OS X
 		CoreAudio,
 	}
