@@ -1,12 +1,12 @@
-﻿using Pulsus.Audio;
+﻿using System;
+using System.Diagnostics;
+using System.IO;
+using Pulsus.Audio;
 using Pulsus.FFmpeg;
 using Pulsus.Gameplay;
 using Pulsus.Graphics;
 using Pulsus.Input;
 using SDL2;
-using System.Diagnostics;
-using System.IO;
-using System;
 
 namespace Pulsus
 {
@@ -31,6 +31,7 @@ namespace Pulsus
 		{
 			Log.Info("Initializing FFmpeg...");
 			FFmpegHelper.Init();
+
 
 			SDL.SDL_version sdlVersion;
 			SDL.SDL_VERSION(out sdlVersion);
@@ -82,8 +83,8 @@ namespace Pulsus
 			}
 
 			Log.Info("Initializing Game window...");
-			string windowTitle = string.Format("{0} {1} ({2}-bit)", Program.name, Program.versionDisplay, (IntPtr.Size*8).ToString());
-			window = new GameWindow(windowTitle, windowWidth, windowHeight, settings.video.mode);		
+			string windowTitle = string.Format("{0} {1} ({2}-bit)", Program.name, Program.versionDisplay, (IntPtr.Size * 8).ToString());
+			window = new GameWindow(windowTitle, windowWidth, windowHeight, settings.video.mode);
 
 			Log.Info("Initializing Renderer...");
 			renderer = new Renderer(window, width, height, rendererFlags, settings.video.renderer);
@@ -96,7 +97,7 @@ namespace Pulsus
 
 			Log.Info("Initializing Input...");
 			inputManager = new InputManager();
-			
+
 			Log.Info("Loading debug font...");
 			debugFont = new Font(debugFontPath, 24, FontStyle.Normal, true);
 
@@ -107,7 +108,7 @@ namespace Pulsus
 			else if (settings.outputMode == OutputMode.DumpTimestamps)
 				sceneManager.Push(new DumpTimestampsScene(this, settings.playPath, settings.outputPath));
 			else if (settings.playPath != null)
-				sceneManager.Push(new GameplayScene(this, new Song(settings.playPath)));
+				sceneManager.Push(new GameplayScene(this, settings.playPath));
 			else
 				sceneManager.Push(new FileSelectScene(this));
 		}
@@ -225,7 +226,7 @@ namespace Pulsus
 				debugFrametimeAccum = debugFrametimes = 0;
 				debugTickrate = updateTicks / debugUpdateInterval;
 				updateTicks = 0;
-			}	
+			}
 
 			sceneManager.Draw(deltaTime);
 
@@ -235,7 +236,7 @@ namespace Pulsus
 				new Int2(0, 0), Color.White);
 			renderer.spriteRenderer.End();
 
-			renderer.Present();	
+			renderer.Present();
 		}
 	}
 }
