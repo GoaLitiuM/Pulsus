@@ -51,7 +51,7 @@ namespace Pulsus
 				// adapted from SDL_Delay
 
 				const int EINTR = 4;
-	
+
 				ulong freq = SDL.SDL_GetPerformanceFrequency();
 				ulong last = SDL.SDL_GetPerformanceCounter();
 				ulong now, elapsed;
@@ -61,14 +61,14 @@ namespace Pulsus
 				do
 				{
 					now = SDL.SDL_GetPerformanceCounter();
-					elapsed = (((now - last)*1000000) / (freq));
+					elapsed = (((now - last) * 1000000) / (freq));
 					last = now;
 
 					if (elapsed >= usec)
 						break;
 
 					usec -= elapsed;
-					
+
 					tv.tv_sec = new IntPtr((int)(usec / 1000000));
 					tv.tv_usec = new IntPtr((int)(usec % 1000000));
 
@@ -117,9 +117,6 @@ namespace Pulsus
 			{
 				try
 				{
-					string distribution = "";
-					string version = "";
-
 					Process process = new Process();
 					process.StartInfo.UseShellExecute = false;
 					process.StartInfo.RedirectStandardOutput = true;
@@ -128,36 +125,44 @@ namespace Pulsus
 					{
 						process.StartInfo.FileName = "lsb_release";
 						process.StartInfo.Arguments = "-i -r";
-						process.OutputDataReceived += (sender, e) =>
-						{
-							if (e.Data.Contains("Distributor ID:"))
-								distribution += e.Data.Replace("Distributor ID:", "").Trim();
-							else if (e.Data.Contains("Release:"))
-								version += e.Data.Replace("Release:", "").Trim();
-						};
 					}
 					else if (platform == PlatformID.MacOSX)
-					{
 						process.StartInfo.FileName = "sw_vers";
-						process.OutputDataReceived += (sender, e) =>
+
+					if (process.Start())
+					{
+						process.WaitForExit();
+
+						string distribution = "";
+						string version = "";
+						string line;
+						while ((line = process.StandardOutput.ReadLine()) != null)
 						{
-							if (e.Data.Contains("ProductName:"))
-								distribution += e.Data.Replace("ProductName:", "").Trim();
-							else if (e.Data.Contains("ProductVersion:"))
-								version += e.Data.Replace("ProductVersion:", "").Trim();
-						};
+							if (platform == PlatformID.Unix)
+							{
+								if (line.Contains("Distributor ID:"))
+									distribution += line.Replace("Distributor ID:", "").Trim();
+								else if (line.Contains("Release:"))
+									version += line.Replace("Release:", "").Trim();
+							}
+							else if (platform == PlatformID.MacOSX)
+							{
+								if (line.Contains("ProductName:"))
+									distribution += line.Replace("ProductName:", "").Trim();
+								else if (line.Contains("ProductVersion:"))
+									version += line.Replace("ProductVersion:", "").Trim();
+							}
+						}
+
+						return distribution + " " + version;
 					}
-
-					process.Start();
-					process.BeginOutputReadLine();
-					process.WaitForExit();
-
-					return distribution + " " + version;
 				}
 				catch
 				{
-					return Environment.OSVersion.VersionString;
 				}
+
+				Console.WriteLine("Failed to determine PlatformVersion for Unix system");
+				return Environment.OSVersion.VersionString;
 			}
 			else if (platform == PlatformID.Win32NT)
 			{
@@ -204,7 +209,7 @@ namespace Pulsus
 
 		[DllImport("ntdll.dll")]
 		static extern int NtSetTimerResolution(int DesiredResolution, bool SetResolution, out int CurrentResolution);
-		
+
 		[DllImport("kernel32.dll", CharSet = CharSet.Auto)]
 		static extern IntPtr CreateWaitableTimer(IntPtr lpTimerAttributes, bool bManualReset, string lpTimerName);
 
@@ -225,7 +230,7 @@ namespace Pulsus
 		static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
 
 		// Unix
-		
+
 		[StructLayout(LayoutKind.Sequential)]
 		struct timeval
 		{
