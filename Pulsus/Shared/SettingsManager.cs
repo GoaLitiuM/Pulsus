@@ -91,6 +91,12 @@ namespace Pulsus
 			// ensure all the directory paths ends with directory separator character
 			for (int i = 0; i < settings.songPaths.Count; i++)
 			{
+				if (string.IsNullOrWhiteSpace(settings.songPaths[i]))
+				{
+					settings.songPaths.RemoveAt(i--);
+					continue;
+				}
+
 				char lastChar = settings.songPaths[i][settings.songPaths[i].Length-1];
 				if (lastChar != Path.DirectorySeparatorChar && lastChar != Path.AltDirectorySeparatorChar)
 					settings.songPaths[i] += Path.DirectorySeparatorChar;
