@@ -10,6 +10,7 @@ namespace Pulsus
 		static PlatformID platform;
 
 		static int ntCurrentResolution = 0;
+		static int cpuCount = 0;
 
 		static IntPtr timer = IntPtr.Zero;
 		static timeval tv;
@@ -29,6 +30,8 @@ namespace Pulsus
 			{
 				tv = new timeval();
 			}
+
+			GetProcessorCount();
 		}
 
 		/// <summary> Suspends the current thread, time units in 1µs (or 0.001ms) </summary>
@@ -205,6 +208,91 @@ namespace Pulsus
 			}
 		}
 
+		public static int GetProcessorThreadCount()
+		{
+			return Environment.ProcessorCount;
+		}
+
+		/// <summary> Returns number of physical CPUs or CPU cores in the system. </summary>
+		public static int GetProcessorCount()
+		{
+			if (cpuCount == 0)
+			{
+				if (platform == PlatformID.Win32NT)
+				{
+					// size of SYSTEM_LOGICAL_PROCESSOR_INFORMATION structure
+					int structureSize = (IntPtr.Size == 4) ? 24 : 32;
+
+					IntPtr buffer = IntPtr.Zero;
+					int lengthBytes = 0;
+
+					GetLogicalProcessorInformation(buffer, ref lengthBytes);
+
+					buffer = Marshal.AllocHGlobal(lengthBytes);
+
+					if (GetLogicalProcessorInformation(buffer, ref lengthBytes))
+					{
+						unsafe
+						{
+							IntPtr offset = buffer;
+							void* bufferEnd = new IntPtr(buffer.ToInt64() + lengthBytes).ToPointer();
+							while (offset.ToPointer() < bufferEnd)
+							{
+								int relationship = *(int*)(offset + IntPtr.Size).ToPointer();
+								if (relationship == 0) // RelationProcessorCore
+									cpuCount++;
+
+								offset += structureSize;
+							}
+						}
+					}
+
+					Marshal.FreeHGlobal(buffer);
+				}
+				else if (platform == PlatformID.Unix)
+				{
+					string coresFindStr = "cpu cores       : ";
+					using (var stream = new System.IO.StreamReader("/proc/cpuinfo"))
+					{
+						string line;
+						while ((line = stream.ReadLine()) != null)
+						{
+							if (line.StartsWithFast(coresFindStr))
+							{
+								line = line.Replace(coresFindStr, "");
+
+								int parsedCores = 0;
+								if (int.TryParse(line, out parsedCores))
+								{
+									if (parsedCores > cpuCount)
+										cpuCount = parsedCores;
+								}
+							}
+						}
+					}
+				}
+				else if (platform == PlatformID.MacOSX)
+				{
+					IntPtr value = Marshal.AllocHGlobal(sizeof(int));
+					IntPtr length = new IntPtr(sizeof(int));
+					if (sysctlbyname("hw.physicalcpu", ref value, ref length,
+						IntPtr.Zero, IntPtr.Zero) == 0)
+					{
+						cpuCount = Marshal.PtrToStructure<int>(value);
+					}
+
+					Marshal.FreeHGlobal(value);
+				}
+
+				if (cpuCount == 0)
+				{
+					Log.Error("Failed to retrieve number of physical CPU cores");
+					cpuCount = 1;
+				}
+			}
+			return cpuCount;
+		}
+
 		// Windows
 
 		[DllImport("ntdll.dll")]
@@ -227,7 +315,12 @@ namespace Pulsus
 		static extern IntPtr GetConsoleWindow();
 
 		[DllImport("user32.dll")]
+		[return: MarshalAs(UnmanagedType.Bool)]
 		static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
+
+		[DllImport("kernel32.dll")]
+		[return: MarshalAs(UnmanagedType.Bool)]
+		static extern bool GetLogicalProcessorInformation(IntPtr buffer, ref int returnLength);
 
 		// Unix
 
@@ -240,5 +333,10 @@ namespace Pulsus
 
 		[DllImport("libc", SetLastError = true)]
 		static extern int select(int nfds, IntPtr readFds, IntPtr writeFds, IntPtr exceptFds, ref timeval timeout);
+
+		// OS X
+
+		[DllImport("libc", CallingConvention = CallingConvention.Cdecl)]
+		static extern int sysctlbyname([MarshalAs(UnmanagedType.LPStr)]string sname, ref IntPtr oldp, ref IntPtr oldlenp, IntPtr newp, IntPtr newlen);
 	}
 }
