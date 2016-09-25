@@ -271,6 +271,9 @@ namespace Pulsus.Audio
 
 		public void PlayScheduled(double position, SoundInstance soundInstance, int polyphony)
 		{
+			if (soundInstance.sound.data.Length == 0)
+				return;
+
 			SoundInstanceInternal instance = new SoundInstanceInternal(soundInstance);
 
 			double bufferPosition = (position - lastCallback) * ((double)audioSpec.freq);
@@ -302,6 +305,9 @@ namespace Pulsus.Audio
 
 		private void AddInstance(SoundInstance soundInstance, int polyphony)
 		{
+			if (soundInstance.sound.data.Length == 0)
+				return;
+
 			SoundInstanceInternal instance = new SoundInstanceInternal(soundInstance);
 
 			if (!dataInstanceCount.ContainsKey(instance.sound))
