@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.IO;
 using System.Threading;
 using Pulsus.Audio;
@@ -14,15 +16,15 @@ namespace Pulsus.Gameplay
 
 		AudioEngine audio;
 
-		Queue<SoundObject> soundQueue = new Queue<SoundObject>();
-		Queue<BGAObject> bgaQueue = new Queue<BGAObject>();
+		ConcurrentQueue<SoundObject> soundQueue = new ConcurrentQueue<SoundObject>();
+		ConcurrentQueue<BGAObject> bgaQueue = new ConcurrentQueue<BGAObject>();
 
 		HashSet<SoundObject> soundUniques = new HashSet<SoundObject>();
 		HashSet<BGAObject> bgaUniques = new HashSet<BGAObject>();
 
 		string basePath;
 
-		Thread loadThread;
+		Thread[] loadThreads;
 		System.Diagnostics.Stopwatch loadTimer;
 
 		// alternate paths where to look up missing files
@@ -44,20 +46,20 @@ namespace Pulsus.Gameplay
 		{
 			this.audio = audio;
 
-			loadThread = new Thread(new ThreadStart(LoadThread));
-			loadThread.Name = "BackgroundLoaderThread";
-			loadThread.IsBackground = true;
+			int threads = Utility.GetProcessorThreadCount();
+			loadThreads = new Thread[threads];
 
 			basePath = chart.basePath;
+
+			loadTimer = new System.Diagnostics.Stopwatch();
 		}
 
 		public override void Dispose()
 		{
-			if (loadThread.IsAlive)
-				loadThread.Abort();
+			for (int i = 0; i < loadThreads.Length; i++)
+				if (loadThreads[i].IsAlive)
+					loadThreads[i].Abort();
 
-			soundQueue.Clear();
-			bgaQueue.Clear();
 			soundUniques.Clear();
 			bgaUniques.Clear();
 		}
@@ -136,11 +138,18 @@ namespace Pulsus.Gameplay
 			int soundCount = soundQueue.Count;
 			int bgaCount = bgaQueue.Count;
 
-			while (soundQueue.Count > 0)
-				LoadSound(soundQueue.Dequeue());
+			for (int i = 0; i < loadThreads.Length; i++)
+			{
+				loadThreads[i] = new Thread(new ThreadStart(LoadThread));
+				loadThreads[i].Name = "LoaderThread";
+				loadThreads[i].IsBackground = true;
+			}
 
-			while (bgaQueue.Count > 0)
-				bgaQueue.Dequeue().Load(basePath);
+			for (int i = 0; i < loadThreads.Length; i++)
+				loadThreads[i].Start();
+
+			for (int i = 0; i < loadThreads.Length; i++)
+				loadThreads[i].Join();
 
 			Log.Info("Preloaded  {0} sound objects, {1} BGA objects", soundCount, bgaCount);
 
@@ -152,8 +161,27 @@ namespace Pulsus.Gameplay
 		{
 			SeekEnd();
 
-			loadTimer = System.Diagnostics.Stopwatch.StartNew();
-			loadThread.Start();
+			loadTimer.Start();
+
+			for (int i = 0; i < loadThreads.Length; i++)
+			{
+				loadThreads[i] = new Thread(new ThreadStart(LoadThread));
+				loadThreads[i].Name = "LoaderThread";
+				loadThreads[i].IsBackground = true;
+
+				loadThreads[i].Start();
+			}
+		}
+
+		public override void Update(double deltaTime)
+		{
+			base.Update(deltaTime);
+
+			if (loadTimer.IsRunning && soundQueue.IsEmpty && bgaQueue.IsEmpty)
+			{
+				loadTimer.Stop();
+				Log.Info("Background loading finished in " + loadTimer.Elapsed.TotalSeconds.ToString() + "s");
+			}
 		}
 
 		public override void OnSoundObject(SoundEvent soundEvent)
@@ -168,8 +196,7 @@ namespace Pulsus.Gameplay
 				return;
 
 			soundUniques.Add(soundEvent.sound);
-			lock (soundQueue)
-				soundQueue.Enqueue(soundEvent.sound);
+			soundQueue.Enqueue(soundEvent.sound);
 		}
 
 		public override void OnBGAObject(BGAEvent bgaEvent)
@@ -184,8 +211,7 @@ namespace Pulsus.Gameplay
 				return;
 
 			bgaUniques.Add(bgaEvent.bga);
-			lock (bgaQueue)
-				bgaQueue.Enqueue(bgaEvent.bga);
+			bgaQueue.Enqueue(bgaEvent.bga);
 		}
 
 		private void LoadSound(SoundObject soundObject)
@@ -194,8 +220,19 @@ namespace Pulsus.Gameplay
 			path = Utility.FindRealFile(path, lookupPaths, lookupAudioExtensions);
 			if (File.Exists(path))
 			{
-				SoundData data = audio.LoadFromFile(path);
-				soundObject.soundFile.SetData(data);
+				try
+				{
+					SoundData data = audio.LoadFromFile(path);
+					soundObject.soundFile.SetData(data);
+				}
+				catch (ThreadAbortException)
+				{
+				}
+				catch (Exception e)
+				{
+					Log.Error("Failed to load sound '" + Path.GetFileName(soundObject.soundFile.path) + "': " + e.Message);
+					soundObject.soundFile.SetData(new SoundData(new byte[0]));
+				}
 			}
 			else
 				Log.Error("Sound file not found: " + soundObject.soundFile.path);
@@ -210,28 +247,8 @@ namespace Pulsus.Gameplay
 					SoundObject sound = null;
 					BGAObject bga = null;
 
-					if (soundQueue.Count > 0 && Monitor.TryEnter(soundQueue))
-					{
-						try
-						{
-							sound = soundQueue.Dequeue();
-						}
-						finally
-						{
-							Monitor.Exit(soundQueue);
-						}
-					}
-					else if (bgaQueue.Count > 0 && Monitor.TryEnter(bgaQueue))
-					{
-						try
-						{
-							bga = bgaQueue.Dequeue();
-						}
-						finally
-						{
-							Monitor.Exit(bgaQueue);
-						}
-					}
+					if (!soundQueue.TryDequeue(out sound))
+						bgaQueue.TryDequeue(out bga);
 
 					if (sound != null && !sound.loaded)
 						LoadSound(sound);
@@ -240,9 +257,6 @@ namespace Pulsus.Gameplay
 					else if (!playing && soundQueue.Count == 0 && bgaQueue.Count == 0)
 						break;
 				}
-
-				loadTimer.Stop();
-				Log.Info("Background loading finished in " + loadTimer.Elapsed.TotalSeconds.ToString() + "s");
 			}
 			catch (ThreadAbortException)
 			{
