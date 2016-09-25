@@ -21,10 +21,15 @@ namespace Pulsus.FFmpeg
 			get
 			{
 				long duration = formatContext->streams[streamIndex]->duration;
-				if ((ulong)duration == ffmpeg.AV_NOPTS_VALUE)
-					return 0.0;
-
 				AVRational time_base = formatContext->streams[streamIndex]->time_base;
+
+				if ((ulong)duration == ffmpeg.AV_NOPTS_VALUE)
+				{
+					duration = formatContext->duration;
+					time_base = new AVRational() { num = 1, den = ffmpeg.AV_TIME_BASE };
+					if ((ulong)duration == ffmpeg.AV_NOPTS_VALUE)
+						return 0.0;
+				}
 				return (double)duration * time_base.num / time_base.den;
 			}
 		}
@@ -38,8 +43,7 @@ namespace Pulsus.FFmpeg
 			get
 			{
 				AVStream* stream = formatContext->streams[streamIndex];
-				double durationSeconds = (double)stream->duration * stream->time_base.num / stream->time_base.den;
-				double samples = durationSeconds * audioSampleRate * audioChannels;
+				long samples = stream->duration * stream->time_base.num * audioChannels * audioSampleRate / stream->time_base.den;
 				return (int)samples;
 			}
 		}
