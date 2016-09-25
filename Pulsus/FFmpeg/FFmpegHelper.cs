@@ -133,7 +133,7 @@ namespace Pulsus.FFmpeg
 				}
 
 				List<byte> bytes = new List<byte>(ffContext.audioBytesTotal);
-				while (ffContext.ReadNextFrame())
+				while (ffContext.ReadFrame())
 					bytes.AddRange(ffContext.GetFrameData());
 
 				return bytes.ToArray();
@@ -168,7 +168,7 @@ namespace Pulsus.FFmpeg
 				// read data
 				int allocated = ffContext.audioBytesTotal;
 				List<byte> bytes = new List<byte>(allocated);
-				while (ffContext.ReadNextFrame())
+				while (ffContext.ReadFrame())
 					bytes.AddRange(ffContext.GetFrameData());
 
 				int overshoot = allocated - bytes.Count;

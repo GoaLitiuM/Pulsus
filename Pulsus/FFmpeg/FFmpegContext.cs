@@ -69,11 +69,9 @@ namespace Pulsus.FFmpeg
 
 		Stream stream;
 		string path;
-		sbyte* readBuffer;
 		byte[] managedBuffer;
 
 		int decodedFrames;
-		int bufferedLength = 0;
 
 		// prevents garbage collector from collecting delegates
 		List<Delegate> delegateRefs = new List<Delegate>();
@@ -123,10 +121,26 @@ namespace Pulsus.FFmpeg
 		public void Dispose()
 		{
 			if (avioContext != null)
-				ffmpeg.avio_close(avioContext);
+			{
+				if (formatContext->oformat != null &&
+					(formatContext->oformat->flags & ffmpeg.AVFMT_NOFILE) == 0)
+				{
+					ffmpeg.avio_close(avioContext);
+				}
+
+				ffmpeg.av_free(avioContext->buffer);
+				avioContext->buffer = null;
+				ffmpeg.av_free(avioContext);
+			}
+
+			if (stream != null)
+				stream.Dispose();
 
 			if (codecContext != null)
+			{
 				ffmpeg.avcodec_close(codecContext);
+				ffmpeg.av_free(codecContext);
+			}
 
 			if (formatContext != null)
 			{
@@ -162,9 +176,6 @@ namespace Pulsus.FFmpeg
 				fixed (AVFrame** framePtr = &frame)
 					ffmpeg.av_frame_free(framePtr);
 
-			if (stream != null)
-				stream.Dispose();
-
 			delegateRefs.Clear();
 		}
 
@@ -183,8 +194,7 @@ namespace Pulsus.FFmpeg
 					byte[] array = new byte[buf_size];
 
 					int read = stream.Read(array, 0, buf_size);
-					for (int i = 0; i < read; i++)
-						Marshal.WriteByte(buf, i, array[i]);
+					Marshal.Copy(array, 0, buf, read);
 
 					return read;
 				};
@@ -206,13 +216,33 @@ namespace Pulsus.FFmpeg
 				delegateRefs.Add(seekStream);
 
 				// setup custom stream reader for ffmpeg to use with AVIO context
-				readBuffer = (sbyte*)ffmpeg.av_malloc(bufferSize + ffmpeg.FF_INPUT_BUFFER_PADDING_SIZE);
+				sbyte* readBuffer = (sbyte*)ffmpeg.av_malloc(bufferSize + ffmpeg.FF_INPUT_BUFFER_PADDING_SIZE);
 				avioContext = FFmpegHelper.avio_alloc_context(readBuffer, bufferSize, 0, null,
 					Marshal.GetFunctionPointerForDelegate(readStream), IntPtr.Zero,
 					Marshal.GetFunctionPointerForDelegate(seekStream));
 
 				formatContext->pb = avioContext;
 				formatContext->flags |= ffmpeg.AVFMT_FLAG_CUSTOM_IO;
+
+				fixed (AVFormatContext** ptr = &formatContext)
+				{
+					int err = 0;
+					AVInputFormat* inputFormat = null;
+					if ((err = ffmpeg.av_probe_input_buffer(formatContext->pb, &inputFormat, path, null, 0, 0)) != 0)
+						throw new FFmpegException(err);
+
+					if (path != null && (inputFormat->flags & ffmpeg.AVFMT_NOFILE) != 0)
+					{
+						// Input format (image2) doesn't support custom AVIOContext,
+						// forcefully clear the flag and hope it works.
+						inputFormat->flags &= ~ffmpeg.AVFMT_NOFILE;
+
+						//ffmpeg.avio_close(formatContext->pb);
+					}
+
+					if ((err = ffmpeg.avformat_open_input(ptr, path, inputFormat, null)) != 0)
+						throw new FFmpegException(err);
+				}
 			}
 			else
 			{
@@ -221,25 +251,6 @@ namespace Pulsus.FFmpeg
 						throw new ApplicationException("Failed to open input stream: " + path);
 			}
 
-			fixed (AVFormatContext** ptr = &formatContext)
-			{
-				int err = 0;
-				AVInputFormat* inputFormat = null;
-				if ((err = ffmpeg.av_probe_input_buffer(formatContext->pb, &inputFormat, path, null, 0, 0)) != 0)
-					throw new FFmpegException(err);
-
-				if (path != null && (inputFormat->flags & ffmpeg.AVFMT_NOFILE) != 0)
-				{
-					// Input format (image2) doesn't support custom AVIOContext,
-					// forcefully clear the flag and hope it works.
-					inputFormat->flags &= ~ffmpeg.AVFMT_NOFILE;
-
-					//ffmpeg.avio_close(formatContext->pb);
-				}
-
-				if ((err = ffmpeg.avformat_open_input(ptr, path, inputFormat, null)) != 0)
-					throw new FFmpegException(err);
-			}
 			frame = ffmpeg.av_frame_alloc();
 		}
 
@@ -359,7 +370,7 @@ namespace Pulsus.FFmpeg
 				throw new ApplicationException("Failed to allocate buffers for frame");
 		}
 
-		private bool ReadFrame()
+		public bool ReadFrame()
 		{
 			int decoded = 0;
 			AVPacket packet = new AVPacket();
@@ -384,21 +395,18 @@ namespace Pulsus.FFmpeg
 		private int DecodeFrame(AVPacket packet)
 		{
 			int gotFrame = 0;
-			int decodeLength = 0;
+			int decoded = 0;
 
 			// decode until full frame has been decoded
 			do
 			{
 				if (type == AVMediaType.AVMEDIA_TYPE_VIDEO)
-					decodeLength = ffmpeg.avcodec_decode_video2(codecContext, frame, &gotFrame, &packet);
+					decoded = ffmpeg.avcodec_decode_video2(codecContext, frame, &gotFrame, &packet);
 				else if (type == AVMediaType.AVMEDIA_TYPE_AUDIO)
-					decodeLength = ffmpeg.avcodec_decode_audio4(codecContext, frame, &gotFrame, &packet);
+					decoded = ffmpeg.avcodec_decode_audio4(codecContext, frame, &gotFrame, &packet);
 
-				if (decodeLength < 0)
-				{
-					System.Diagnostics.Debug.WriteLine("Failed to decode audio: " + FFmpegHelper.logLastLine);
-					break;
-				}
+				if (decoded < 0)
+					throw new FFmpegException(decoded);
 
 				if (gotFrame > 0)
 				{
@@ -425,16 +433,16 @@ namespace Pulsus.FFmpeg
 				}
 
 				// offset to next frame in packet
-				packet.size -= decodeLength;
-				packet.data += decodeLength;
+				packet.size -= decoded;
+				packet.data += decoded;
 
 			} while (packet.size > 0);
 
 			// some images cannot be decoded in a single pass
-			if (decodeLength > 0 && gotFrame == 0)
+			if (decoded > 0 && gotFrame == 0)
 				return 0;
 
-			return decodeLength;
+			return decoded;
 		}
 
 		private bool ConvertFrame()
@@ -449,13 +457,6 @@ namespace Pulsus.FFmpeg
 			}
 			else if (type == AVMediaType.AVMEDIA_TYPE_AUDIO)
 			{
-				AVFrame* inputFrame = frame;
-				if (bufferedLength > 0)
-				{
-					// passing a null frame flushes the remaining buffered data
-					inputFrame = null;
-				}
-
 				int targetSamples = (int)ffmpeg.av_rescale_rnd(frame->nb_samples, sampleRate, frame->sample_rate, AVRounding.AV_ROUND_UP);
 				if (targetSamples > convertedMaxSamples)
 				{
@@ -483,46 +484,38 @@ namespace Pulsus.FFmpeg
 			return true;
 		}
 
-		// returns true if there is data in next frame
-		public bool ReadNextFrame()
-		{
-			// more data in previous frame, continue converting the buffered data
-			if (bufferedLength > 0)
-				return ConvertFrame();
-
-			return ReadFrame();
-		}
-
 		public byte[] GetFrameData()
 		{
 			sbyte* buffer = null;
 			int bufferSize = 0;
 
 			// point to the correct frame where our output is
-			AVFrame* dataFrame = frame;
+			AVFrame* sourceFrame = frame;
 			if (swsContext != null)
-				dataFrame = convertedFrame;
-
-			buffer = dataFrame->data0;
-			if (type == AVMediaType.AVMEDIA_TYPE_VIDEO)
-			{
-				bufferSize = ffmpeg.av_image_get_buffer_size((AVPixelFormat)dataFrame->format,
-					dataFrame->width, dataFrame->height, 1);
-			}
-			else if (type == AVMediaType.AVMEDIA_TYPE_AUDIO)
-			{
-				bufferSize = ffmpeg.av_samples_get_buffer_size(null, audioChannels,
-					dataFrame->nb_samples, (AVSampleFormat)dataFrame->format, 1);
-			}
+				sourceFrame = convertedFrame;
 
 			if (swrContext != null)
 			{
 				buffer = convertedBuffer;
 				bufferSize = convertedBytes;
 			}
+			else
+			{
+				buffer = sourceFrame->data0;
+				if (type == AVMediaType.AVMEDIA_TYPE_VIDEO)
+				{
+					bufferSize = ffmpeg.av_image_get_buffer_size((AVPixelFormat)sourceFrame->format,
+						sourceFrame->width, sourceFrame->height, 1);
+				}
+				else if (type == AVMediaType.AVMEDIA_TYPE_AUDIO)
+				{
+					bufferSize = ffmpeg.av_samples_get_buffer_size(null, audioChannels,
+						sourceFrame->nb_samples, (AVSampleFormat)sourceFrame->format, 1);
+				}
 
-			if (bufferSize < 0)
-				throw new ApplicationException("buffer size negative: " + FFmpegHelper.logLastLine);
+				if (bufferSize < 0)
+					throw new FFmpegException(bufferSize);
+			}
 
 			// allocate and copy the data to managed memory
 			if (managedBuffer == null || managedBuffer.Length != bufferSize)
@@ -531,6 +524,45 @@ namespace Pulsus.FFmpeg
 			Marshal.Copy((IntPtr)buffer, managedBuffer, 0, bufferSize);
 
 			return managedBuffer;
+		}
+
+		public int GetFrameData(ref byte[] bytes, int startIndex)
+		{
+			sbyte* buffer = null;
+			int bufferSize = 0;
+
+			// point to the correct frame where our output is
+			AVFrame* sourceFrame = frame;
+			if (swsContext != null)
+				sourceFrame = convertedFrame;
+
+			if (swrContext != null)
+			{
+				buffer = convertedBuffer;
+				bufferSize = convertedBytes;
+			}
+			else
+			{
+				buffer = sourceFrame->data0;
+				if (type == AVMediaType.AVMEDIA_TYPE_VIDEO)
+				{
+					bufferSize = ffmpeg.av_image_get_buffer_size((AVPixelFormat)sourceFrame->format,
+						sourceFrame->width, sourceFrame->height, 1);
+				}
+				else if (type == AVMediaType.AVMEDIA_TYPE_AUDIO)
+				{
+					bufferSize = ffmpeg.av_samples_get_buffer_size(null, audioChannels,
+						sourceFrame->nb_samples, (AVSampleFormat)sourceFrame->format, 1);
+				}
+
+				if (bufferSize < 0)
+					throw new FFmpegException(bufferSize);
+			}
+
+			Marshal.Copy((IntPtr)buffer, bytes, startIndex, bufferSize);
+
+			//return managedBuffer;
+			return bufferSize;
 		}
 
 		// set output format from file extension
@@ -645,30 +677,29 @@ namespace Pulsus.FFmpeg
 			if (encoder == null)
 				throw new ApplicationException("Failed to load encoder for " + outputFormat->video_codec.ToString());
 
-			codecContext = ffmpeg.avcodec_alloc_context3(encoder);
-			if (codecContext == null)
-				throw new ApplicationException("Failed to allocate codec context");
-
 			AVStream* audioStream = ffmpeg.avformat_new_stream(formatContext, encoder);
 			if (audioStream == null)
 				throw new ApplicationException("Failed to create new stream");
 
-			audioStream->id = (int)formatContext->nb_streams - 1;
+			AVCodecContext* codec = audioStream->codec;
 
-			codecContext->sample_rate = sampleRate;
-			codecContext->channels = 2;
+			audioStream->id = (int)formatContext->nb_streams - 1;
+			streamIndex = audioStream->id;
+
+			codec->sample_rate = sampleRate;
+			codec->channels = 2;
 			//codecContext->bit_rate = 64000;
 			//codecContext->compression_level = 10;
-			codecContext->channel_layout = ffmpeg.AV_CH_LAYOUT_STEREO;
+			codec->channel_layout = ffmpeg.AV_CH_LAYOUT_STEREO;
 			//codecContext->compression_level = compression;
-			codecContext->sample_fmt = sampleFormat;
+			codec->sample_fmt = sampleFormat;
 
-			if (ffmpeg.avcodec_open2(codecContext, encoder, null) < 0)
+			if (ffmpeg.avcodec_open2(codec, encoder, null) < 0)
 				throw new ApplicationException("Failed to open codec for " + outputFormat->video_codec.ToString());
 
-			codecContext->codec_tag = 0;
+			codec->codec_tag = 0;
 			if ((formatContext->oformat->flags & ffmpeg.AVFMT_GLOBALHEADER) != 0)
-				codecContext->flags |= ffmpeg.AV_CODEC_FLAG_GLOBAL_HEADER;
+				codec->flags |= ffmpeg.AV_CODEC_FLAG_GLOBAL_HEADER;
 
 			if ((formatContext->oformat->flags & ffmpeg.AVFMT_NOFILE) == 0)
 			{
@@ -682,10 +713,10 @@ namespace Pulsus.FFmpeg
 			audioStream->time_base = new AVRational() { num = 1, den = sampleRate };
 
 			frame = ffmpeg.av_frame_alloc();
-			frame->sample_rate = codecContext->sample_rate;
-			frame->channels = codecContext->channels;
-			frame->format = (int)codecContext->sample_fmt;
-			frame->channel_layout = codecContext->channel_layout;
+			frame->sample_rate = codec->sample_rate;
+			frame->channels = codec->channels;
+			frame->format = (int)codec->sample_fmt;
+			frame->channel_layout = codec->channel_layout;
 			frame->nb_samples = sampleCount;
 
 			if (ffmpeg.av_frame_get_buffer(frame, 1) != 0)
@@ -717,12 +748,12 @@ namespace Pulsus.FFmpeg
 			int gotOutput = 0;
 			if (type == AVMediaType.AVMEDIA_TYPE_VIDEO)
 			{
-				if (ffmpeg.avcodec_encode_video2(codecContext, &packet, inputFrame, &gotOutput) < 0)
+				if (ffmpeg.avcodec_encode_video2(formatContext->streams[streamIndex]->codec, &packet, inputFrame, &gotOutput) < 0)
 					throw new ApplicationException("Failed to encode video");
 			}
 			else if (type == AVMediaType.AVMEDIA_TYPE_AUDIO)
 			{
-				if (ffmpeg.avcodec_encode_audio2(codecContext, &packet, inputFrame, &gotOutput) < 0)
+				if (ffmpeg.avcodec_encode_audio2(formatContext->streams[streamIndex]->codec, &packet, inputFrame, &gotOutput) < 0)
 					throw new ApplicationException("Failed to encode audio");
 			}
 

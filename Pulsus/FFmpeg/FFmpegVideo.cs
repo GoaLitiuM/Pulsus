@@ -60,7 +60,7 @@ namespace Pulsus.FFmpeg
 			}
 		}
 
-		private unsafe void Load(Stream stream)
+		private void Load(Stream stream)
 		{
 			if (!stream.CanRead)
 				throw new ApplicationException("Unable to read stream");
@@ -99,7 +99,7 @@ namespace Pulsus.FFmpeg
 
 		public void ReadFrames()
 		{
-			while (ffContext.ReadNextFrame())
+			while (ffContext.ReadFrame())
 			{
 				OnNextFrame(ffContext.GetFrameData());
 				presentedFrames++;
@@ -143,7 +143,7 @@ namespace Pulsus.FFmpeg
 			// decoder is one frame ahead of presentation
 			if (decodedFrames <= presentedFrames)
 			{
-				if (ffContext.ReadNextFrame())
+				if (ffContext.ReadFrame())
 				{
 					decodedFrames++;
 					nextFramePts = ffContext.framePts;
