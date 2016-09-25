@@ -132,11 +132,17 @@ namespace Pulsus.FFmpeg
 						throw new ApplicationException("Could not map AVSampleFormat to SDL audio format: " + sampleFormat.ToString());
 				}
 
-				List<byte> bytes = new List<byte>(ffContext.audioBytesTotal);
-				while (ffContext.ReadFrame())
-					bytes.AddRange(ffContext.GetFrameData());
+				// FFmpeg only approximates stream durations but is
+				// usually not far from the real duration.
+				byte[] bytes = new byte[ffContext.audioBytesTotal + 4096];
 
-				return bytes.ToArray();
+				// read all data from frames
+				long offset = 0;
+				while (ffContext.ReadFrame())
+					offset += ffContext.GetFrameData(ref bytes, (int)offset);
+
+				Array.Resize(ref bytes, (int)offset);
+				return bytes;
 			}
 		}
 
@@ -158,22 +164,24 @@ namespace Pulsus.FFmpeg
 					throw new ApplicationException("Could not map SDL audio format to AVSampleFormat: " + sampleFormatSDL.ToString());
 			}
 
-			using (FFmpegContext ffContext = FFmpegContext.Read(new FileStream(path, FileMode.Open, FileAccess.Read)))
+			using (FFmpegContext ffContext = FFmpegContext.Read(path))
 			{
 				ffContext.SelectStream(AVMediaType.AVMEDIA_TYPE_AUDIO);
 
 				// setup resamplers and other format converters if needed
 				ffContext.ConvertToFormat(targetFormat2, sampleRate, channels);
 
-				// read data
-				int allocated = ffContext.audioBytesTotal;
-				List<byte> bytes = new List<byte>(allocated);
+				// FFmpeg only approximates stream durations but is
+				// usually not far from the real duration.
+				byte[] bytes = new byte[ffContext.audioBytesTotal + 4096];
+
+				// read all data from frames
+				long offset = 0;
 				while (ffContext.ReadFrame())
-					bytes.AddRange(ffContext.GetFrameData());
+					offset += ffContext.GetFrameData(ref bytes, (int)offset);
 
-				int overshoot = allocated - bytes.Count;
-
-				return bytes.ToArray();
+				Array.Resize(ref bytes, (int)offset);
+				return bytes;
 			}
 		}
 
