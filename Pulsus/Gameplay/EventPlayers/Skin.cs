@@ -1,7 +1,7 @@
-﻿using Pulsus.Graphics;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System;
+using Pulsus.Graphics;
 
 namespace Pulsus.Gameplay
 {
@@ -1076,8 +1076,8 @@ namespace Pulsus.Gameplay
 				int offsetX = 0;
 				int offsetY = 0;
 
-				int newWidth = (int)Math.Round(baseWidth * scaleX);
-				int newHeight = (int)Math.Round(baseHeight * scaleY);
+				int newWidth = (int)Math.Round(baseWidth * scale);
+				int newHeight = (int)Math.Round(baseHeight * scale);
 
 				if (newWidth < bgaRect.width)
 					offsetX = (int)Math.Round((bgaRect.width - newWidth) / 2.0);
