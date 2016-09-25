@@ -41,7 +41,8 @@ namespace Pulsus
 				throw new ApplicationException("Log path already set");
 
 			logPath = path;
-			logStream = new StreamWriter(File.Open(logPath, FileMode.Create), Encoding.UTF8);
+			logStream = new StreamWriter(File.Open(logPath,
+				FileMode.Create, FileAccess.Write, FileShare.ReadWrite), Encoding.UTF8);
 		}
 
 		public static void FlushLog()
