@@ -76,10 +76,21 @@ namespace Pulsus.Gameplay
 			else if (preloadBga)
 				Log.Info("Preloading BGA objects " + preloadAheadTime.ToString() + "s ahead");
 
+			double firstSoundTimestamp = 0.0;
+			foreach (Event @event in eventList)
+			{
+				if (!(@event is SoundEvent))
+					continue;
+
+				firstSoundTimestamp = @event.timestamp;
+				break;
+			}
+
 			double oldStartTime = startTime;
+			double preloadEndTime = Math.Max(oldStartTime, firstSoundTimestamp) + preloadAheadTime;
 
 			Seek(0.0);
-			Seek(oldStartTime + preloadAheadTime);
+			Seek(preloadEndTime);
 
 			StartPreload(preloadSound, preloadBga);
 
