@@ -134,14 +134,19 @@ namespace Pulsus.FFmpeg
 
 				// FFmpeg only approximates stream durations but is
 				// usually not far from the real duration.
-				byte[] bytes = new byte[ffContext.audioBytesTotal + 4096];
+				byte[] bytes = new byte[ffContext.audioBytesTotal];
 
 				// read all data from frames
 				long offset = 0;
 				while (ffContext.ReadFrame())
-					offset += ffContext.GetFrameData(ref bytes, (int)offset);
+				{
+					long frameSize = ffContext.GetFrameBufferSize();
+					if (offset + frameSize > bytes.Length)
+						Array.Resize(ref bytes, (int)(offset + frameSize));
 
-				Array.Resize(ref bytes, (int)offset);
+					offset += ffContext.GetFrameData(ref bytes, (int)offset);
+				}
+
 				return bytes;
 			}
 		}
@@ -173,14 +178,19 @@ namespace Pulsus.FFmpeg
 
 				// FFmpeg only approximates stream durations but is
 				// usually not far from the real duration.
-				byte[] bytes = new byte[ffContext.audioBytesTotal + 4096];
+				byte[] bytes = new byte[ffContext.audioBytesTotal];
 
 				// read all data from frames
 				long offset = 0;
 				while (ffContext.ReadFrame())
-					offset += ffContext.GetFrameData(ref bytes, (int)offset);
+				{
+					long frameSize = ffContext.GetFrameBufferSize();
+					if (offset + frameSize > bytes.Length)
+						Array.Resize(ref bytes, (int)(offset + frameSize));
 
-				Array.Resize(ref bytes, (int)offset);
+					offset += ffContext.GetFrameData(ref bytes, (int)offset);
+				}
+
 				return bytes;
 			}
 		}

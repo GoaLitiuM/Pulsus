@@ -486,36 +486,8 @@ namespace Pulsus.FFmpeg
 
 		public byte[] GetFrameData()
 		{
-			sbyte* buffer = null;
 			int bufferSize = 0;
-
-			// point to the correct frame where our output is
-			AVFrame* sourceFrame = frame;
-			if (swsContext != null)
-				sourceFrame = convertedFrame;
-
-			if (swrContext != null)
-			{
-				buffer = convertedBuffer;
-				bufferSize = convertedBytes;
-			}
-			else
-			{
-				buffer = sourceFrame->data0;
-				if (type == AVMediaType.AVMEDIA_TYPE_VIDEO)
-				{
-					bufferSize = ffmpeg.av_image_get_buffer_size((AVPixelFormat)sourceFrame->format,
-						sourceFrame->width, sourceFrame->height, 1);
-				}
-				else if (type == AVMediaType.AVMEDIA_TYPE_AUDIO)
-				{
-					bufferSize = ffmpeg.av_samples_get_buffer_size(null, audioChannels,
-						sourceFrame->nb_samples, (AVSampleFormat)sourceFrame->format, 1);
-				}
-
-				if (bufferSize < 0)
-					throw new FFmpegException(bufferSize);
-			}
+			sbyte* buffer = GetFrameBuffer(out bufferSize);
 
 			// allocate and copy the data to managed memory
 			if (managedBuffer == null || managedBuffer.Length != bufferSize)
@@ -528,8 +500,24 @@ namespace Pulsus.FFmpeg
 
 		public int GetFrameData(ref byte[] bytes, int startIndex)
 		{
-			sbyte* buffer = null;
 			int bufferSize = 0;
+			sbyte* buffer = GetFrameBuffer(out bufferSize);
+
+			Marshal.Copy((IntPtr)buffer, bytes, startIndex, bufferSize);
+
+			return bufferSize;
+		}
+
+		public int GetFrameBufferSize()
+		{
+			int bufferSize = 0;
+			GetFrameBuffer(out bufferSize);
+			return bufferSize;
+		}
+
+		private sbyte* GetFrameBuffer(out int bufferSize)
+		{
+			sbyte* buffer = null;
 
 			// point to the correct frame where our output is
 			AVFrame* sourceFrame = frame;
@@ -554,15 +542,14 @@ namespace Pulsus.FFmpeg
 					bufferSize = ffmpeg.av_samples_get_buffer_size(null, audioChannels,
 						sourceFrame->nb_samples, (AVSampleFormat)sourceFrame->format, 1);
 				}
+				else
+					bufferSize = -1;
 
 				if (bufferSize < 0)
 					throw new FFmpegException(bufferSize);
 			}
 
-			Marshal.Copy((IntPtr)buffer, bytes, startIndex, bufferSize);
-
-			//return managedBuffer;
-			return bufferSize;
+			return buffer;
 		}
 
 		// set output format from file extension
