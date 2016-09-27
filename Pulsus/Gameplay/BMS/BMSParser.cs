@@ -1,9 +1,9 @@
-﻿using Pulsus.Audio;
+﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System;
+using Pulsus.Audio;
 
 namespace Pulsus.Gameplay
 {
@@ -15,12 +15,10 @@ namespace Pulsus.Gameplay
 		const bool skipToFirstMeasure = false;
 
 		Dictionary<int, int> channelRefs = new Dictionary<int, int>();
-		string basePath;
 
 		public override Chart Load(string path)
 		{
-			basePath = Directory.GetParent(path).FullName;
-			BMSChart data = new BMSChart(basePath);
+			BMSChart data = new BMSChart(Directory.GetParent(path).FullName);
 			BMSMeasure lastMeasure = null;
 
 			bool warnRandom = false;
@@ -35,7 +33,7 @@ namespace Pulsus.Gameplay
 					while ((line = stream.ReadLine()) != null)
 					{
 						lineNumber++;
-						
+
 						string command, value;
 						if (!ParseCommandLine(line, out command, out value))
 							continue;
@@ -540,7 +538,7 @@ namespace Pulsus.Gameplay
 			string indexStr = command.Substring(3);
 			int index = Utility.FromBase36(indexStr);
 
-			data.soundObjects[index] = new SoundObject(new SoundFile(Path.Combine(basePath, value)), 1, indexStr);
+			data.soundObjects[index] = new SoundObject(new SoundFile(value), 1, indexStr);
 		}
 
 		private void OnBMP(BMSChart data, string command, string value)
@@ -551,14 +549,14 @@ namespace Pulsus.Gameplay
 			string indexStr = command.Substring(3);
 			int index = Utility.FromBase36(indexStr);
 
-			data.bgaObjects[index] = new BGAObject(Path.Combine(basePath, value), indexStr);
+			data.bgaObjects[index] = new BGAObject(value, indexStr);
 		}
 
 		private void OnBPM(BMSChart data, string command, string value)
 		{
 			int index = 0;
 			if (command != "BPM")
-				index = Utility.FromBase36(command.Substring(command.Length-2));
+				index = Utility.FromBase36(command.Substring(command.Length - 2));
 
 			double bpmValue = 0.0;
 
