@@ -77,10 +77,6 @@ namespace Pulsus
 		// resolution for rendering
 		public uint width = 1280;
 		public uint height = 720;
-
-		// window size
-		public uint windowWidth = 0;
-		public uint windowHeight = 0;
 	}
 
 	public class AudioSettings

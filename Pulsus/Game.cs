@@ -51,20 +51,12 @@ namespace Pulsus
 			RendererFlags rendererFlags = RendererFlags.None;
 			int width = (int)settings.video.width;
 			int height = (int)settings.video.height;
-			int windowWidth = width;
-			int windowHeight = height;
 
 			if (settings.video.vsync)
 				rendererFlags |= RendererFlags.Vsync;
 
 			if (settings.video.mode == VideoMode.Fullscreen)
 				rendererFlags |= RendererFlags.Fullscreen;
-			else if (settings.video.mode == VideoMode.Borderless &&
-				settings.video.windowWidth * settings.video.windowHeight > 0)
-			{
-				windowWidth = (int)settings.video.windowWidth;
-				windowHeight = (int)settings.video.windowHeight;
-			}
 
 			if (settings.engine.tickrate != 0)
 				updateInterval = Math.Max(0.0, 1.0 / settings.engine.tickrate);
@@ -84,7 +76,7 @@ namespace Pulsus
 
 			Log.Info("Initializing Game window...");
 			string windowTitle = string.Format("{0} {1} ({2}-bit)", Program.name, Program.versionDisplay, (IntPtr.Size * 8).ToString());
-			window = new GameWindow(windowTitle, windowWidth, windowHeight, settings.video.mode);
+			window = new GameWindow(windowTitle, width, height, settings.video.mode);
 
 			Log.Info("Initializing Renderer...");
 			renderer = new Renderer(window, width, height, rendererFlags, settings.video.renderer);
