@@ -55,8 +55,8 @@ namespace Pulsus
 			SDL.SDL_WindowFlags flags = SDL.SDL_WindowFlags.SDL_WINDOW_SHOWN & SDL.SDL_WindowFlags.SDL_WINDOW_OPENGL;
 			if (mode == VideoMode.Borderless)
 				flags |= SDL.SDL_WindowFlags.SDL_WINDOW_BORDERLESS;
-			//else if (mode == VideoMode.Fullscreen)
-			//	flags |= SDL.SDL_WindowFlags.SDL_WINDOW_FULLSCREEN;
+			else if (mode == VideoMode.Fullscreen)
+				flags |= SDL.SDL_WindowFlags.SDL_WINDOW_FULLSCREEN;
 
 			handle = SDL.SDL_CreateWindow(title, x, y, width, height, flags);
 
