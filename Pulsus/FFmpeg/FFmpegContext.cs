@@ -69,7 +69,6 @@ namespace Pulsus.FFmpeg
 
 		Stream stream;
 		string path;
-		byte[] managedBuffer;
 
 		int decodedFrames;
 
@@ -482,20 +481,6 @@ namespace Pulsus.FFmpeg
 			}
 
 			return true;
-		}
-
-		public byte[] GetFrameData()
-		{
-			int bufferSize = 0;
-			sbyte* buffer = GetFrameBuffer(out bufferSize);
-
-			// allocate and copy the data to managed memory
-			if (managedBuffer == null || managedBuffer.Length != bufferSize)
-				managedBuffer = new byte[bufferSize];
-
-			Marshal.Copy((IntPtr)buffer, managedBuffer, 0, bufferSize);
-
-			return managedBuffer;
 		}
 
 		public int GetFrameData(ref byte[] bytes, int startIndex)

@@ -83,28 +83,22 @@ namespace Pulsus.FFmpeg
 
 		public static byte[] ImageFromFile(string path, out int width, out int height, out int bytesPerPixel)
 		{
-			FFmpegVideo video = new FFmpegVideo();
-			width = 0;
-			height = 0;
-			bytesPerPixel = 0;
+			using (FFmpegVideo video = new FFmpegVideo())
+			{
+				video.Load(path);
 
-			video.Load(path);
+				width = video.width;
+				height = video.height;
+				bytesPerPixel = 4;
 
-			List<byte> bytes = new List<byte>();
-			video.OnNextFrame += (data) => bytes.AddRange(data);
-
-			if (video.isVideo)
-				video.ReadNextFrame();
-			else
-				video.ReadFrames();
-
-			width = video.width;
-			height = video.height;
-			bytesPerPixel = 4;
-
-			video.Dispose();
-
-			return bytes.ToArray();
+				if (video.isVideo)
+				{
+					video.ReadNextFrame();
+					return video.imageBytes;
+				}
+				else
+					return video.ReadFrames();
+			}
 		}
 
 		public static byte[] SoundFromFile(string path, out int sampleRate, out int channels, out ushort sampleFormatSDL)

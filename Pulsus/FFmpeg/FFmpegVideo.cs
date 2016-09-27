@@ -18,13 +18,16 @@ namespace Pulsus.FFmpeg
 
 		public OnNextFrameDelegate OnNextFrame;
 
+		private byte[] bytes = null;
+		public byte[] imageBytes { get { return bytes; } }
+
 		public bool isVideo { get { return length > 0.0; } }
 
-		string path;
-		double nextFramePts;
-		FFmpegContext ffContext;
-		Thread loadThread;
-		AutoResetEvent nextFrameEvent;
+		private string path;
+		private double nextFramePts;
+		private FFmpegContext ffContext;
+		private Thread loadThread;
+		private AutoResetEvent nextFrameEvent;
 
 		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
 		public delegate void OnNextFrameDelegate(byte[] data);
@@ -80,6 +83,8 @@ namespace Pulsus.FFmpeg
 
 			// setup resamplers and other format converters if needed
 			ffContext.ConvertToFormat(AVPixelFormat.AV_PIX_FMT_BGRA);
+
+			bytes = new byte[width * height * 4];
 		}
 
 		public void Update(double deltaTime)
@@ -91,19 +96,23 @@ namespace Pulsus.FFmpeg
 
 			if (currentTime >= nextFramePts && presentedFrames < decodedFrames)
 			{
-				OnNextFrame(ffContext.GetFrameData());
+				ffContext.GetFrameData(ref bytes, 0);
+				if (OnNextFrame != null)
+					OnNextFrame(bytes);
+
 				presentedFrames++;
 				nextFrameEvent.Set();
 			}
 		}
 
-		public void ReadFrames()
+		public byte[] ReadFrames()
 		{
-			while (ffContext.ReadFrame())
-			{
-				OnNextFrame(ffContext.GetFrameData());
-				presentedFrames++;
-			}
+			if (!ffContext.ReadFrame())
+				return null;
+
+			ffContext.GetFrameData(ref bytes, 0);	
+			presentedFrames++;
+			return bytes;
 		}
 
 		public void Start()

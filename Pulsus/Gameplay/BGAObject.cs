@@ -1,7 +1,7 @@
-﻿using Pulsus.FFmpeg;
-using Pulsus.Graphics;
+﻿using System;
 using System.IO;
-using System;
+using Pulsus.FFmpeg;
+using Pulsus.Graphics;
 
 namespace Pulsus.Gameplay
 {
@@ -78,7 +78,7 @@ namespace Pulsus.Gameplay
 			{
 				video.Load(fullPath);
 				texture = new Texture2D(video.width, video.height);
-				video.OnNextFrame += texture.SetData;
+				video.OnNextFrame += (data) => texture.SetData(data);
 			}
 			catch when (Path.GetExtension(filename).ToLower() == ".lua")
 			{
@@ -93,7 +93,7 @@ namespace Pulsus.Gameplay
 				if (video != null)
 					video.Dispose();
 				video = null;
-				
+
 				return false;
 			}
 
@@ -105,7 +105,7 @@ namespace Pulsus.Gameplay
 			else
 			{
 				// fully load image files
-				video.ReadFrames();
+				video.OnNextFrame(video.ReadFrames());
 				video.Dispose();
 				video = null;
 			}
