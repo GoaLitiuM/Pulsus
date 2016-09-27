@@ -9,6 +9,7 @@ namespace Pulsus
 		public bool closing;
 
 		private IntPtr handle; // SDL_Window
+		private VideoMode videoMode;
 
 		public string Title
 		{
@@ -47,6 +48,8 @@ namespace Pulsus
 
 		private void CreateWindow(string title, int x, int y, int width, int height, VideoMode mode)
 		{
+			videoMode = mode;
+
 			if (x == int.MaxValue)
 				x = SDL.SDL_WINDOWPOS_CENTERED;
 			if (y == int.MaxValue)
@@ -98,9 +101,23 @@ namespace Pulsus
 		public bool PollEvent(out SDL.SDL_Event sdlEvent)
 		{
 			bool ret = (SDL.SDL_PollEvent(out sdlEvent) != 0);
-			if (ret && sdlEvent.type == SDL.SDL_EventType.SDL_QUIT)
+			if (!ret)
+				return ret;
+
+			if (sdlEvent.type == SDL.SDL_EventType.SDL_QUIT)
 				closing = true;
-			return ret;
+			else if (sdlEvent.type == SDL.SDL_EventType.SDL_KEYDOWN)
+			{
+				if (((sdlEvent.key.keysym.mod & SDL.SDL_Keymod.KMOD_LALT) != 0 ||
+					(sdlEvent.key.keysym.mod & SDL.SDL_Keymod.KMOD_RALT) != 0) &&
+					sdlEvent.key.keysym.scancode == SDL.SDL_Scancode.SDL_SCANCODE_RETURN &&
+					sdlEvent.key.repeat == 0) // ALT+Enter
+				{
+					ToggleFullscreen();
+				}
+			}
+
+			return true;
 		}
 
 		private void GetClientSize(out int width, out int height)
@@ -128,6 +145,22 @@ namespace Pulsus
 			}
 			else
 				SDL.SDL_RaiseWindow(handle);
+		}
+
+		public void ToggleFullscreen()
+		{
+			SDL.SDL_WindowFlags flags = (SDL.SDL_WindowFlags)SDL.SDL_GetWindowFlags(handle);
+			SetFullscreen((flags & SDL.SDL_WindowFlags.SDL_WINDOW_FULLSCREEN) == 0);
+		}
+
+		public void SetFullscreen(bool fullscreen)
+		{
+			if (fullscreen)
+				SDL.SDL_SetWindowFullscreen(handle, (uint)SDL.SDL_WindowFlags.SDL_WINDOW_FULLSCREEN);
+			else if (videoMode == VideoMode.Windowed)
+				SDL.SDL_SetWindowFullscreen(handle, 0);
+			else
+				SDL.SDL_SetWindowFullscreen(handle, (uint)SDL.SDL_WindowFlags.SDL_WINDOW_BORDERLESS);
 		}
 
 		[DllImport("user32.dll")]
