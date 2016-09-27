@@ -1,9 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.IO;
 using System.Threading;
 using Pulsus.Audio;
+using Pulsus.FFmpeg;
 
 namespace Pulsus.Gameplay
 {
@@ -15,6 +16,7 @@ namespace Pulsus.Gameplay
 		public bool skipBGA = false;
 
 		AudioEngine audio;
+		object rendererLock = new object();
 
 		ConcurrentQueue<SoundObject> soundQueue = new ConcurrentQueue<SoundObject>();
 		ConcurrentQueue<BGAObject> bgaQueue = new ConcurrentQueue<BGAObject>();
@@ -39,6 +41,31 @@ namespace Pulsus.Gameplay
 			".wav",
 			".ogg",
 			".m4a",
+		};
+
+		static string[] lookupImageExtensions =
+		{
+			// image formats
+			".bmp",
+			".png",
+			".jpg",
+			".tga",
+
+			// video formats
+			".gif",
+			".mpg",
+			".avi",
+			".mp4",
+			".flv",
+			".mkv",
+			".wmv",
+			".ogv",
+			".webm",
+			".mov",
+			".swf",
+			".3gp",
+			".asf",
+			".m4v",
 		};
 
 		public Loader(Chart chart, AudioEngine audio)
@@ -238,6 +265,46 @@ namespace Pulsus.Gameplay
 				Log.Error("Sound file not found: " + soundObject.soundFile.path);
 		}
 
+		private void LoadBGA(BGAObject bgaObject)
+		{
+			string path = Path.Combine(basePath, bgaObject.path);
+			path = Utility.FindRealFile(path, lookupPaths, lookupImageExtensions);
+			if (File.Exists(path))
+			{
+				if (Path.GetExtension(bgaObject.path).ToLower() == ".lua")
+				{
+					Log.Error("Failed to load BGA '" + bgaObject.path + "', scripted BGAs are not supported");
+					return;
+				}
+
+				FFmpegVideo video = new FFmpegVideo();
+				try
+				{
+					video.Load(path);
+
+					byte[] bytes = video.ReadFrame();
+
+					bgaObject.SetVideo(video);
+					lock (rendererLock)
+						video.OnNextFrame(bytes);
+				}
+				catch (ThreadAbortException)
+				{
+				}
+				catch (Exception e)
+				{
+					Log.Error("Failed to load BGA '" + Path.GetFileName(bgaObject.path) + "': " + e.Message);
+				}
+				finally
+				{
+					if (!video.isVideo)
+						video.Dispose();
+				}
+			}
+			else
+				Log.Warning("BGA file not found: " + bgaObject.path);
+		}
+
 		private void LoadThread()
 		{
 			try
@@ -253,7 +320,7 @@ namespace Pulsus.Gameplay
 					if (sound != null && !sound.loaded)
 						LoadSound(sound);
 					else if (bga != null && !bga.loaded)
-						bga.Load(basePath);
+						LoadBGA(bga);
 					else if (!playing && soundQueue.Count == 0 && bgaQueue.Count == 0)
 						break;
 				}

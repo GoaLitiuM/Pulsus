@@ -105,13 +105,17 @@ namespace Pulsus.FFmpeg
 			}
 		}
 
-		public byte[] ReadFrames()
+		public byte[] ReadFrame()
 		{
 			if (!ffContext.ReadFrame())
 				return null;
 
-			ffContext.GetFrameData(ref bytes, 0);	
+			ffContext.GetFrameData(ref bytes, 0);
+			nextFramePts = ffContext.framePts;
+
 			presentedFrames++;
+			decodedFrames++;
+
 			return bytes;
 		}
 
@@ -147,7 +151,7 @@ namespace Pulsus.FFmpeg
 			}
 		}
 
-		public bool ReadNextFrame()
+		private bool ReadNextFrame()
 		{
 			// decoder is one frame ahead of presentation
 			if (decodedFrames <= presentedFrames)

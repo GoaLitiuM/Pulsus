@@ -91,13 +91,7 @@ namespace Pulsus.FFmpeg
 				height = video.height;
 				bytesPerPixel = 4;
 
-				if (video.isVideo)
-				{
-					video.ReadNextFrame();
-					return video.imageBytes;
-				}
-				else
-					return video.ReadFrames();
+				return video.ReadFrame();
 			}
 		}
 
