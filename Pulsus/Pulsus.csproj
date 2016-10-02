@@ -286,7 +286,7 @@
       <GitHash Condition="'$(GitHash)' == ''">0000000</GitHash>
     </PropertyGroup>
     <Message Text="Hash: $(GitHash)" />
-    <WriteLinesToFile File="$(ProjectDir)\Properties\AssemblyInfo_Version.cs" Overwrite="true" Lines="// This file was auto-generated during build.&#xD;&#xA;using System.Reflection%3B&#xD;&#xA;&#xD;&#xA;[assembly: AssemblyVersion(&quot;$(GitTag)&quot;)]&#xD;&#xA;[assembly: AssemblyFileVersion(&quot;$(GitTag)&quot;)]&#xD;&#xA;[assembly: AssemblyInformationalVersion(&quot;$(GitTag)-$(GitHash)&quot;)]&#xD;&#xA;" />
+    <WriteLinesToFile File="$(ProjectDir)\Properties\AssemblyInfo_Version.cs" Overwrite="true" Lines="// This file was auto-generated during build.&#xA;&#xA;[assembly: System.Reflection.AssemblyVersion(&quot;$(GitTag)&quot;)]&#xA;[assembly: System.Reflection.AssemblyFileVersion(&quot;$(GitTag)&quot;)]&#xA;[assembly: System.Reflection.AssemblyInformationalVersion(&quot;$(GitTag)-$(GitHash)&quot;)]&#xA;" />
   </Target>
   <Target Name="AfterBuild">
     <Copy SourceFiles="$(SolutionDir)ThirdParty\FFmpeg.AutoGen.dll.config;$(SolutionDir)ThirdParty\SDL2-CS.dll.config;$(SolutionDir)ThirdParty\SharpBgfx.dll.config" DestinationFolder="$(TargetDir)" />
