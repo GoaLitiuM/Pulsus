@@ -251,15 +251,14 @@ namespace Pulsus
 				}
 				else if (platform == PlatformID.Unix)
 				{
-					string coresFindStr = "cpu cores       : ";
 					using (var stream = new System.IO.StreamReader("/proc/cpuinfo"))
 					{
 						string line;
 						while ((line = stream.ReadLine()) != null)
 						{
-							if (line.StartsWithFast(coresFindStr))
+							if (line.StartsWithFast("cpu cores"))
 							{
-								line = line.Replace(coresFindStr, "");
+								line = line.Substring(line.IndexOf(':') + 1).Trim();
 
 								int parsedCores = 0;
 								if (int.TryParse(line, out parsedCores))
