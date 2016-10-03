@@ -9,6 +9,8 @@ namespace Pulsus.Graphics
 {
 	public class Font : IDisposable
 	{
+		private const int version = 2;
+
 		public string familyName { get; private set; }
 		public int pointSize { get; private set; }
 		public FontGlyph[] glyphs { get; private set; }
@@ -243,6 +245,10 @@ namespace Pulsus.Graphics
 			{
 				using (BinaryReader reader = new BinaryReader(stream))
 				{
+					int fileVersion = reader.ReadInt32();
+					if (fileVersion != version)
+						return false;
+
 					int length = reader.ReadInt32();
 					glyphs = new FontGlyph[length];
 
@@ -284,6 +290,7 @@ namespace Pulsus.Graphics
 			{
 				using (BinaryWriter writer = new BinaryWriter(stream))
 				{
+					writer.Write(version);
 					writer.Write(glyphs.Length);
 
 					for (int i = 0; i < glyphs.Length; ++i)
