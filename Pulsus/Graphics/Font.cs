@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
-using SDL2;
 using System.IO;
+using System.Runtime.InteropServices;
 using Pulsus.FFmpeg;
+using SDL2;
 
 namespace Pulsus.Graphics
 {
@@ -22,8 +22,6 @@ namespace Pulsus.Graphics
 		private static int loadedFonts = 0;
 		private static bool cacheFonts;
 
-		private static readonly string cachePath = Path.Combine(Path.GetTempPath(), Program.name + "Cache");
-
 		public Font(string path, int pointSize, FontStyle style = FontStyle.Normal, bool unicode = true)
 		{
 			cacheFonts = SettingsManager.instance.engine.cacheFonts;
@@ -35,21 +33,18 @@ namespace Pulsus.Graphics
 			{
 				if (SDL_ttf.TTF_Init() != 0)
 					throw new ApplicationException("Failed to initialize SDL_ttf: " + SDL.SDL_GetError());
-
-				if (!File.Exists(cachePath))
-					Directory.CreateDirectory(cachePath);
 			}
 
 			handle = SDL_ttf.TTF_OpenFont(path, pointSize);
 			if (handle == IntPtr.Zero)
 				throw new ApplicationException("Failed to load font: " + SDL.SDL_GetError());
-		
+
 			SDL_ttf.TTF_SetFontStyle(handle, (int)style);
 
 			familyName = SDL_ttf.TTF_FontFaceFamilyName(handle);
 
 			ushort characterCount = unicode ? ushort.MaxValue : (ushort)256;
-	
+
 			bool generateTextures = true;
 			if (cacheFonts)
 			{
@@ -100,7 +95,7 @@ namespace Pulsus.Graphics
 		private void GenerateGlyphData(ushort characterCount)
 		{
 			Log.Info("Font: Generating glyph data for {0} characters", characterCount);
-			
+
 			glyphs = new FontGlyph[characterCount];
 
 			for (ushort i = 0; i < characterCount; ++i)
@@ -121,7 +116,7 @@ namespace Pulsus.Graphics
 		{
 			Log.Info("Font: Generating font textures");
 
-			byte[] textureData = new byte[textureSize*textureSize*4];
+			byte[] textureData = new byte[textureSize * textureSize * 4];
 			textures.Add(new Texture2D(textureSize, textureSize));
 
 			// sort the glyphs starting form widest one, prioritize
@@ -178,7 +173,7 @@ namespace Pulsus.Graphics
 
 				if (x + surfaceWidth >= textureSize)
 					x = 0; // place the pen position back to left
-				
+
 				// find free spot 
 				int y = columnPixels[x];
 				for (int j = x + 1; j < x + surfaceWidth; j++)
@@ -192,11 +187,11 @@ namespace Pulsus.Graphics
 					// texture is full, update it and move to next texture
 
 					UpdateTexture(textureData, texture, currentTexture, textureSize, textureSize);
-					
-					for (int j=0; j<textureSize*textureSize*4; j++)
+
+					for (int j = 0; j < textureSize * textureSize * 4; j++)
 						textureData[j] = 0;
 
-					for (int j=0; j<textureSize; j++)
+					for (int j = 0; j < textureSize; j++)
 						columnPixels[j] = 0;
 
 					textures.Add(new Texture2D(textureSize, textureSize));
@@ -234,12 +229,12 @@ namespace Pulsus.Graphics
 
 		private string GetCacheFilename()
 		{
-			return familyName + "_" + pointSize.ToString() + "_" + (unicode ? "U" : "A") + ((int)style).ToString();;
+			return familyName + "_" + pointSize.ToString() + "_" + (unicode ? "U" : "A") + ((int)style).ToString();
 		}
 
 		private bool LoadGlyphDataCached()
 		{
-			string glyphPath = Path.Combine(cachePath, GetCacheFilename() + ".bin");
+			string glyphPath = Path.Combine(Program.cachePath, GetCacheFilename() + ".bin");
 
 			if (!File.Exists(glyphPath))
 				return false;
@@ -266,7 +261,7 @@ namespace Pulsus.Graphics
 			int id = 0;
 			while (true)
 			{
-				string texturePath = Path.Combine(cachePath, fileTemplate + "_" + id.ToString() + ".png");
+				string texturePath = Path.Combine(Program.cachePath, fileTemplate + "_" + id.ToString() + ".png");
 				if (!File.Exists(texturePath))
 					break;
 
@@ -274,7 +269,7 @@ namespace Pulsus.Graphics
 				if (texture == null)
 					break;
 
-				textures.Add(texture);			
+				textures.Add(texture);
 				id++;
 			}
 			return textures.Count > 0;
@@ -283,9 +278,9 @@ namespace Pulsus.Graphics
 		private void CacheGlyphData()
 		{
 			Log.Info("Font: Saving glyph data to cache...");
-			string glyphPath = Path.Combine(cachePath, GetCacheFilename() + ".bin");
+			string glyphPath = Path.Combine(Program.cachePath, GetCacheFilename() + ".bin");
 
-			using (Stream stream = File.Open(glyphPath, FileMode.CreateNew))
+			using (Stream stream = File.Open(glyphPath, FileMode.Create, FileAccess.Write))
 			{
 				using (BinaryWriter writer = new BinaryWriter(stream))
 				{
@@ -300,7 +295,7 @@ namespace Pulsus.Graphics
 		private void CacheTextureData(byte[] data, int textureId)
 		{
 			Log.Info("Font: Saving texture data to cache...");
-			string texturePath = Path.Combine(cachePath, GetCacheFilename() + "_" + textureId.ToString() + ".png");
+			string texturePath = Path.Combine(Program.cachePath, GetCacheFilename() + "_" + textureId.ToString() + ".png");
 			FFmpegHelper.SaveImagePNG(texturePath, data, textureSize, textureSize);
 		}
 
@@ -368,7 +363,7 @@ namespace Pulsus.Graphics
 					src += surfacePitch;
 				}
 			}
-			
+
 			width = glyph.width;
 			height = glyph.height;
 

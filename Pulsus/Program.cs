@@ -1,9 +1,9 @@
-﻿using System.Diagnostics;
+﻿using System;
+using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Reflection;
 using System.Threading;
-using System;
 
 namespace Pulsus
 {
@@ -26,6 +26,18 @@ namespace Pulsus
 					_basePath = Directory.GetParent(Assembly.GetExecutingAssembly().Location).FullName;
 
 				return _basePath;
+			}
+		}
+
+		private static string _cachePath;
+		public static string cachePath
+		{
+			get
+			{
+				if (_cachePath == null)
+					_cachePath = Path.Combine(Path.GetTempPath(), Assembly.GetExecutingAssembly().GetName().Name + "Cache");
+
+				return _cachePath;
 			}
 		}
 
@@ -69,6 +81,9 @@ namespace Pulsus
 			// locale independent date and number formatting
 			CultureInfo.DefaultThreadCurrentCulture = CultureInfo.InvariantCulture;
 			Thread.CurrentThread.CurrentCulture = CultureInfo.InvariantCulture;
+
+			if (!File.Exists(cachePath))
+				Directory.CreateDirectory(cachePath);
 
 			// close Eto on exit
 			AppDomain.CurrentDomain.ProcessExit += OnProcessExit;
