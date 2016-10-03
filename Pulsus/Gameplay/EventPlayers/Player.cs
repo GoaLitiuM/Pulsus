@@ -66,7 +66,7 @@ namespace Pulsus.Gameplay
 
 		private void PressKey(int lane, SoundObject value, NoteEvent pressNote = null)
 		{
-			if (seeking)
+			if (seeking && realtime)
 				return;
 
 			if (skin != null)
@@ -141,7 +141,7 @@ namespace Pulsus.Gameplay
 
 		private void ReleaseKey(int lane, SoundObject value = null)
 		{
-			if (seeking)
+			if (seeking && realtime)
 				return;
 
 			if (skin != null)

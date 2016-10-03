@@ -25,7 +25,7 @@ namespace Pulsus.Gameplay
 
 		public override void OnBGM(SoundEvent soundEvent)
 		{
-			if (seeking)
+			if (seeking && realtime)
 				return;
 
 			if (soundEvent.sound == null)

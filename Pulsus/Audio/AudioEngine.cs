@@ -276,6 +276,9 @@ namespace Pulsus.Audio
 
 			SoundInstanceInternal instance = new SoundInstanceInternal(soundInstance);
 
+			if (!dataInstanceCount.ContainsKey(instance.sound))
+				dataInstanceCount.Add(instance.sound, 0);
+
 			double bufferPosition = (position - lastCallback) * ((double)audioSpec.freq);
 			uint offset = (uint)(bufferPosition * bytesPerSample);
 			if (offset % 4 != 0)
