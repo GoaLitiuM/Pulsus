@@ -162,7 +162,7 @@ namespace Pulsus.Gameplay
 
 			missWindow = timingWindow[4];
 
-			scoreExMax = chart.noteCount * 2;
+			scoreExMax = (chart.noteCount + chart.longNoteCount) * 2;
 		}
 
 		public void OnKeyPress(int lane, NoteEvent pressNote = null)
