@@ -378,7 +378,7 @@ namespace Pulsus.FFmpeg
 				if (packet.stream_index == streamIndex)
 					decoded = DecodeFrame(packet);
 
-				ffmpeg.av_free_packet(&packet);
+				ffmpeg.av_packet_unref(&packet);
 			}
 
 			if (decoded == 0)
@@ -584,6 +584,7 @@ namespace Pulsus.FFmpeg
 			codecContext->height = height;
 			codecContext->compression_level = compression;
 			codecContext->pix_fmt = pixelFormat;
+			codecContext->time_base = new AVRational() { num = 1, den = 1 };
 
 			for (int i = 0; encoder->pix_fmts[i] != AVPixelFormat.AV_PIX_FMT_NONE; i++)
 			{
@@ -644,6 +645,8 @@ namespace Pulsus.FFmpeg
 			fixed (AVFormatContext** ptr = &formatContext)
 				if (ffmpeg.avformat_alloc_output_context2(ptr, outputFormat, null, path) < 0)
 					throw new ApplicationException("Failed to allocate format context");
+
+			formatContext->oformat = outputFormat;
 
 			AVCodec* encoder = ffmpeg.avcodec_find_encoder(codecId);
 			if (encoder == null)
@@ -720,7 +723,7 @@ namespace Pulsus.FFmpeg
 			int gotOutput = 0;
 			if (type == AVMediaType.AVMEDIA_TYPE_VIDEO)
 			{
-				if (ffmpeg.avcodec_encode_video2(formatContext->streams[streamIndex]->codec, &packet, inputFrame, &gotOutput) < 0)
+				if (ffmpeg.avcodec_encode_video2(codecContext, &packet, inputFrame, &gotOutput) < 0)
 					throw new ApplicationException("Failed to encode video");
 			}
 			else if (type == AVMediaType.AVMEDIA_TYPE_AUDIO)
