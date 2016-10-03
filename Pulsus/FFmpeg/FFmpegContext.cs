@@ -734,6 +734,7 @@ namespace Pulsus.FFmpeg
 
 			if (gotOutput > 0)
 			{
+				packet.dts = packet.pts = 0;
 				if (ffmpeg.av_interleaved_write_frame(formatContext, &packet) < 0)
 					throw new ApplicationException("Failed av_interleaved_write_frame");
 			}
