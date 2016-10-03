@@ -109,7 +109,7 @@ namespace Pulsus.Graphics
 
 			// reset all used views
 			for (int i = 0; i < spriteRenderer.currentViewport; i++)
-				Bgfx.SetViewClear((byte)i, ClearTargets.None, 0, 0, 0);
+				Bgfx.SetViewClear((byte)i, ClearTargets.None, 0, 0.0f, 0);
 
 			spriteRenderer.currentViewport = 0;
 		}
