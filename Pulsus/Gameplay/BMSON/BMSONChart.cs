@@ -1,7 +1,7 @@
-﻿using Pulsus.Audio;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System;
+using Pulsus.Audio;
 
 namespace Pulsus.Gameplay
 {
@@ -14,7 +14,7 @@ namespace Pulsus.Gameplay
 		public override int rank { get { return rankLegacy; } }
 		public override double rankMultiplier { get { return rankMultiplierReal; } }
 		public override double gaugeTotal { get { return 0.0; } }
-		public override double gaugeMultiplier { get { return bmson.info.total / 100.0; } }
+		public override double gaugeMultiplier { get { return total / 100.0; } }
 		public override double volume { get { return 1.0; } }
 		public override int playLevel { get { return (int)bmson.info.level; } }
 		public override string previewFile { get { return bmson.info.preview_music; } }
@@ -33,6 +33,7 @@ namespace Pulsus.Gameplay
 		private BMSONHeader bmson;
 
 		private int rankLegacy = 2;
+		private double total = 100;
 		private double rankMultiplierReal = 1.0;
 
 		public BMSONChart(string basePath, BMSONHeader bmson)
@@ -59,6 +60,13 @@ namespace Pulsus.Gameplay
 				rankLegacy = (int)bmson.info.judge_rank;
 			else
 				rankMultiplierReal = bmson.info.judge_rank / 100.0;
+
+			total = bmson.info.total;
+
+			// total value should be in percentages, but the value was entered
+			// as a multiplier, convert the value back to percentages.
+			if (total <= 13) // arbitrary value
+				total = bmson.info.total * 100.0;
 
 			// collect all time related events into one collection
 			if (version.Major == 0) // bmson 0.21
