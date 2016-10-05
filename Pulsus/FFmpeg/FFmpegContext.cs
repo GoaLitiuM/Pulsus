@@ -119,6 +119,12 @@ namespace Pulsus.FFmpeg
 
 		public void Dispose()
 		{
+			if (codecContext != null)
+			{
+				ffmpeg.avcodec_close(codecContext);
+				ffmpeg.av_free(codecContext);
+			}
+
 			if (avioContext != null)
 			{
 				if (formatContext->oformat != null &&
@@ -126,20 +132,16 @@ namespace Pulsus.FFmpeg
 				{
 					ffmpeg.avio_close(avioContext);
 				}
-
-				ffmpeg.av_free(avioContext->buffer);
-				avioContext->buffer = null;
-				ffmpeg.av_free(avioContext);
+				else
+				{
+					ffmpeg.av_free(avioContext->buffer);
+					avioContext->buffer = null;
+					ffmpeg.av_free(avioContext);
+				}
 			}
 
 			if (stream != null)
 				stream.Dispose();
-
-			if (codecContext != null)
-			{
-				ffmpeg.avcodec_close(codecContext);
-				ffmpeg.av_free(codecContext);
-			}
 
 			if (formatContext != null)
 			{
