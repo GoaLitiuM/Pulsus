@@ -46,12 +46,17 @@ namespace Pulsus
 			if (songPlayer.playing || autoplay.playing)
 				throw new ApplicationException("Players did not finish as expected");
 
+			Log.Info("Rendering audio...");
 			byte[] audioData = audio.RenderAudio();
+
 			if (audioData.Length > 0)
 			{
+				Log.Info("Saving audio...");
 				FFmpegHelper.SaveSound(outputPath,
 					audioData, audioData.Length / 4, audio.audioSpec.freq);
 			}
+			else
+				Log.Warning("No audio was rendered");
 		}
 
 		public override void Dispose()
