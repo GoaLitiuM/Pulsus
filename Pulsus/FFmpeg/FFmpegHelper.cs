@@ -68,7 +68,7 @@ namespace Pulsus.FFmpeg
 				{
 					logPtr = Marshal.GetFunctionPointerForDelegate(logCallback);
 					GC.KeepAlive(logCallback);
-					FFmpegHelper.av_log_set_callback(logPtr);
+					ffmpeg.av_log_set_callback(logPtr);
 				}
 			}
 			catch (DllNotFoundException e)
@@ -213,17 +213,5 @@ namespace Pulsus.FFmpeg
 		public const int AV_LOG_VERBOSE = 40;
 		public const int AV_LOG_DEBUG = 48;
 		public const int AV_LOG_TRACE = 56;
-		public const int AVERROR_EOF = -541478725;  // FFERRTAG( 'E','O','F',' ')
-
-		// corrected signatures from FFmpeg.AutoGen
-
-		private const string libavutil = "avutil-55";
-		private const string libavformat = "avformat-57";
-
-		[DllImport(libavutil, EntryPoint = "av_log_set_callback", CallingConvention = CallingConvention.Cdecl)]
-		public static extern void av_log_set_callback(IntPtr @callback);
-
-		[DllImport(libavformat, EntryPoint = "avio_alloc_context", CallingConvention = CallingConvention.Cdecl)]
-		public static extern unsafe AVIOContext* avio_alloc_context(sbyte* buffer, int buffer_size, int write_flag, void* opaque, IntPtr read_packet, IntPtr write_packet, IntPtr seek);
 	}
 }

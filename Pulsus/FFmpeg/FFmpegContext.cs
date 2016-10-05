@@ -218,7 +218,7 @@ namespace Pulsus.FFmpeg
 
 				// setup custom stream reader for ffmpeg to use with AVIO context
 				sbyte* readBuffer = (sbyte*)ffmpeg.av_malloc(bufferSize + ffmpeg.FF_INPUT_BUFFER_PADDING_SIZE);
-				avioContext = FFmpegHelper.avio_alloc_context(readBuffer, bufferSize, 0, null,
+				avioContext = ffmpeg.avio_alloc_context(readBuffer, bufferSize, 0, null,
 					Marshal.GetFunctionPointerForDelegate(readStream), IntPtr.Zero,
 					Marshal.GetFunctionPointerForDelegate(seekStream));
 
