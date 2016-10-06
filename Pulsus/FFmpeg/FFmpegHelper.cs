@@ -134,7 +134,7 @@ namespace Pulsus.FFmpeg
 			}
 		}
 
-		public static byte[] SoundFromFileResample(string path, int sampleRate, int channels, ushort sampleFormatSDL)
+		public static byte[] SoundFromFileResample(string path, int sampleRate, int channels, ushort sampleFormatSDL, ResampleQuality resampleQuality = ResampleQuality.High)
 		{
 			AVSampleFormat targetFormat2;
 			switch (sampleFormatSDL)
@@ -157,7 +157,7 @@ namespace Pulsus.FFmpeg
 				ffContext.SelectStream(AVMediaType.AVMEDIA_TYPE_AUDIO);
 
 				// setup resamplers and other format converters if needed
-				ffContext.ConvertToFormat(targetFormat2, sampleRate, channels);
+				ffContext.ConvertToFormat(targetFormat2, sampleRate, channels, resampleQuality);
 
 				// FFmpeg only approximates stream durations but is
 				// usually not far from the real duration.

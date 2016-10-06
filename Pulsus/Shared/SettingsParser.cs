@@ -32,6 +32,8 @@ namespace Pulsus
 				}
 			}
 
+			private bool resampleQualityOverridden = false;
+
 			public Settings Parse(string[] args)
 			{
 				for (int i = 1; i < args.Length; i++)
@@ -67,12 +69,17 @@ namespace Pulsus
 					Tuple.Create("-m VALUE, --measure VALUE",       "Starts the chart from measure number VALUE [0-999]"),
 					Tuple.Create("", ""),
 					Tuple.Create("--render OUTPUT.wav",             "Renders all audio of CHARTFILE to file"),
+					Tuple.Create("--resample-quality [low|medium|high|highest]",
+																	"Changes resampling quality of audio samples"),
 					Tuple.Create("--dump-timestamps OUTPUT",        "Dumps all generated note event timestamps of CHARTFILE"),
 				};
 
 				foreach (var option in options)
 				{
-					Console.WriteLine("  {0,-35}{1}", option.Item1, option.Item2);
+					if (option.Item1.Length < 35)
+						Console.WriteLine("  {0,-35}{1}", option.Item1, option.Item2);
+					else
+						Console.WriteLine("  {0,-35}\n  {2,-35}{1}", option.Item1, option.Item2, "");
 				}
 
 				Console.Write("\n");
@@ -127,6 +134,20 @@ namespace Pulsus
 								settings.audio.volume = 100;
 								settings.outputPath = value;
 
+								if (!resampleQualityOverridden)
+									settings.audio.resampleQuality = ResampleQuality.Highest;
+								break;
+							case "--resample-quality":
+								{
+									ResampleQuality resampleQuality;
+									if (Enum.TryParse<ResampleQuality>(value, true, out resampleQuality))
+									{
+										settings.audio.resampleQuality = resampleQuality;
+										resampleQualityOverridden = true;
+									}
+									else
+										Log.Warning("Unknown resample quality value: " + value);
+								}
 								break;
 							case "--dump-timestamps":
 								settings.outputMode = OutputMode.DumpTimestamps;

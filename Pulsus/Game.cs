@@ -34,7 +34,9 @@ namespace Pulsus
 			FFmpegHelper.Init();
 
 			Log.Info("Initializing Audio...");
-			audio = new AudioEngine(null, settings.audio.driver, (int)settings.audio.sampleRate, (int)settings.audio.bufferLength);
+			audio = new AudioEngine(null, settings.audio.driver,
+				(int)settings.audio.sampleRate, (int)settings.audio.bufferLength,
+				settings.audio.resampleQuality);
 			audio.SetVolume(Math.Min(settings.audio.volume, 100) / 100.0f);
 			Log.Info("Audio driver: " + audio.audioDriver.ToString());
 

@@ -51,8 +51,12 @@ namespace Pulsus.Audio
 		long buffersMixedCount = 0;
 		float volume = 1.0f;
 
-		public AudioEngine(string audioDevice = null, AudioDriver driver = AudioDriver.Default, int sampleRate = 44100, int bufferLength = 1024)
+		private ResampleQuality resampleQuality;
+
+		public AudioEngine(string audioDevice = null, AudioDriver driver = AudioDriver.Default, int sampleRate = 44100, int bufferLength = 1024, ResampleQuality resampleQuality = ResampleQuality.High)
 		{
+			this.resampleQuality = resampleQuality;
+
 			SDL.SDL_InitSubSystem(SDL.SDL_INIT_AUDIO);
 
 			audioCallback = AudioCallback;
@@ -261,7 +265,7 @@ namespace Pulsus.Audio
 		public SoundData LoadFromFile(string path)
 		{
 			return new SoundData(FFmpeg.FFmpegHelper.SoundFromFileResample(path,
-				audioSpec.freq, audioSpec.channels, audioSpec.format));
+				audioSpec.freq, audioSpec.channels, audioSpec.format, resampleQuality));
 		}
 
 		public void Play(SoundInstance soundInstance, int polyphony)

@@ -199,6 +199,7 @@
     <Compile Include="Graphics\VertexColor.cs" />
     <Compile Include="Scenes\Scene.cs" />
     <Compile Include="SceneManager.cs" />
+    <Compile Include="Shared\ResampleQuality.cs" />
     <Compile Include="Shared\Settings.cs" />
     <Compile Include="Shared\SettingsManager.cs" />
     <Compile Include="SettingsWindow.cs" />

@@ -296,7 +296,7 @@ namespace Pulsus.FFmpeg
 				format = (int)codecContext->sample_fmt;
 		}
 
-		public void ConvertToFormat(AVSampleFormat sampleFormat, int sampleRate, int channels)
+		public void ConvertToFormat(AVSampleFormat sampleFormat, int sampleRate, int channels, ResampleQuality resampleQuality = ResampleQuality.High)
 		{
 			if (format == (int)sampleFormat &&
 				this.sampleRate == sampleRate &&
@@ -312,6 +312,7 @@ namespace Pulsus.FFmpeg
 			int channelLayout = (int)ffmpeg.av_get_default_channel_layout(channels);
 
 			swrContext = ffmpeg.swr_alloc();
+
 			ffmpeg.av_opt_set_int(swrContext, "in_channel_layout", (int)codecContext->channel_layout, 0);
 			ffmpeg.av_opt_set_int(swrContext, "out_channel_layout", channelLayout, 0);
 			ffmpeg.av_opt_set_int(swrContext, "in_channel_count", codecContext->channels, 0);
@@ -320,6 +321,25 @@ namespace Pulsus.FFmpeg
 			ffmpeg.av_opt_set_int(swrContext, "out_sample_rate", sampleRate, 0);
 			ffmpeg.av_opt_set_sample_fmt(swrContext, "in_sample_fmt", codecContext->sample_fmt, 0);
 			ffmpeg.av_opt_set_sample_fmt(swrContext, "out_sample_fmt", sampleFormat, 0);
+
+			switch (resampleQuality)
+			{
+				case ResampleQuality.Low:
+					ffmpeg.av_opt_set_int(swrContext, "filter_size", 0, 0);
+					ffmpeg.av_opt_set_int(swrContext, "phase_shift", 0, 0);
+					break;
+				case ResampleQuality.Medium:
+					// default ffmpeg settings
+					break;
+				case ResampleQuality.High:
+					ffmpeg.av_opt_set_int(swrContext, "filter_size", 128, 0);
+					ffmpeg.av_opt_set_double(swrContext, "cutoff", 1.0, 0);
+					break;
+				case ResampleQuality.Highest:
+					ffmpeg.av_opt_set_int(swrContext, "filter_size", 256, 0);
+					ffmpeg.av_opt_set_double(swrContext, "cutoff", 1.0, 0);
+					break;
+			}
 
 			if (ffmpeg.swr_init(swrContext) != 0)
 				throw new ApplicationException("Failed init SwrContext: " + FFmpegHelper.logLastLine);

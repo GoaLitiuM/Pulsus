@@ -1,11 +1,11 @@
-﻿using Jil;
+﻿using System;
+using System.Collections.Generic;
+using Jil;
 using Pulsus.Audio;
 using Pulsus.Gameplay;
 using Pulsus.Graphics;
 using Pulsus.Input;
 using SDL2;
-using System.Collections.Generic;
-using System;
 
 namespace Pulsus
 {
@@ -82,10 +82,10 @@ namespace Pulsus
 	public class AudioSettings
 	{
 		public AudioDriver driver = AudioDriver.Default;
-
 		public uint volume = 30;
 		public uint sampleRate = 44100;
 		public uint bufferLength = 768;
+		public ResampleQuality resampleQuality = ResampleQuality.Low;
 	}
 
 	public class InputSettings
