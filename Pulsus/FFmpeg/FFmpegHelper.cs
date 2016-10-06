@@ -21,21 +21,16 @@ namespace Pulsus.FFmpeg
 			}
 		}
 
-		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-		private delegate int ReadStreamDelegate(IntPtr opaque, IntPtr buf, int buf_size);
-
-		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-		private delegate Int64 SeekStreamDelegate(IntPtr opaque, Int64 offset, int whence);
-
-		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-		private delegate void LogDelegate(IntPtr ptr, int i, string str, IntPtr valist);
-
-		// prevents garbage collector from collecting delegates
-		static List<Delegate> delegateRefs = new List<Delegate>();
+		public static string logLastLine { get; private set; }
 
 		private static LogDelegate logCallback = Log;
 		private static IntPtr logPtr = IntPtr.Zero;
-		public static string logLastLine = "";
+
+		// prevents garbage collector from collecting delegates
+		private static List<Delegate> delegateRefs = new List<Delegate>();
+
+		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+		private delegate void LogDelegate(IntPtr ptr, int i, string str, IntPtr valist);
 
 		static void Log(IntPtr avcl, int level, string fmt, IntPtr vl)
 		{

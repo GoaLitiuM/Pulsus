@@ -11,6 +11,11 @@ namespace Pulsus.FFmpeg
 		{
 		}
 
+		public FFmpegException(int errorCode, string message)
+			: base(message, new FFmpegException(errorCode))
+		{
+		}
+
 		private static string GetError(int errorCode)
 		{
 			IntPtr strPtr = Marshal.AllocHGlobal(256);

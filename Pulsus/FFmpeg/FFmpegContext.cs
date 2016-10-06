@@ -183,54 +183,55 @@ namespace Pulsus.FFmpeg
 		private void OpenInput()
 		{
 			formatContext = ffmpeg.avformat_alloc_context();
-			if (stream != null)
+			fixed (AVFormatContext** formatContextPtr = &formatContext)
 			{
-				const int bufferSize = 8192;
+				int error;
+				AVInputFormat* inputFormat = null;
 
-				// with delegates and anonymous functions, we can capture
-				// the local stream variable without passing it as a argument.
-
-				ReadStreamDelegate readStream = (IntPtr opaque, IntPtr buf, int buf_size) =>
+				if (stream != null)
 				{
-					byte[] array = new byte[buf_size];
+					const int bufferSize = 8192;
 
-					int read = stream.Read(array, 0, buf_size);
-					Marshal.Copy(array, 0, buf, read);
+					// with delegates and anonymous functions, we can capture
+					// the local stream variable without passing it as a argument.
 
-					return read;
-				};
+					ReadStreamDelegate readStream = (IntPtr opaque, IntPtr buf, int buf_size) =>
+					{
+						byte[] array = new byte[buf_size];
 
-				SeekStreamDelegate seekStream = (IntPtr opaque, Int64 offset, int whence) =>
-				{
-					if (whence == ffmpeg.AVSEEK_SIZE)
-						return stream.Length;
+						int read = stream.Read(array, 0, buf_size);
+						Marshal.Copy(array, 0, buf, read);
 
-					if (!stream.CanSeek)
-						return -1;
+						return read;
+					};
 
-					stream.Seek(offset, (SeekOrigin)whence);
-					return stream.Position;
-				};
+					SeekStreamDelegate seekStream = (IntPtr opaque, Int64 offset, int whence) =>
+					{
+						if (whence == ffmpeg.AVSEEK_SIZE)
+							return stream.Length;
 
-				// track the delegates, GC might remove them prematurely
-				delegateRefs.Add(readStream);
-				delegateRefs.Add(seekStream);
+						if (!stream.CanSeek)
+							return -1;
 
-				// setup custom stream reader for ffmpeg to use with AVIO context
-				sbyte* readBuffer = (sbyte*)ffmpeg.av_malloc(bufferSize + ffmpeg.FF_INPUT_BUFFER_PADDING_SIZE);
-				avioContext = ffmpeg.avio_alloc_context(readBuffer, bufferSize, 0, null,
-					Marshal.GetFunctionPointerForDelegate(readStream), IntPtr.Zero,
-					Marshal.GetFunctionPointerForDelegate(seekStream));
+						stream.Seek(offset, (SeekOrigin)whence);
+						return stream.Position;
+					};
 
-				formatContext->pb = avioContext;
-				formatContext->flags |= ffmpeg.AVFMT_FLAG_CUSTOM_IO;
+					// track the delegates, GC might remove them prematurely
+					delegateRefs.Add(readStream);
+					delegateRefs.Add(seekStream);
 
-				fixed (AVFormatContext** ptr = &formatContext)
-				{
-					int err = 0;
-					AVInputFormat* inputFormat = null;
-					if ((err = ffmpeg.av_probe_input_buffer(formatContext->pb, &inputFormat, path, null, 0, 0)) != 0)
-						throw new FFmpegException(err);
+					// setup custom stream reader for ffmpeg to use with AVIO context
+					sbyte* readBuffer = (sbyte*)ffmpeg.av_malloc(bufferSize + ffmpeg.FF_INPUT_BUFFER_PADDING_SIZE);
+					avioContext = ffmpeg.avio_alloc_context(readBuffer, bufferSize, 0, null,
+						Marshal.GetFunctionPointerForDelegate(readStream), IntPtr.Zero,
+						Marshal.GetFunctionPointerForDelegate(seekStream));
+
+					formatContext->pb = avioContext;
+					formatContext->flags |= ffmpeg.AVFMT_FLAG_CUSTOM_IO;
+
+					if ((error = ffmpeg.av_probe_input_buffer(formatContext->pb, &inputFormat, path, null, 0, 0)) != 0)
+						throw new FFmpegException(error);
 
 					if (path != null && (inputFormat->flags & ffmpeg.AVFMT_NOFILE) != 0)
 					{
@@ -240,16 +241,10 @@ namespace Pulsus.FFmpeg
 
 						//ffmpeg.avio_close(formatContext->pb);
 					}
-
-					if ((err = ffmpeg.avformat_open_input(ptr, path, inputFormat, null)) != 0)
-						throw new FFmpegException(err);
 				}
-			}
-			else
-			{
-				fixed (AVFormatContext** ptr = &formatContext)
-					if (ffmpeg.avformat_open_input(ptr, path, null, null) != 0)
-						throw new ApplicationException("Failed to open input stream: " + path);
+
+				if ((error = ffmpeg.avformat_open_input(formatContextPtr, path, inputFormat, null)) != 0)
+					throw new FFmpegException(error, "Failed to open input stream for file '" + path + "'");
 			}
 
 			frame = ffmpeg.av_frame_alloc();
@@ -259,8 +254,9 @@ namespace Pulsus.FFmpeg
 		// where the format has no header information.
 		public void FindStreamInfo()
 		{
-			if (ffmpeg.avformat_find_stream_info(formatContext, null) != 0)
-				throw new ApplicationException("Failed to find stream info");
+			int error;
+			if ((error = ffmpeg.avformat_find_stream_info(formatContext, null)) != 0)
+				throw new FFmpegException(error, "Failed to find stream info");
 		}
 
 		public void SelectStream(AVMediaType type)
@@ -269,17 +265,8 @@ namespace Pulsus.FFmpeg
 
 			streamIndex = ffmpeg.av_find_best_stream(formatContext, type, -1, -1, null, 0);
 			if (streamIndex < 0)
-				throw new ApplicationException("No stream found for type " + type.ToString());
+				throw new FFmpegException(streamIndex, "Failed to find stream for type " + type.ToString());
 
-			SetupCodecContext(formatContext->streams[streamIndex]);
-		}
-
-		public void SelectStream(int index)
-		{
-			if (index >= formatContext->nb_streams)
-				throw new ApplicationException("No stream found for index " + index.ToString());
-
-			streamIndex = index;
 			SetupCodecContext(formatContext->streams[streamIndex]);
 		}
 
@@ -293,11 +280,12 @@ namespace Pulsus.FFmpeg
 			if (codecContext == null)
 				throw new ApplicationException("Failed to allocate codec context");
 
-			if (ffmpeg.avcodec_copy_context(codecContext, stream->codec) != 0)
-				throw new ApplicationException("Failed to copy codec context");
+			int error;
+			if ((error = ffmpeg.avcodec_copy_context(codecContext, stream->codec)) != 0)
+				throw new FFmpegException(error, "Failed to copy codec context");
 
-			if (ffmpeg.avcodec_open2(codecContext, decoder, null) < 0)
-				throw new ApplicationException("Failed to open decoder for " + codecContext->codec_id.ToString() + " : ");
+			if ((error = ffmpeg.avcodec_open2(codecContext, decoder, null)) < 0)
+				throw new FFmpegException(error, "Failed to open decoder for " + codecContext->codec_id.ToString() + " : ");
 
 			channels = codecContext->channels;
 			sampleRate = codecContext->sample_rate;
@@ -306,11 +294,6 @@ namespace Pulsus.FFmpeg
 				format = (int)codecContext->pix_fmt;
 			else if (stream->codec->codec_type == AVMediaType.AVMEDIA_TYPE_AUDIO)
 				format = (int)codecContext->sample_fmt;
-		}
-
-		public void ConvertToFormat(AVSampleFormat sampleFormat)
-		{
-			ConvertToFormat(sampleFormat, audioSampleRate, audioChannels);
 		}
 
 		public void ConvertToFormat(AVSampleFormat sampleFormat, int sampleRate, int channels)
