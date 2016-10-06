@@ -1,9 +1,7 @@
-﻿using Jil;
-using Pulsus.Gameplay;
-using System.IO;
+﻿using System.IO;
 using System.Reflection;
 using System.Text;
-using System;
+using Jil;
 
 namespace Pulsus
 {
@@ -12,21 +10,10 @@ namespace Pulsus
 		private static readonly string defaultPath = Path.Combine(Program.basePath, "settings.json");
 
 		// returns most up to date settings 
-		public static Settings instance { get { return _temporary ?? persistent; } }
+		public static Settings instance { get { return overridden ?? persistent; } }
 
 		private static Settings persistent = null;
-		private static Settings _temporary = null; // values overridden by commandline options
-		private static Settings temporary
-		{
-			get
-			{
-				// on-demand cloning of persistent settings
-				if (_temporary == null)
-					LoadTemporary(persistent);
-
-				return _temporary;
-			}
-		}
+		private static Settings overridden = null; // values overridden by commandline options
 
 		public static Settings Clone(Settings settings)
 		{
@@ -73,14 +60,9 @@ namespace Pulsus
 			Apply(settings);
 		}
 
-		public static void LoadTemporary(Settings settings)
+		public static void ClearOverrides()
 		{
-			_temporary = Clone(settings);
-		}
-
-		public static void ClearTemporary()
-		{
-			_temporary = null;
+			overridden = null;
 		}
 
 		public static void Process(Settings settings)
@@ -97,7 +79,7 @@ namespace Pulsus
 					continue;
 				}
 
-				char lastChar = settings.songPaths[i][settings.songPaths[i].Length-1];
+				char lastChar = settings.songPaths[i][settings.songPaths[i].Length - 1];
 				if (lastChar != Path.DirectorySeparatorChar && lastChar != Path.AltDirectorySeparatorChar)
 					settings.songPaths[i] += Path.DirectorySeparatorChar;
 			}
@@ -106,7 +88,7 @@ namespace Pulsus
 		public static void Apply(Settings settings)
 		{
 			persistent = settings;
-			ClearTemporary();
+			ClearOverrides();
 		}
 
 		public static void Save()
@@ -115,120 +97,11 @@ namespace Pulsus
 			File.WriteAllText(defaultPath, json, Encoding.UTF8);
 		}
 
-		private static void PrintHelp()
-		{
-			Console.WriteLine(
-				"\nUsage: " + Environment.GetCommandLineArgs()[0] + " [OPTIONS] CHARTFILE\n" +
-				"\nOptions: "
-				);
-
-			var options = new Tuple<string, string>[]
-			{
-				Tuple.Create("-h, --help",                      "Prints this"),
-				Tuple.Create("--settings, --config",            "Opens configuration window"),
-				Tuple.Create("--skin SKINNAME",                 "Skin override"),
-				Tuple.Create("--debug",                         "Shows console window for debugging"),
-				Tuple.Create("", ""),
-				Tuple.Create("-p, --preview, -a, --autoplay",   "Enables chart preview mode (autoplay)"),
-				Tuple.Create("-m VALUE, --measure VALUE",       "Starts the chart from measure number VALUE [0-999]"),
-				Tuple.Create("", ""),
-				Tuple.Create("--render OUTPUT.wav",             "Renders all audio of CHARTFILE to file"),
-				Tuple.Create("--dump-timestamps OUTPUT",        "Dumps all generated note event timestamps of CHARTFILE"),
-			};
-
-			foreach (var option in options)
-			{
-				Console.WriteLine("  {0,-35}{1}", option.Item1, option.Item2);
-			}
-
-			Console.Write("\n");
-			Environment.Exit(0);
-		}
-
-		private static bool ParseArg(string key, string value)
-		{
-			if (key.StartsWith("-"))
-			{
-				key = key.ToLower();
-
-				switch (key)
-				{
-					case "--help":
-					case "-help":
-					case "-h":
-						PrintHelp();
-						break;
-					case "--debug":
-						temporary.debug = true;
-						break;
-					case "--settings":
-					case "--config":
-						temporary.showSettings = true;
-						break;
-					case "--autoplay":
-					case "-a":
-					case "--preview":
-					case "-p":
-						temporary.gameplay.assistMode = AssistMode.Autoplay;
-						break;
-					default:
-						break;
-				}
-				if (!string.IsNullOrEmpty(value))
-				{
-					switch (key)
-					{
-						case "--measure":
-						case "-m":
-							if (!int.TryParse(value, out temporary.startMeasure))
-								Log.Error("Invalid value for measure");
-							break;
-						case "--skin":
-							temporary.skin = value;
-							break;
-						case "--render":
-							temporary.outputMode = OutputMode.Render;
-							temporary.audio.driver = Audio.AudioDriver.File;
-							temporary.audio.bufferLength = 4096;
-							temporary.audio.volume = 100;
-							temporary.outputPath = value;
-							break;
-						case "--dump-timestamps":
-							temporary.outputMode = OutputMode.DumpTimestamps;
-							temporary.outputPath = value;
-							break;
-						default:
-							return false;
-					}
-
-					// value was read from next argument, skip it
-					return true;
-				}
-			}
-			else if (key == "/?")
-				PrintHelp();
-			else
-				temporary.playPath = key;
-
-			return false;
-		}
-
 		public static void ParseArgs(string[] args)
 		{
-			for (int i = 1; i < args.Length; i++)
-			{
-				string key = args[i];
-				string value = null;
-				if (i + 1 < args.Length && !args[i + 1].StartsWith("-"))
-					value = args[i + 1];
+			overridden = SettingsParser.Parse(persistent, args);
 
-				if (ParseArg(key, value))
-					i++;
-			}
-
-			ParseArg("-", null);
-
-			if (_temporary != null)
+			if (overridden != null)
 			{
 				// settings state was overridden
 			}

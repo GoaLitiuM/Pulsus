@@ -219,6 +219,7 @@
     <Compile Include="Gameplay\Chart.cs" />
     <Compile Include="Gameplay\ChartParser.cs" />
     <Compile Include="Gameplay\Event\Event.cs" />
+    <Compile Include="Shared\SettingsParser.cs" />
     <Compile Include="Shared\Utility.cs" />
     <Compile Include="GameWindow.cs" />
     <Compile Include="Shared\Utility_Platform.cs" />
