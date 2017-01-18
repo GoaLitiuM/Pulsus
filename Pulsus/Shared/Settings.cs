@@ -278,7 +278,9 @@ namespace Pulsus
 		//public PlayMode playMode;
 		//public LaneMode laneMode;
 		public GaugeMode gaugeMode;
-		//public RandomMode randomMode;
+        //public RandomMode randomMode;
+
+        public bool showFSIndicator = true;
 	}
 
 	public enum OutputMode
