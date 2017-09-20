@@ -110,6 +110,7 @@ namespace Pulsus
 						case "-a":
 						case "--preview":
 						case "-p":
+							settings.checkUpdates = false;
 							settings.gameplay.assistMode = AssistMode.Autoplay;
 							break;
 						default:
