@@ -201,7 +201,7 @@ namespace Pulsus.Gameplay
 
 						// turn longnote into regular note
 						longNoteCount--;
-						eventList[i] = new NoteEvent(longNoteEvent.pulse, longNoteEvent.sound, longNoteEvent.lane);
+						eventList[i] = new NoteEvent(longNoteEvent.pulse, longNoteEvent.sounds, longNoteEvent.lane);
 						eventList[i].timestamp = bmsEvent.timestamp;
 					}
 					else if (longNoteEvent.length <= 0)

@@ -1,5 +1,6 @@
 ﻿using System;
 using Pulsus.Audio;
+using System.Collections.Generic;
 
 namespace Pulsus.Gameplay
 {
@@ -34,7 +35,7 @@ namespace Pulsus.Gameplay
 			if (!autoplay)
 				return;
 
-			PressKey(noteEvent.lane, noteEvent.sound, noteEvent);
+			PressKey(noteEvent.lane, noteEvent.sounds, noteEvent);
 			ReleaseKey(noteEvent.lane);
 		}
 
@@ -43,7 +44,7 @@ namespace Pulsus.Gameplay
 			if (!autoplay)
 				return;
 
-			PressKey(noteEvent.lane, noteEvent.sound, noteEvent);
+			PressKey(noteEvent.lane, noteEvent.sounds, noteEvent);
 		}
 
 		public override void OnPlayerKeyLongEnd(LongNoteEndEvent noteEndEvent)
@@ -51,7 +52,7 @@ namespace Pulsus.Gameplay
 			if (!autoplay)
 				return;
 
-			ReleaseKey(noteEndEvent.lane, noteEndEvent.sound);
+			ReleaseKey(noteEndEvent.lane, noteEndEvent.sounds);
 		}
 
 		public void PlayerPressKey(int lane)
@@ -64,7 +65,7 @@ namespace Pulsus.Gameplay
 			ReleaseKey(lane, null);
 		}
 
-		private void PressKey(int lane, SoundObject value, NoteEvent pressNote = null)
+		private void PressKey(int lane, List<SoundObject> values, NoteEvent pressNote = null)
 		{
 			if (seeking && realtime)
 				return;
@@ -75,8 +76,12 @@ namespace Pulsus.Gameplay
 			if (judge != null)
 				judge.OnKeyPress(lane, pressNote);
 
-			if (value == null)
+			List<SoundObject> sounds = values;
+
+			if (sounds == null)
 			{
+				sounds = new List<SoundObject>(1);
+
 				int closest = -1;
 				double closestDiff = double.MaxValue;
 				for (int i = lastEventIndex; i < eventList.Count; i++)
@@ -118,28 +123,31 @@ namespace Pulsus.Gameplay
 				if (closest != -1)
 				{
 					NoteEvent noteEvent = eventList[closest] as NoteEvent;
-					value = noteEvent.sound;
+					sounds.AddRange(noteEvent.sounds);
 				}
 			}
 
-			SoundObject soundObject = value;
-			if (soundObject != null && soundObject.soundFile != null)
+			foreach (SoundObject soundObject in sounds)
 			{
-				if (soundObject.soundFile.data != null)
+				if (soundObject.soundFile == null)
+					continue;
+
+				if (soundObject.soundFile.data == null)
 				{
-					SoundData soundData = soundObject.soundFile.data;
-					SoundInstance instance = soundObject.CreateInstance(audioEngine, (float)chart.volume);
-					if (realtime)
-						audioEngine.Play(instance, soundObject.polyphony);
-					else
-						audioEngine.PlayScheduled(currentTime, instance, soundObject.polyphony);
-				}
-				else
 					Log.Warning("Sound file not loaded: " + soundObject.name);
+					continue;
+				}
+				
+				SoundData soundData = soundObject.soundFile.data;
+				SoundInstance instance = soundObject.CreateInstance(audioEngine, (float)chart.volume);
+				if (realtime)
+					audioEngine.Play(instance, soundObject.polyphony);
+				else
+					audioEngine.PlayScheduled(currentTime, instance, soundObject.polyphony);		
 			}
 		}
 
-		private void ReleaseKey(int lane, SoundObject value = null)
+		private void ReleaseKey(int lane, List<SoundObject> values = null)
 		{
 			if (seeking && realtime)
 				return;

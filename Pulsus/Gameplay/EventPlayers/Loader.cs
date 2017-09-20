@@ -211,19 +211,19 @@ namespace Pulsus.Gameplay
 			}
 		}
 
-		public override void OnSoundObject(SoundEvent soundEvent)
+		public override void OnSoundObject(SoundObject sound)
 		{
 			if (skipSound)
 				return;
 
-			if (soundEvent.sound == null)
+			if (sound == null)
 				return;
 
-			if (soundEvent.sound.loaded || soundUniques.Contains(soundEvent.sound))
+			if (sound.loaded || soundUniques.Contains(sound))
 				return;
 
-			soundUniques.Add(soundEvent.sound);
-			soundQueue.Enqueue(soundEvent.sound);
+			soundUniques.Add(sound);
+			soundQueue.Enqueue(sound);
 		}
 
 		public override void OnBGAObject(BGAEvent bgaEvent)

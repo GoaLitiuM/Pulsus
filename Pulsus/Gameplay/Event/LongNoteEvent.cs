@@ -1,4 +1,5 @@
-﻿using System.Diagnostics;
+﻿using System.Collections.Generic;
+using System.Diagnostics;
 
 namespace Pulsus.Gameplay
 {
@@ -11,6 +12,12 @@ namespace Pulsus.Gameplay
 
 		public LongNoteEvent(long pulse, SoundObject sound, int lane, LongNoteEndEvent endNote)
 			: base(pulse, sound, lane)
+		{
+			this.endNote = endNote;
+		}
+
+		public LongNoteEvent(long pulse, List<SoundObject> sounds, int lane, LongNoteEndEvent endNote)
+			: base(pulse, sounds, lane)
 		{
 			this.endNote = endNote;
 		}

@@ -167,6 +167,8 @@ namespace Pulsus.Gameplay
 						throw new ApplicationException("Unsupported BMSON mode_hint: " + modeHint);
 			}
 
+			Dictionary<int, Dictionary<long, NoteEvent>> uniqueNotes = new Dictionary<int, Dictionary<long, NoteEvent>>();
+
 			foreach (BMSON.SoundChannel channel in bmson.sound_channels ?? new BMSON.SoundChannel[0])
 			{
 				double lastTimeEventTime = 0.0;
@@ -191,6 +193,7 @@ namespace Pulsus.Gameplay
 					long notePulse = (long)note.y;
 					if (notePulse != lastSlicePulse)
 					{
+						// calculate timestamp for each pulse
 						for (; lastTimeEventIndex < timeEventList.Count; lastTimeEventIndex++)
 						{
 							Event timeEvent = timeEventList[lastTimeEventIndex];
@@ -254,9 +257,9 @@ namespace Pulsus.Gameplay
 					BMSON.Note note = channel.notes[i];
 					SoundObject soundObject = slices[noteSlice[i]];
 
-					int lane = (int)note.x;
-					long pulse = (long)note.y;
-					long length = (long)note.l;
+					int lane = note.x;
+					long pulse = note.y;
+					long length = note.l;
 
 					if (lane == 0)
 					{
@@ -265,9 +268,6 @@ namespace Pulsus.Gameplay
 					}
 					else
 					{
-						playerEventCount++;
-						noteCount++;
-
 						if (hasTurntable && lane == 8)
 							lane = 0;
 						else if (hasTurntable && lane == 16)
@@ -275,20 +275,71 @@ namespace Pulsus.Gameplay
 						else if (lane > 8)
 							lane--;
 
-						if (length == 0)
+						Dictionary<long, NoteEvent> laneNotes;
+						if (!uniqueNotes.TryGetValue(lane, out laneNotes))
 						{
-							NoteEvent noteEvent = new NoteEvent(pulse, soundObject, lane);
-							eventList.Add(noteEvent);
+							laneNotes = new Dictionary<long, NoteEvent>();
+							uniqueNotes[lane] = laneNotes;
+						}
+
+						NoteEvent uniqueNote;
+						if (laneNotes.TryGetValue(pulse, out uniqueNote))
+						{
+							LongNoteEvent lnStartEvent = uniqueNote as LongNoteEvent;
+							LongNoteEndEvent lnEndEvent = laneNotes[pulse + length] as LongNoteEndEvent;
+
+							if (length != 0 && lnStartEvent != null)
+							{
+								if (lnStartEvent.endNote != lnEndEvent)
+									Log.Warning("Layered long note event contains different end note");
+
+								lnStartEvent.sounds.Add(soundObject);
+								if (lnEndEvent != null)
+									lnEndEvent.sounds.Add(soundObject);
+							}
+							else if (length == 0)
+							{
+								if (lnStartEvent != null || lnEndEvent != null)
+									Log.Warning("Layered regular note overlaps with long note");
+
+								uniqueNote.sounds.Add(soundObject);
+							}
 						}
 						else
-						{
-							longNoteCount++;
-							LongNoteEndEvent lnEndEvent = new LongNoteEndEvent(pulse + length, soundObject, lane, null);
-							LongNoteEvent lnStartEvent = new LongNoteEvent(pulse, soundObject, lane, lnEndEvent);
-							lnEndEvent.startNote = lnStartEvent;
+						{ 
+							playerEventCount++;
+							noteCount++;
 
-							eventList.Add(lnStartEvent);
-							eventList.Add(lnEndEvent);
+							if (length == 0)
+							{
+								NoteEvent noteEvent = new NoteEvent(pulse, soundObject, lane);
+								eventList.Add(noteEvent);
+
+								laneNotes[pulse] = noteEvent;
+							}
+							else
+							{
+								longNoteCount++;
+								LongNoteEndEvent lnEndEvent = new LongNoteEndEvent(pulse + length, soundObject, lane, null);
+								LongNoteEvent lnStartEvent = new LongNoteEvent(pulse, soundObject, lane, lnEndEvent);
+								lnEndEvent.startNote = lnStartEvent;
+
+								eventList.Add(lnStartEvent);
+								eventList.Add(lnEndEvent);
+
+								laneNotes[pulse] = lnStartEvent;
+
+								if (!laneNotes.ContainsKey(pulse + length))
+									laneNotes[pulse + length] = lnEndEvent;
+								else
+								{
+									NoteEvent overlappingNote = laneNotes[pulse + length];
+									if (overlappingNote is LongNoteEndEvent)
+										overlappingNote.sounds.Add(soundObject);
+									else
+										Log.Warning("Layered long note end point does not overlap with other long note end point");
+								}
+							}
 						}
 					}
 				}

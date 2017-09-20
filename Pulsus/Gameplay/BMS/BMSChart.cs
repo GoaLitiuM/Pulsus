@@ -210,7 +210,7 @@ namespace Pulsus.Gameplay
 
 							LongNoteEvent lastEvent = lastLNEvent[lnChannel];
 							LongNoteEvent startEvent = startLNEvent[lnChannel];
-							LongNoteEndEvent endEvent = new LongNoteEndEvent(pulse, lastEvent.sound, lastEvent.lane, startEvent);
+							LongNoteEndEvent endEvent = new LongNoteEndEvent(pulse, lastEvent.sounds, lastEvent.lane, startEvent);
 							startEvent.endNote = endEvent;
 
 							eventList.Add(endEvent);
@@ -322,7 +322,7 @@ namespace Pulsus.Gameplay
 											if (lastEvent != null)
 											{
 												lastPlayerEvent[lane] = null;
-												lastLongNote = new LongNoteEvent(lastEvent.pulse, lastEvent.sound, lastEvent.lane, null);
+												lastLongNote = new LongNoteEvent(lastEvent.pulse, lastEvent.sounds, lastEvent.lane, null);
 
 												bool foundNote = false;
 												for (int j = measureEvents.Count - 1; j >= 0; j--)
@@ -363,14 +363,6 @@ namespace Pulsus.Gameplay
 											startEvent.endNote = endEvent;
 
 											lastLNEvent.Remove(channel.index);
-
-											SoundObject releaseSound = null;
-											if (startEvent.sound != sound && sound != null)
-											{
-												// play sound on release
-												releaseSound = sound;
-											}
-
 											noteEvent = endEvent;
 										}
 										else if (isLongChannel)

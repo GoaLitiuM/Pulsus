@@ -200,31 +200,34 @@ namespace Pulsus.Gameplay
 				OnBPM(currentEvent as BPMEvent);
 			else if (currentEvent is SoundEvent)
 			{
-				SoundEvent soundEvent = currentEvent as SoundEvent;
-				NoteEvent noteEvent = soundEvent as NoteEvent;
+				SoundEvent soundEvent = currentEvent as SoundEvent;		
 				KeySoundChangeEvent keySoundEvent = soundEvent as KeySoundChangeEvent;
 
-				OnSoundObject(soundEvent);
+				OnSoundObject(soundEvent.sound);
 
 				if (keySoundEvent != null)
 					OnPlayerKeyChange(keySoundEvent);
-				else if (noteEvent != null)
-				{
-					LandmineEvent landmineEvent = noteEvent as LandmineEvent;
-					LongNoteEvent longNoteEvent = noteEvent as LongNoteEvent;
-					LongNoteEndEvent longNoteEndEvent = noteEvent as LongNoteEndEvent;
-
-					if (landmineEvent != null)
-						OnLandmine(noteEvent);
-					else if (longNoteEndEvent != null)
-						OnPlayerKeyLongEnd(longNoteEndEvent);
-					else if (longNoteEvent != null)
-						OnPlayerKeyLong(longNoteEvent);
-					else
-						OnPlayerKey(noteEvent);
-				}
 				else
 					OnBGM(soundEvent);
+			}
+			else if (currentEvent is NoteEvent)
+			{
+				NoteEvent noteEvent = currentEvent as NoteEvent;
+				LandmineEvent landmineEvent = noteEvent as LandmineEvent;
+				LongNoteEvent longNoteEvent = noteEvent as LongNoteEvent;
+				LongNoteEndEvent longNoteEndEvent = noteEvent as LongNoteEndEvent;
+
+				foreach (SoundObject sound in noteEvent.sounds)
+					OnSoundObject(sound);
+
+				if (landmineEvent != null)
+					OnLandmine(noteEvent);
+				else if (longNoteEndEvent != null)
+					OnPlayerKeyLongEnd(longNoteEndEvent);
+				else if (longNoteEvent != null)
+					OnPlayerKeyLong(longNoteEvent);
+				else
+					OnPlayerKey(noteEvent);
 			}
 			else if (currentEvent is StopEvent)
 				OnStop(currentEvent as StopEvent);
@@ -254,7 +257,7 @@ namespace Pulsus.Gameplay
 			StopPlayer();
 		}
 
-		public virtual void OnSoundObject(SoundEvent soundEvent)
+		public virtual void OnSoundObject(SoundObject sound)
 		{
 			if (!playing)
 				return;
