@@ -15,7 +15,8 @@ namespace Pulsus.Gameplay
 			this.lane = lane;
 
 			sounds = new List<SoundObject>();
-			sounds.Add(sound);
+			if (sound != null)
+				sounds.Add(sound);
 		}
 
 		public NoteEvent(long pulse, List<SoundObject> sounds, int lane)
