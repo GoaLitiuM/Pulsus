@@ -23,6 +23,7 @@ namespace Pulsus.Gameplay
 
 		HashSet<SoundObject> soundUniques = new HashSet<SoundObject>();
 		HashSet<BGAObject> bgaUniques = new HashSet<BGAObject>();
+		HashSet<string> missingFiles = new HashSet<string>();
 
 		string basePath;
 
@@ -243,8 +244,9 @@ namespace Pulsus.Gameplay
 
 		private void LoadSound(SoundObject soundObject)
 		{
-			string path = Path.Combine(basePath, soundObject.soundFile.path);
-			path = Utility.FindRealFile(path, lookupPaths, lookupAudioExtensions);
+			string filename = soundObject.soundFile.path;
+			string fullPath = Path.Combine(basePath, filename);
+			string path = Utility.FindRealFile(fullPath, lookupPaths, lookupAudioExtensions);
 			if (File.Exists(path))
 			{
 				try
@@ -257,23 +259,27 @@ namespace Pulsus.Gameplay
 				}
 				catch (Exception e)
 				{
-					Log.Error("Failed to load sound '" + Path.GetFileName(soundObject.soundFile.path) + "': " + e.Message);
+					Log.Error("Failed to load sound '" + Path.GetFileName(filename) + "': " + e.Message);
 					soundObject.soundFile.SetData(new SoundData(new byte[0]));
 				}
 			}
-			else
-				Log.Error("Sound file not found: " + soundObject.soundFile.path);
+			else if (!missingFiles.Contains(filename))
+			{
+				missingFiles.Add(filename);
+				Log.Error("Sound file not found: " + filename);
+			}
 		}
 
 		private void LoadBGA(BGAObject bgaObject)
 		{
-			string path = Path.Combine(basePath, bgaObject.path);
-			path = Utility.FindRealFile(path, lookupPaths, lookupImageExtensions);
+			string filename = bgaObject.path;
+			string fullPath = Path.Combine(basePath, filename);
+			string path = Utility.FindRealFile(fullPath, lookupPaths, lookupImageExtensions);
 			if (File.Exists(path))
 			{
-				if (Path.GetExtension(bgaObject.path).ToLower() == ".lua")
+				if (Path.GetExtension(filename).ToLower() == ".lua")
 				{
-					Log.Error("Failed to load BGA '" + bgaObject.path + "', scripted BGAs are not supported");
+					Log.Error("Failed to load BGA '" + filename + "', scripted BGAs are not supported");
 					return;
 				}
 
@@ -293,7 +299,7 @@ namespace Pulsus.Gameplay
 				}
 				catch (Exception e)
 				{
-					Log.Error("Failed to load BGA '" + Path.GetFileName(bgaObject.path) + "': " + e.Message);
+					Log.Error("Failed to load BGA '" + Path.GetFileName(filename) + "': " + e.Message);
 				}
 				finally
 				{
@@ -301,8 +307,11 @@ namespace Pulsus.Gameplay
 						video.Dispose();
 				}
 			}
-			else
-				Log.Warning("BGA file not found: " + bgaObject.path);
+			else if (!missingFiles.Contains(filename))
+			{
+				missingFiles.Add(filename);
+				Log.Warning("BGA file not found: " + filename);
+			}	
 		}
 
 		private void LoadThread()
