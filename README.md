@@ -2,6 +2,11 @@ Pulsus
 ---
 [Pulsus](https://github.com/GoaLitiuM/Pulsus) is a open source rhythm game and simulator/player for [BMS format](https://en.wikipedia.org/wiki/Be-Music_Source) written in C#. The project main focus is to provide support for all the common game modes BMS is known for: 5key, 7key and 9key modes including both single and double modes.
 
+[Pulsus in action (YouTube):](https://www.youtube.com/watch?v=6g5i-UZ3n8E&t=16)
+
+[![YouTube: Pulsus 2016 10 03 Linux (Dolphin - DE/CON-STRUKT [BOFU2016])](https://img.youtube.com/vi/6g5i-UZ3n8E/maxresdefault.jpg)](https://www.youtube.com/watch?v=6g5i-UZ3n8E&t=16 "Pulsus 2016 10 03 Linux (Dolphin - DE/CON-STRUKT [BOFU2016])")
+
+
 Features
 ---
 - Supports following file formats (not completely):
