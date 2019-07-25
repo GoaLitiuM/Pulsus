@@ -617,6 +617,7 @@ namespace Pulsus.Gameplay
 			RenderBGA(deltaTime, new Rectangle(1280 - 720, 0, 720, 720));
 			RenderNoteHit(deltaTime, laneStartPos + new Int2(0, laneHeight));
 			RenderGauge(deltaTime, laneStartPos + new Int2(-9, laneHeight + 94));
+            RenderFSIndicator(deltaTime, laneStartPos + new Int2(laneTotalWidth / 2, (int)(laneHeight * judgeTextY)));
 
 			string songInfo = string.Format("{0} - {1}", chart.artist, chart.title);
 			spriteRenderer.DrawText(Game.debugFont, songInfo, new Int2(0, Game.debugFont.pointSize * 1), Color.White);
@@ -848,6 +849,33 @@ namespace Pulsus.Gameplay
 				laneX += keyTexture.width;
 			}
 		}
+
+        private void RenderFSIndicator(double deltaTime, Int2 pos)
+        {
+            Settings settings = SettingsManager.instance;
+            bool showIndicator = settings.gameplay.showFSIndicator;
+            if (judgeText == JudgeText.Empty || judgeFont == null || judgeText == JudgeText.PGreat || !showIndicator)
+                return;
+
+            SpriteRenderer spriteRenderer = renderer.spriteRenderer;
+            String indicatorStr;
+            Color indicatorColor;
+            if (judge.GetLastDelay() < 0)
+            {
+                    indicatorStr = "FAST";
+                    indicatorColor = Color.Blue;
+            }else
+            {
+                indicatorStr = "SLOW";
+                indicatorColor = Color.Red;
+            }
+
+            pos.x = pos.x - (Game.debugFont.MeasureSize(indicatorStr).x / 2);
+            pos.y = pos.y + 40;
+
+            spriteRenderer.DrawTextOutline(Game.debugFont, indicatorStr, pos, Color.Black, 1);
+            spriteRenderer.DrawText(Game.debugFont, indicatorStr, pos, indicatorColor);
+        }
 
 		private void RenderJudgeText(double deltaTime, Int2 judgePos)
 		{

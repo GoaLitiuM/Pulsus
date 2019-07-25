@@ -67,6 +67,8 @@ namespace Pulsus.Gameplay
 		public double totalDifference = 0.0;
 		public int judgedKeyCount = 0;
 
+        double lastDelay = 0.0;
+
 		public delegate void OnNoteJudgedDelegate(NoteScore noteScore);
 		public OnNoteJudgedDelegate OnNoteJudged;
 
@@ -223,6 +225,8 @@ namespace Pulsus.Gameplay
 				difference = ((int)(hitTimestamp * 1000) - (int)(noteScore.timestamp * 1000)) / 1000.0;
 			else
 				difference = hitTimestamp - noteScore.timestamp;
+
+            lastDelay = difference;
 
 			bool fast = difference < 0;
 			bool judged = true;
@@ -383,6 +387,11 @@ namespace Pulsus.Gameplay
 		{
 			return totalDifference / judgedKeyCount;
 		}
+
+        public double GetLastDelay()
+        {
+            return lastDelay;
+        }
 
 		public double GetCurrentPercentage()
 		{
